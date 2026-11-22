@@ -205,13 +205,26 @@ function buildBraceCloseMapSkippingProtected(
 
 interface OutBuffer {
   readonly chars: string[];
-  readonly map: number[];
+  readonly map: number[] | null;
+}
+
+function pushOutChar(buf: OutBuffer, ch: string, orig: number): void {
+  buf.chars.push(ch);
+  if (buf.map !== null) {
+    buf.map.push(orig);
+  }
 }
 
 function pushMappedPieces(
   buf: OutBuffer,
   pieces: readonly { readonly ch: string; readonly orig: number }[],
 ): void {
+  if (buf.map === null) {
+    for (const piece of pieces) {
+      buf.chars.push(piece.ch);
+    }
+    return;
+  }
   for (const piece of pieces) {
     buf.chars.push(piece.ch);
     buf.map.push(piece.orig);
@@ -448,9 +461,13 @@ function substituteSlice(
       const prot = findProtectedSpanAt(activeProtected, i);
       if (prot !== null) {
         const stop = Math.min(end, prot.end);
-        for (let k = i; k < stop; k++) {
-          out.chars.push(input.charAt(k));
-          out.map.push(k);
+        if (out.map === null) {
+          out.chars.push(input.slice(i, stop));
+        } else {
+          for (let k = i; k < stop; k++) {
+            out.chars.push(input.charAt(k));
+            out.map.push(k);
+          }
         }
         i = stop;
         continue;
@@ -462,8 +479,7 @@ function substituteSlice(
 
     // 1. Tie space `~` -> one space
     if (ch === 126) {
-      out.chars.push(" ");
-      out.map.push(originHere);
+      pushOutChar(out, " ", originHere);
       i++;
       continue;
     }
@@ -471,14 +487,12 @@ function substituteSlice(
     // 2. Em-dash `---` and En-dash `--` -> `-`
     if (ch === 45) {
       if (i + 2 < end && input.charCodeAt(i + 1) === 45 && input.charCodeAt(i + 2) === 45) {
-        out.chars.push("-");
-        out.map.push(originHere);
+        pushOutChar(out, "-", originHere);
         i += 3;
         continue;
       }
       if (i + 1 < end && input.charCodeAt(i + 1) === 45) {
-        out.chars.push("-");
-        out.map.push(originHere);
+        pushOutChar(out, "-", originHere);
         i += 2;
         continue;
       }
@@ -486,16 +500,14 @@ function substituteSlice(
 
     // 3. `` (two backticks) -> "
     if (ch === 96 && i + 1 < end && input.charCodeAt(i + 1) === 96) {
-      out.chars.push('"');
-      out.map.push(originHere);
+      pushOutChar(out, '"', originHere);
       i += 2;
       continue;
     }
 
     // 4. '' (two apostrophes) -> "
     if (ch === 39 && i + 1 < end && input.charCodeAt(i + 1) === 39) {
-      out.chars.push('"');
-      out.map.push(originHere);
+      pushOutChar(out, '"', originHere);
       i += 2;
       continue;
     }
@@ -503,8 +515,7 @@ function substituteSlice(
     // 5. Backslash escapes & macros
     if (ch === 92) {
       if (i + 1 >= end) {
-        out.chars.push("\\");
-        out.map.push(originHere);
+        pushOutChar(out, "\\", originHere);
         i++;
         continue;
       }
@@ -512,16 +523,14 @@ function substituteSlice(
 
       // Single-char escapes `\%`, `\$`, `\&`, `\#`, `\_`
       if (next === 37 || next === 36 || next === 38 || next === 35 || next === 95) {
-        out.chars.push(input.charAt(i + 1));
-        out.map.push(originHere);
+        pushOutChar(out, input.charAt(i + 1), originHere);
         i += 2;
         continue;
       }
 
       // Spacing symbols `\,`, `\;`, `\:`, `\ ` -> one space
       if (next === 44 || next === 59 || next === 58 || next === 32) {
-        out.chars.push(" ");
-        out.map.push(originHere);
+        pushOutChar(out, " ", originHere);
         i += 2;
         continue;
       }
@@ -534,8 +543,8 @@ function substituteSlice(
 
       // Other non-letter control symbol (`\\`, `\{`, `\}`, etc.) -> emit verbatim pair
       if (!isAsciiLetter(next)) {
-        out.chars.push("\\", input.charAt(i + 1));
-        out.map.push(originHere, fixedOrigin ?? i + 1);
+        pushOutChar(out, "\\", originHere);
+        pushOutChar(out, input.charAt(i + 1), fixedOrigin ?? i + 1);
         i += 2;
         continue;
       }
@@ -557,9 +566,13 @@ function substituteSlice(
         MACRO_DEF_COMMANDS.has(cmd) ||
         SKIPPED_SECTION_OR_META_COMMANDS.has(cmd)
       ) {
-        for (let k = i; k < cmdEnd; k++) {
-          out.chars.push(input.charAt(k));
-          out.map.push(fixedOrigin ?? k);
+        if (out.map === null) {
+          out.chars.push(input.slice(i, cmdEnd));
+        } else {
+          for (let k = i; k < cmdEnd; k++) {
+            out.chars.push(input.charAt(k));
+            out.map.push(fixedOrigin ?? k);
+          }
         }
         i = cmdEnd;
         continue;
@@ -567,8 +580,7 @@ function substituteSlice(
 
       // Spacing words `\quad`, `\qquad` -> one space
       if (KNOWN_SPACE_COMMANDS.has(cmd)) {
-        out.chars.push(" ");
-        out.map.push(originHere);
+        pushOutChar(out, " ", originHere);
         i = cmdEnd;
         continue;
       }
@@ -627,8 +639,7 @@ function substituteSlice(
       if (cmd === "textsuperscript" || cmd === "textsubscript") {
         const arg = isSimpleOneArgBracedMacro(input, braceClose, cmdEnd, end);
         if (arg !== null) {
-          out.chars.push(cmd === "textsuperscript" ? "^" : "_");
-          out.map.push(originHere);
+          pushOutChar(out, cmd === "textsuperscript" ? "^" : "_", originHere);
           substituteSlice(
             input,
             braceClose,
@@ -705,8 +716,7 @@ function substituteSlice(
             fixedOrigin,
           );
           if (unitPieces.length > 0) {
-            out.chars.push(" ");
-            out.map.push(fixedOrigin ?? unitArg.open);
+            pushOutChar(out, " ", fixedOrigin ?? unitArg.open);
             pushMappedPieces(out, unitPieces);
           }
           i = parsed.after;
@@ -743,8 +753,7 @@ function substituteSlice(
           for (let k = valArg.open + 1; k < valArg.close; k++) {
             const c = input.charCodeAt(k);
             if (c !== 123 && c !== 125) {
-              out.chars.push(input.charAt(k));
-              out.map.push(fixedOrigin ?? k);
+              pushOutChar(out, input.charAt(k), fixedOrigin ?? k);
             }
           }
           i = parsed.after;
@@ -774,8 +783,7 @@ function substituteSlice(
             unregList,
             out,
           );
-          out.chars.push("-");
-          out.map.push(fixedOrigin ?? aArg.close);
+          pushOutChar(out, "-", fixedOrigin ?? aArg.close);
           substituteSlice(
             input,
             braceClose,
@@ -796,8 +804,7 @@ function substituteSlice(
             fixedOrigin,
           );
           if (unitPieces.length > 0) {
-            out.chars.push(" ");
-            out.map.push(fixedOrigin ?? uArg.open);
+            pushOutChar(out, " ", fixedOrigin ?? uArg.open);
             pushMappedPieces(out, unitPieces);
           }
           i = parsed.after;
@@ -860,9 +867,13 @@ function substituteSlice(
             out,
           );
         } else {
-          for (let k = lastBrace.start + 1; k < lastBrace.end - 1; k++) {
-            out.chars.push(input.charAt(k));
-            out.map.push(fixedOrigin ?? k);
+          if (out.map === null) {
+            out.chars.push(input.slice(lastBrace.start + 1, lastBrace.end - 1));
+          } else {
+            for (let k = lastBrace.start + 1; k < lastBrace.end - 1; k++) {
+              out.chars.push(input.charAt(k));
+              out.map.push(fixedOrigin ?? k);
+            }
           }
         }
         i = seq.end;
@@ -873,6 +884,29 @@ function substituteSlice(
     }
 
     // Ordinary character
+    if (out.map === null) {
+      let runLimit = end;
+      if (activeProtected !== undefined && activeProtected.length > 0) {
+        for (const sp of activeProtected) {
+          if (sp.start > i && sp.start < runLimit) {
+            runLimit = sp.start;
+            break;
+          }
+        }
+      }
+      let runEnd = i + 1;
+      while (runEnd < runLimit) {
+        const c = input.charCodeAt(runEnd);
+        if (c === 126 || c === 45 || c === 96 || c === 39 || c === 92) {
+          break;
+        }
+        runEnd++;
+      }
+      out.chars.push(input.slice(i, runEnd));
+      i = runEnd;
+      continue;
+    }
+
     out.chars.push(input.charAt(i));
     out.map.push(originHere);
     i++;
@@ -883,9 +917,10 @@ function applyLatexSubstitutionsWithProtected(
   input: string,
   options: LatexSubstitutionsOptions | undefined,
   protectedSpans: readonly TextRangeLike[],
+  collectMap: boolean = true,
 ): LatexSubstitutionsResult {
   const braceClose = buildBraceCloseMapSkippingProtected(input, protectedSpans);
-  const out: OutBuffer = { chars: [], map: [] };
+  const out: OutBuffer = { chars: [], map: collectMap ? [] : null };
   const unregList: string[] = [];
 
   substituteSlice(
@@ -901,11 +936,13 @@ function applyLatexSubstitutionsWithProtected(
     unregList,
     out,
   );
-  out.map.push(input.length);
+  if (out.map !== null) {
+    out.map.push(input.length);
+  }
 
   return {
     text: out.chars.join(""),
-    map: out.map,
+    map: out.map ?? [],
     unregisteredCommands: unregList,
   };
 }
@@ -949,14 +986,18 @@ function appendRawProseWithoutMasks(
 ): number {
   let len = currentLength;
   let segStart = 0;
-  for (let k = 0; k <= slice.length; k++) {
-    if (k === slice.length || slice.charAt(k) === MASK_CHAR) {
-      if (k > segStart) {
-        parts.push(slice.slice(segStart, k));
-        len += k - segStart;
-      }
-      segStart = k + 1;
+  while (segStart < slice.length) {
+    const maskIdx = slice.indexOf(MASK_CHAR, segStart);
+    if (maskIdx === -1) {
+      parts.push(segStart === 0 ? slice : slice.slice(segStart));
+      len += slice.length - segStart;
+      break;
     }
+    if (maskIdx > segStart) {
+      parts.push(slice.slice(segStart, maskIdx));
+      len += maskIdx - segStart;
+    }
+    segStart = maskIdx + 1;
   }
   return len;
 }
@@ -1074,6 +1115,7 @@ export function normSentence(s: string, options?: NormSentenceOptions): string {
             ...(effectiveCustomCiteMacros !== undefined ? { customCiteMacros: effectiveCustomCiteMacros } : {}),
           },
           protectedSpans,
+          false,
         ).text
       : assembled;
 

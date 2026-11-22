@@ -1,0 +1,159 @@
+[
+  {
+    "id": "example_01_strong_but_split",
+    "input": "Drug X reduced mortality by 30% [1] but increased bleeding [2].",
+    "expected": [
+      { "claimText": "Drug X reduced mortality by 30%", "markerRawTexts": ["[1]"], "uncited": false },
+      { "claimText": "increased bleeding", "markerRawTexts": ["[2]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_02_narrative_citation",
+    "input": "Smith et al. (2020) found no effect of X on Y.",
+    "expected": [
+      { "claimText": "found no effect of X on Y", "markerRawTexts": ["Smith et al. (2020)"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_03_latex_cite_multi_key",
+    "input": "X improves Y \\cite{a,b}.",
+    "expected": [
+      { "claimText": "X improves Y", "markerRawTexts": ["\\cite{a,b}"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_04_leading_frame",
+    "input": "As shown previously [3], X improves Y.",
+    "expected": [
+      { "claimText": "X improves Y", "markerRawTexts": ["[3]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_05_narrative_plus_non_narrative_no_split",
+    "input": "Smith et al. (2020) found X reduces Y [3].",
+    "expected": [
+      { "claimText": "found X reduces Y", "markerRawTexts": ["Smith et al. (2020)", "[3]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_06_reporting_frame_and_comma_pair_cleanup",
+    "input": "Drug X, as shown by Smith (2020), reduced Y.",
+    "expected": [
+      { "claimText": "Drug X reduced Y", "markerRawTexts": ["Smith (2020)"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_07_strong_but_after_two_narrative_claims",
+    "input": "Smith (2020) found X [3], but Jones (2021) found not-X.",
+    "expected": [
+      { "claimText": "found X", "markerRawTexts": ["Smith (2020)", "[3]"], "uncited": false },
+      { "claimText": "found not-X", "markerRawTexts": ["Jones (2021)"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_08_step2_split_ge_4_words_lead_connector",
+    "input": "X increased A [1] and decreased B in older adults [2].",
+    "expected": [
+      { "claimText": "X increased A", "markerRawTexts": ["[1]"], "uncited": false },
+      { "claimText": "decreased B in older adults", "markerRawTexts": ["[2]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_09_relativizer_at_end_stays_single_clause",
+    "input": "The effect was large [4], which was unexpected.",
+    "expected": [
+      { "claimText": "The effect was large, which was unexpected", "markerRawTexts": ["[4]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_10_unclosed_pandoc_bracket_uncited",
+    "input": "Prior work [@k0; @k1; @k2",
+    "expected": [
+      { "claimText": "Prior work [@k0; @k1; @k2", "markerRawTexts": [], "uncited": true }
+    ]
+  },
+  {
+    "id": "example_11_relativizer_inner_split_after_word_2",
+    "input": "The effect was large [4], which was unexpected, and the control was small [5].",
+    "expected": [
+      { "claimText": "The effect was large, which was unexpected", "markerRawTexts": ["[4]"], "uncited": false },
+      { "claimText": "the control was small", "markerRawTexts": ["[5]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_12_not_only_but_also_no_split",
+    "input": "X not only reduced pain but also improved sleep [6].",
+    "expected": [
+      { "claimText": "X not only reduced pain but also improved sleep", "markerRawTexts": ["[6]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_13_two_words_between_groups_no_split",
+    "input": "Mortality fell by 30% [1] in 2019 [2].",
+    "expected": [
+      { "claimText": "Mortality fell by 30% in 2019", "markerRawTexts": ["[1]", "[2]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_14_cleanup_a_and_c_keeps_comma",
+    "input": "X improves Y [3] , and Z [4].",
+    "expected": [
+      { "claimText": "X improves Y, and Z", "markerRawTexts": ["[3]", "[4]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "example_15_however_comma_marker_lead_connector",
+    "input": "However, [2] reported that X reduces Y.",
+    "expected": [
+      { "claimText": "reported that X reduces Y", "markerRawTexts": ["[2]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "extra_strong_however_semicolon_whereas_while",
+    "input": "A increased [1]; B decreased [2], whereas C stayed flat [3], however, D rose [4], while E fell [5].",
+    "expected": [
+      { "claimText": "A increased", "markerRawTexts": ["[1]"], "uncited": false },
+      { "claimText": "B decreased", "markerRawTexts": ["[2]"], "uncited": false },
+      { "claimText": "C stayed flat", "markerRawTexts": ["[3]"], "uncited": false },
+      { "claimText": "D rose", "markerRawTexts": ["[4]"], "uncited": false },
+      { "claimText": "E fell", "markerRawTexts": ["[5]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "extra_three_findings_list",
+    "input": "Drug X reduced pain [1], sleep latency fell substantially [2], and adverse events remained rare [3].",
+    "expected": [
+      { "claimText": "Drug X reduced pain", "markerRawTexts": ["[1]"], "uncited": false },
+      { "claimText": "sleep latency fell substantially", "markerRawTexts": ["[2]"], "uncited": false },
+      { "claimText": "adverse events remained rare", "markerRawTexts": ["[3]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "extra_which_was_unexpected_between_groups",
+    "input": "The effect was large [4], which was unexpected [5].",
+    "expected": [
+      { "claimText": "The effect was large, which was unexpected", "markerRawTexts": ["[4]", "[5]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "extra_frames_in_see_that_as_with_mid_vs_start",
+    "input": "Study with Drug X reduces mortality in mice [1].",
+    "expected": [
+      { "claimText": "Study with Drug X reduces mortality in mice", "markerRawTexts": ["[1]"], "uncited": false }
+    ]
+  },
+  {
+    "id": "extra_in_reporting_frame_and_with_lead_connector",
+    "input": "In Smith (2020), with aspirin, X improved Y.",
+    "expected": [
+      { "claimText": "aspirin, X improved Y", "markerRawTexts": ["Smith (2020)"], "uncited": false }
+    ]
+  },
+  {
+    "id": "extra_short_uncited_merge_into_next",
+    "input": "Yes; Drug X improved sleep quality [1].",
+    "expected": [
+      { "claimText": "Yes; Drug X improved sleep quality", "markerRawTexts": ["[1]"], "uncited": false }
+    ]
+  }
+]

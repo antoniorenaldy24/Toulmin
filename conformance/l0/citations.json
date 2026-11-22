@@ -1,0 +1,115 @@
+[
+  {
+    "id": "latex_cite_variants_and_custom_macro",
+    "op": "scan",
+    "latexSource": "\\newcommand{\\mycite}[1]{[#1]}",
+    "input": "See \\cite{a,b}, \\citep[p.~3]{a}, \\citet*{a}, \\parencite{a}, \\textcites{a}{b}, and \\mycite{a}.",
+    "expected": [
+      { "rule": "latex_cite", "kind": "EXPLICIT", "narrative": false, "keys": ["a", "b"] },
+      { "rule": "latex_cite", "kind": "EXPLICIT", "narrative": false, "keys": ["a"] },
+      { "rule": "latex_cite", "kind": "EXPLICIT", "narrative": true, "keys": ["a"] },
+      { "rule": "latex_cite", "kind": "EXPLICIT", "narrative": false, "keys": ["a"] },
+      { "rule": "latex_cite", "kind": "EXPLICIT", "narrative": true, "keys": ["a", "b"] },
+      { "rule": "latex_cite", "kind": "EXPLICIT", "narrative": false, "keys": ["a"] }
+    ]
+  },
+  {
+    "id": "pandoc_bracket_and_suppress_author",
+    "op": "scan",
+    "input": "Prior results [@a; @b, p. 3] and [-@a].",
+    "expected": [
+      { "rule": "pandoc_bracket", "kind": "EXPLICIT", "narrative": false, "keys": ["a", "b"] },
+      { "rule": "pandoc_bracket", "kind": "EXPLICIT", "narrative": false, "keys": ["a"] }
+    ]
+  },
+  {
+    "id": "pandoc_narrative_vs_email",
+    "op": "scan",
+    "bibKeys": ["smith2020"],
+    "input": "@smith2020 reported outcomes, whereas name@example.org did not.",
+    "expected": [
+      { "rule": "pandoc_narrative", "kind": "EXPLICIT", "narrative": true, "keys": ["smith2020"], "rawText": "@smith2020" }
+    ]
+  },
+  {
+    "id": "numeric_en_dash_range_expansion",
+    "op": "scan",
+    "input": "Mortality fell across trials [1\u20133, 5].",
+    "expected": [
+      { "rule": "numeric_bracket", "kind": "HEURISTIC", "narrative": false, "numericIds": [1, 2, 3, 5] }
+    ]
+  },
+  {
+    "id": "rule2_normative_table_and_ac_l0_22",
+    "op": "scanBatch",
+    "cases": [
+      { "input": "reduced mortality by 30% [1]", "expectedNumeric": [[1]] },
+      { "input": "reduced mortality by 30% [1, 2].", "expectedNumeric": [[1, 2]] },
+      { "input": "as listed in Table 2 [3, 7].", "expectedNumeric": [[3, 7]] },
+      { "input": "reported in 2019 [3]", "expectedNumeric": [[3]] },
+      { "input": "in social [3] contexts", "expectedNumeric": [[3]] },
+      { "input": "across species [14]", "expectedNumeric": [[14]] },
+      { "input": "95% CI [12, 45]", "expectedNumeric": [] },
+      { "input": "IQR [3, 7]", "expectedNumeric": [] },
+      { "input": "median 5 [3, 7] days", "expectedNumeric": [] },
+      { "input": "[2](https://example.org)", "expectedNumeric": [] }
+    ]
+  },
+  {
+    "id": "author_year_paren_and_narrative",
+    "op": "scan",
+    "input": "Early work (Smith et al., 2020a) and reviews (see Smith & Lee, 2019; Jones, 2021, p. 4) agree with Smith and Lee (2019).",
+    "expected": [
+      { "rule": "author_year_paren", "kind": "HEURISTIC", "narrative": false, "surnames": ["Smith"], "years": ["2020a"] },
+      { "rule": "author_year_paren", "kind": "HEURISTIC", "narrative": false, "surnames": ["Smith", "Jones"], "years": ["2019", "2021"] },
+      { "rule": "author_year_narrative", "kind": "HEURISTIC", "narrative": true, "rawText": "Smith and Lee (2019)", "surnames": ["Smith"], "years": ["2019"] }
+    ]
+  },
+  {
+    "id": "ac_l0_23_non_name_words_and_heuristic_never_red",
+    "op": "resolve",
+    "input": "Dates in (March 2020) and data in (Table 2020) are excluded, while WHO (2020), (Smith 2020), and (Jones et al., 2021) plus \\cite{missingKey} are checked.",
+    "entries": [],
+    "expected": {
+      "markerCount": 4,
+      "statuses": ["POSSIBLE_CITATION", "POSSIBLE_CITATION", "POSSIBLE_CITATION", "UNRESOLVED_KEY"],
+      "possibleCitationTexts": ["WHO (2020)", "(Smith 2020)", "(Jones et al., 2021)"],
+      "unresolvedKeys": ["missingKey"]
+    }
+  },
+  {
+    "id": "organization_rule_who_2020_resolved",
+    "op": "resolve",
+    "input": "WHO (2020) issued updated guidance.",
+    "entries": [
+      {
+        "refId": "ref_who",
+        "key": "who2020",
+        "corporateAuthor": "{{World Health Organization}}",
+        "year": "2020"
+      }
+    ],
+    "expected": {
+      "markerCount": 1,
+      "statuses": ["RESOLVED"],
+      "resolvedRefIds": ["ref_who"],
+      "unresolvedKeys": []
+    }
+  },
+  {
+    "id": "markdown_references_numbered_list_order",
+    "op": "resolveMarkdown",
+    "input": "Prior data showed benefit [2] while another ref failed [5].\n\n## References\n1. Alpha Study (2019).\n2. Beta Trial (2020).",
+    "expected": {
+      "resolvedRefIds": ["mdref:2"],
+      "statuses": ["RESOLVED", "UNRESOLVED_KEY"],
+      "unresolvedKeys": ["5"]
+    }
+  },
+  {
+    "id": "unclosed_cite_64_keys_zero_markers",
+    "op": "scan",
+    "input": "\\cite{k1,k2,k3,k4,k5,k6,k7,k8,k9,k10,k11,k12,k13,k14,k15,k16,k17,k18,k19,k20,k21,k22,k23,k24,k25,k26,k27,k28,k29,k30,k31,k32,k33,k34,k35,k36,k37,k38,k39,k40,k41,k42,k43,k44,k45,k46,k47,k48,k49,k50,k51,k52,k53,k54,k55,k56,k57,k58,k59,k60,k61,k62,k63,k64",
+    "expected": []
+  }
+]

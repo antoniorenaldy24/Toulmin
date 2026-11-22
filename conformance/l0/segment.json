@@ -1,0 +1,227 @@
+[
+  {
+    "id": "ac_l0_02_et_al_and_lowercase",
+    "op": "segment",
+    "format": "md",
+    "input": "Mortality fell by 30% (Smith et al., 2020). However, Smith et al. found X.",
+    "expected": [
+      {
+        "text": "Mortality fell by 30% (Smith et al., 2020).",
+        "markerCount": 1
+      },
+      {
+        "text": "However, Smith et al. found X.",
+        "markerCount": 0
+      }
+    ]
+  },
+  {
+    "id": "class_n_abbreviations",
+    "op": "segment",
+    "format": "md",
+    "input": "Treatment (e.g. aspirin, i.e. low dose) vs. placebo is in Fig. 2, p. 12, approx. 5 mg.",
+    "expected": [
+      {
+        "text": "Treatment (e.g. aspirin, i.e. low dose) vs. placebo is in Fig. 2, p. 12, approx. 5 mg.",
+        "markerCount": 0
+      }
+    ]
+  },
+  {
+    "id": "class_t_routes_lower_vs_upper",
+    "op": "segment",
+    "format": "md",
+    "input": "Drugs given i.v. or i.p. or s.c. or p.o. showed response. We injected i.p. Animals recovered.",
+    "expected": [
+      {
+        "text": "Drugs given i.v. or i.p. or s.c. or p.o. showed response."
+      },
+      {
+        "text": "We injected i.p."
+      },
+      {
+        "text": "Animals recovered."
+      }
+    ]
+  },
+  {
+    "id": "class_t_sec_capitalized_vs_lowercase",
+    "op": "segment",
+    "format": "md",
+    "input": "See sec. methods below. Consult sec. Discussion next.",
+    "expected": [
+      {
+        "text": "See sec. methods below."
+      },
+      {
+        "text": "Consult sec."
+      },
+      {
+        "text": "Discussion next."
+      }
+    ]
+  },
+  {
+    "id": "single_upper_initial_group_b_vs_j_smith",
+    "op": "segment",
+    "format": "md",
+    "input": "Dr. J. Smith studied group B. The vitamin C. Controls improved.",
+    "expected": [
+      {
+        "text": "Dr. J. Smith studied group B."
+      },
+      {
+        "text": "The vitamin C."
+      },
+      {
+        "text": "Controls improved."
+      }
+    ]
+  },
+  {
+    "id": "lowercase_exceptions_p53_mrna_ttest_n3",
+    "op": "segment",
+    "format": "md",
+    "input": "First result. p53 levels rose. mRNA increased. t-test confirmed. n-3 fatty acids helped. control failed.",
+    "expected": [
+      {
+        "text": "First result."
+      },
+      {
+        "text": "p53 levels rose."
+      },
+      {
+        "text": "mRNA increased."
+      },
+      {
+        "text": "t-test confirmed."
+      },
+      {
+        "text": "n-3 fatty acids helped. control failed."
+      }
+    ]
+  },
+  {
+    "id": "decimal_ending_sentence",
+    "op": "segment",
+    "format": "md",
+    "input": "The mean was 3.5. Controls averaged 1.2 mg.",
+    "expected": [
+      {
+        "text": "The mean was 3.5."
+      },
+      {
+        "text": "Controls averaged 1.2 mg."
+      }
+    ]
+  },
+  {
+    "id": "ending_citation_and_citation_after_space",
+    "op": "segment",
+    "format": "md",
+    "input": "Mortality fell [12]. Effect. [12] The next trial replicated.",
+    "expected": [
+      {
+        "text": "Mortality fell [12].",
+        "markerCount": 1
+      },
+      {
+        "text": "Effect. [12]",
+        "markerCount": 1
+      },
+      {
+        "text": "The next trial replicated.",
+        "markerCount": 0
+      }
+    ]
+  },
+  {
+    "id": "ellipsis_lowercase_vs_uppercase",
+    "op": "segment",
+    "format": "md",
+    "input": "He paused... then left. She stopped... Next day began.",
+    "expected": [
+      {
+        "text": "He paused... then left."
+      },
+      {
+        "text": "She stopped..."
+      },
+      {
+        "text": "Next day began."
+      }
+    ]
+  },
+  {
+    "id": "quotation_ending_period_quote",
+    "op": "segment",
+    "format": "md",
+    "input": "She said, \"Treatment worked.\" Then patients left.",
+    "expected": [
+      {
+        "text": "She said, \"Treatment worked.\""
+      },
+      {
+        "text": "Then patients left."
+      }
+    ]
+  },
+  {
+    "id": "inline_numbered_list_no_split",
+    "op": "segment",
+    "format": "md",
+    "input": "We tested: 1) aspirin daily. 2) placebo daily.",
+    "expected": [
+      {
+        "text": "We tested: 1) aspirin daily. 2) placebo daily."
+      }
+    ]
+  },
+  {
+    "id": "forced_paragraph_and_markdown_list_boundaries",
+    "op": "segment",
+    "format": "md",
+    "input": "Para one without dot\n\n- Item A here.\n- Item B here.",
+    "expected": [
+      {
+        "text": "Para one without dot"
+      },
+      {
+        "text": "- Item A here."
+      },
+      {
+        "text": "- Item B here."
+      }
+    ]
+  },
+  {
+    "id": "stage1_eligibility_cases",
+    "op": "segment",
+    "format": "md",
+    "input": "Too short.\n\nA b c d e f.\n\n\"Quoted sentence with more than six words inside.\"\n\nOral aspirin reduced mortality in older adults.\n\n# References\nSmith J. Trial of six words total.",
+    "expected": [
+      {
+        "text": "Too short.",
+        "eligible": false
+      },
+      {
+        "text": "A b c d e f.",
+        "eligible": false
+      },
+      {
+        "text": "\"Quoted sentence with more than six words inside.\"",
+        "eligible": false
+      },
+      {
+        "text": "Oral aspirin reduced mortality in older adults.",
+        "eligible": true,
+        "wordCount": 7
+      },
+      {
+        "text": "Smith J. Trial of six words total.",
+        "section": "references",
+        "eligible": false
+      }
+    ]
+  }
+]

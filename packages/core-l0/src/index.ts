@@ -125,3 +125,68 @@ export type {
   NormSentenceOptions,
   TextRangeLike,
 } from "./latex.js";
+
+export {
+  AUTHOR_YEAR_PREFIXES,
+  FIRST_CITATION_ORDER_STYLES,
+  INTERVAL_CONTEXT_WORDS,
+  MULTICITE_COMMANDS,
+  NON_NAME_WORDS,
+  SURNAME_PARTICLES,
+  countWords,
+  extractCorporateInitials,
+  extractLatexBibStyle,
+  extractMarkdownNumberedReferences,
+  extractWordSpans,
+  resolveCitationMarkers,
+  scanCitations,
+} from "./citations.js";
+export type {
+  AuthorYearQuery,
+  AuthoritativeDocxMarker,
+  BibStatus,
+  BibliographyEntry,
+  CitationMarker,
+  CitationResolutionResult,
+  CitationRuleKind,
+  MarkdownNumberedRef,
+  MarkerKind,
+  MarkerResolutionStatus,
+  ResolveCitationsOptions,
+  ResolvedCitationMarker,
+  ScanCitationsOptions,
+  WordSpan,
+} from "./citations.js";
+
+export {
+  CLASS_N_ABBREVS,
+  CLASS_T_ABBREVS,
+  INITIAL_TERMINAL_PRECEDERS,
+  checkStage1Eligibility,
+  computeClaimId,
+  segmentDocument,
+} from "./segment.js";
+export type {
+  SegmentDocumentResult,
+  SegmentOptions,
+  SegmentedSentence,
+} from "./segment.js";
+
+export {
+  INNER_SPLITS,
+  LEADING_FRAMES,
+  LEAD_CONNECTORS,
+  RELATIVIZERS,
+  REPORTING_FRAMES,
+  STRONG_BOUNDARIES,
+  TRAIL_CONNECTORS,
+  groupMarkers,
+  partitionClauses,
+  partitionClausesWithTrace,
+} from "./clauses.js";
+export type {
+  ClauseSplitTrace,
+  MarkerGroup,
+  PartitionClausesWithTraceResult,
+  PartitionedClause,
+} from "./clauses.js";

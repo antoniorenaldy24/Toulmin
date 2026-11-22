@@ -556,6 +556,33 @@ function pushCodePointUnits(
  */
 export function norm(x: string): NormResult {
   const xLen = x.length;
+  // Clean ASCII fast path: no non-ASCII, no CR/TAB, no consecutive spaces -> identity text & map
+  let isCleanAscii = true;
+  let prevSpace = false;
+  for (let idx = 0; idx < xLen; idx += 1) {
+    const cu = x.charCodeAt(idx);
+    if (cu >= 0x80 || cu === 0x0d || cu === 0x09) {
+      isCleanAscii = false;
+      break;
+    }
+    if (cu === 0x20) {
+      if (prevSpace) {
+        isCleanAscii = false;
+        break;
+      }
+      prevSpace = true;
+    } else {
+      prevSpace = false;
+    }
+  }
+  if (isCleanAscii) {
+    const map = new Array<number>(xLen + 1);
+    for (let idx = 0; idx <= xLen; idx += 1) {
+      map[idx] = idx;
+    }
+    return { text: x, map };
+  }
+
   // Stage 1: latin_compose (strictly O(n))
   const s1Cps: number[] = [];
   const s1Offs: number[] = [];
@@ -764,6 +791,60 @@ export function normLowerWithMap(x: string): NormResult {
  * lowercasing from `unicode_15_1.bin` plus `lower_overrides` (keeping U+0130 unchanged).
  */
 export function normLower(x: string): string {
+  const xLen = x.length;
+  let allAscii = true;
+  let needsRewrite = false;
+  let prevSpace = false;
+
+  for (let i = 0; i < xLen; i += 1) {
+    const cu = x.charCodeAt(i);
+    if (cu >= 0x80) {
+      allAscii = false;
+      break;
+    }
+    if ((cu >= 0x41 && cu <= 0x5a) || cu === 0x0d || cu === 0x09) {
+      needsRewrite = true;
+      prevSpace = cu === 0x09;
+    } else if (cu === 0x20) {
+      if (prevSpace) {
+        needsRewrite = true;
+      }
+      prevSpace = true;
+    } else {
+      prevSpace = false;
+    }
+  }
+
+  if (allAscii) {
+    if (!needsRewrite) {
+      return x;
+    }
+    const outUnits = new Array<number>();
+    let inSpace = false;
+    for (let i = 0; i < xLen; i += 1) {
+      const cu = x.charCodeAt(i);
+      if (cu === 0x20 || cu === 0x09) {
+        if (!inSpace) {
+          outUnits.push(0x20);
+          inSpace = true;
+        }
+      } else if (cu === 0x0d) {
+        if (i + 1 < xLen && x.charCodeAt(i + 1) === 0x0a) {
+          i += 1;
+        }
+        outUnits.push(0x0a);
+        inSpace = false;
+      } else if (cu >= 0x41 && cu <= 0x5a) {
+        outUnits.push(cu + 32);
+        inSpace = false;
+      } else {
+        outUnits.push(cu);
+        inSpace = false;
+      }
+    }
+    return unitsToString(outUnits);
+  }
+
   return normLowerWithMap(x).text;
 }
 
@@ -846,15 +927,35 @@ export function foldLatin(x: string): string {
  * (0xEF, 0xBF, 0xBD) on every platform (02 §2.3).
  */
 export function utf8Encode(x: string): Uint8Array {
-  const buf = new Uint8Array(x.length * 3);
+  const n = x.length;
+  let allAscii = true;
+  for (let i = 0; i < n; i += 1) {
+    if (x.charCodeAt(i) >= 0x80) {
+      allAscii = false;
+      break;
+    }
+  }
+  if (allAscii) {
+    const asciiBuf = new Uint8Array(n);
+    for (let i = 0; i < n; i += 1) {
+      asciiBuf[i] = x.charCodeAt(i);
+    }
+    return asciiBuf;
+  }
+
+  const buf = new Uint8Array(n * 3);
   let pos = 0;
   let i = 0;
-  while (i < x.length) {
+  while (i < n) {
+    const cu = x.charCodeAt(i);
+    if (cu <= 0x7f) {
+      buf[pos++] = cu;
+      i += 1;
+      continue;
+    }
     const unit = codePointAtSafe(x, i);
     const cp = unit.isUnpairedSurrogate ? 0xfffd : unit.cp;
-    if (cp <= 0x7f) {
-      buf[pos++] = cp;
-    } else if (cp <= 0x7ff) {
+    if (cp <= 0x7ff) {
       buf[pos++] = 0xc0 | (cp >> 6);
       buf[pos++] = 0x80 | (cp & 0x3f);
     } else if (cp <= 0xffff) {
