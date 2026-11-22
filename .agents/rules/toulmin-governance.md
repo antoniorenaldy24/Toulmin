@@ -31,3 +31,7 @@ trigger: always_on
 ## 4. Communication Language Policy
 - **Chat Responses:** Always write all conversational explanations, plans, progress updates, RFC discussions, and Author Escalation Briefs in **Bahasa Indonesia** (technical identifiers, file paths, symbol names, and exact spec quotes remain in English).
 - **Repository Artifacts (Strictly English):** All code, code comments, commit messages, tests, golden files, `packages/copy/en.json`, `packages/prompts/p2.1/*`, `README.md`, and `/docs/{spikes,acceptance}/*.md` MUST remain strictly in **English** per the specification.
+
+## 5. Windows PowerShell CLI Hygiene (Anti-Hang)
+- NEVER invoke `npx tsx -e`, `pnpm exec tsx -e`, or multi-line `-e` arguments in Windows PowerShell (Windows `.cmd` wrappers truncate `\n` and hang `tsx` on open stdin).
+- For any ad-hoc TypeScript verification script via `run_command`, always pipe a single-quoted PowerShell here-string (`@' ... '@`) in plain ESM JS syntax directly into `.\node_modules\.bin\tsx.CMD -`, or run a real Vitest test command (`pnpm test` / `pnpm exec vitest run <file>`).
