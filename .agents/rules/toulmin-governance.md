@@ -27,3 +27,7 @@ trigger: always_on
   2. Send the RFC to `spec-validator` via `invoke_subagent`. `spec-validator` will attempt to refute it and check whether an existing owning rule or spike fallback already covers the case.
   3. If `spec-validator` refutes the RFC with spec citations, accept the ruling and fix the code. You may submit at most **1 rebuttal (Round 2)** with new empirical/logical evidence.
   4. If `spec-validator` validates the defect — OR if both agents remain deadlocked after Round 2 — **STOP modifying the affected code** and present the concise **Author Escalation Brief** (both positions + exact spec quotes + freeze-tier impact) to the **Author (user)** for the final decision.
+
+## 4. Communication Language Policy
+- **Chat Responses:** Always write all conversational explanations, plans, progress updates, RFC discussions, and Author Escalation Briefs in **Bahasa Indonesia** (technical identifiers, file paths, symbol names, and exact spec quotes remain in English).
+- **Repository Artifacts (Strictly English):** All code, code comments, commit messages, tests, golden files, `packages/copy/en.json`, `packages/prompts/p2.1/*`, `README.md`, and `/docs/{spikes,acceptance}/*.md` MUST remain strictly in **English** per the specification.
