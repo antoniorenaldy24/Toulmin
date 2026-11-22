@@ -1,0 +1,37 @@
+export {
+  GENERAL_CATEGORIES,
+  NORM_TABLE,
+  codePointAtSafe,
+  foldLatin,
+  generalCategory,
+  getUnicode151BinBytes,
+  isBaseLetter,
+  isCloser,
+  isCombiningMark,
+  isDigit,
+  isJoinerPreservedScript,
+  isKeyChar,
+  isLetter,
+  isLetterAt,
+  isLower,
+  isMarkMnOrMe,
+  isPunctSent,
+  isPunctuation,
+  isSpace,
+  isUpper,
+  norm,
+  normLower,
+  normLowerWithMap,
+  parseUnicode151Bin,
+  sha256hex,
+  sha256hexBytes,
+  simpleLowerCodePoint,
+  utf8Encode
+} from "./norm.js";
+export type {
+  CodePointUnit,
+  GeneralCategory,
+  NormResult,
+  NormTable,
+  Unicode151Table
+} from "./norm.js";

@@ -1,0 +1,13 @@
+{
+  "name": "@toulmin/tools",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@toulmin/core-l0": "workspace:*"
+  }
+}

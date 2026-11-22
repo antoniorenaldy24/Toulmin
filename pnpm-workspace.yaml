@@ -1,0 +1,9 @@
+packages:
+  - "packages/*"
+  - "apps/web"
+  - "functions"
+  - "eval-harness"
+  - "tools"
+
+allowBuilds:
+  esbuild: true
