@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import {
   generalCategory,
@@ -57,10 +58,25 @@ describe("Tier A bundled asset parity & ESLint boundary guardrails", () => {
     const errorCount = results.reduce((sum, r) => sum + r.errorCount, 0);
     expect(errorCount).toBe(0);
 
-    // Extra static check ensuring zero RegExp literals in norm.ts / generated file
+    // Extra AST static check ensuring zero RegularExpressionLiteral or RegExp constructor usage in core-l0/src
     for (const file of coreFiles) {
       const src = readFileSync(file, "utf8");
-      expect(src).not.toMatch(/\\w|\\b|\\s|\\d|\\p\{|\\P\{/);
+      const sourceFile = ts.createSourceFile(file, src, ts.ScriptTarget.Latest, true);
+      const regexHits: string[] = [];
+      const visit = (node: ts.Node): void => {
+        if (ts.isRegularExpressionLiteral(node)) {
+          regexHits.push(node.getText(sourceFile));
+        } else if (
+          (ts.isNewExpression(node) || ts.isCallExpression(node)) &&
+          ts.isIdentifier(node.expression) &&
+          node.expression.text === "RegExp"
+        ) {
+          regexHits.push(node.getText(sourceFile));
+        }
+        ts.forEachChild(node, visit);
+      };
+      visit(sourceFile);
+      expect(regexHits, `${file} contains forbidden regex constructs`).toEqual([]);
     }
   });
 

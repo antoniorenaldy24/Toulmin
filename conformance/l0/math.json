@@ -1,0 +1,241 @@
+[
+  {
+    "id": "norm_sentence_math_diff_p_values",
+    "op": "normSentenceCompare",
+    "format": "latex",
+    "inputA": "Treatment reduced mortality ($p<0.05$).",
+    "inputB": "Treatment reduced mortality ($p<0.01$).",
+    "expected": {
+      "normA": "treatment reduced mortality (p<0.05).",
+      "normB": "treatment reduced mortality (p<0.01).",
+      "equal": false
+    }
+  },
+  {
+    "id": "norm_sentence_inline_paren_n48",
+    "op": "normSentence",
+    "format": "latex",
+    "input": "Subjects \\(n=48\\) completed follow-up.",
+    "expected": "subjects n=48 completed follow-up."
+  },
+  {
+    "id": "math_text_greek_frac_sqrt",
+    "op": "mathText",
+    "input": "$\\frac{\\alpha + \\beta}{2} \\le \\sqrt{n}$",
+    "expected": "(α + β)/(2) ≤ sqrt(n)"
+  },
+  {
+    "id": "math_text_superscript_subscript_ops",
+    "op": "mathText",
+    "input": "$$1.2 \\cdot 10^{-3} \\pm 0.5 \\approx x_{i} \\ge 0 \\neq 1$$",
+    "expected": "1.2 × 10^-3 ± 0.5 ≈ x_i ≥ 0 ≠ 1"
+  },
+  {
+    "id": "math_text_unknown_cmd_percent",
+    "op": "mathText",
+    "input": "\\(\\mathrm{CI} = 95\\%, \\times \\to \\left(a\\right)\\)",
+    "expected": "CI = 95%, × (a)"
+  },
+  {
+    "id": "math_text_sqrt_optional_degree",
+    "op": "mathText",
+    "input": "$\\sqrt[3]{\\frac{x}{y}}$",
+    "expected": "sqrt((x)/(y))"
+  },
+  {
+    "id": "display_math_midline_attached",
+    "op": "preMask",
+    "format": "latex",
+    "input": "Energy obeys $$E=mc^{2}$$ strictly.",
+    "expected": {
+      "mathCount": 1,
+      "displayCount": 1,
+      "inlineCount": 0,
+      "mathTexts": ["E=mc^2"],
+      "firstMathIsBlockBoundary": false
+    }
+  },
+  {
+    "id": "display_math_own_line_block",
+    "op": "preMask",
+    "format": "latex",
+    "input": "First.\n\\[\na \\approx b\n\\]\nNext.",
+    "expected": {
+      "mathCount": 1,
+      "displayCount": 1,
+      "inlineCount": 0,
+      "mathTexts": ["a ≈ b"],
+      "firstMathIsBlockBoundary": true
+    }
+  },
+  {
+    "id": "escaped_dollar_not_math",
+    "op": "preMask",
+    "format": "latex",
+    "input": "Cost was \\$5 and \\$10.",
+    "expected": {
+      "mathCount": 0,
+      "displayCount": 0,
+      "inlineCount": 0,
+      "mathTexts": [],
+      "unmaskedEqualsInput": true
+    }
+  },
+  {
+    "id": "markdown_currency_dollars_not_math",
+    "op": "preMask",
+    "format": "md",
+    "input": "Treatment costs $5 and $6 per visit.",
+    "expected": {
+      "mathCount": 0,
+      "displayCount": 0,
+      "inlineCount": 0,
+      "mathTexts": [],
+      "unmaskedEqualsInput": true
+    }
+  },
+  {
+    "id": "markdown_pandoc_inline_with_currency",
+    "op": "preMask",
+    "format": "md",
+    "input": "The dose was $5 per day and $p<0.05$.",
+    "expected": {
+      "mathCount": 1,
+      "displayCount": 0,
+      "inlineCount": 1,
+      "mathTexts": ["p<0.05"]
+    }
+  },
+  {
+    "id": "macro_def_aspirin_expanded",
+    "op": "normSentence",
+    "format": "latex",
+    "input": "\\def\\drug{aspirin}\nPatients took \\drug daily.",
+    "expected": "patients took aspirin daily."
+  },
+  {
+    "id": "macro_newcommand_one_arg_not_expanded",
+    "op": "preMask",
+    "format": "latex",
+    "input": "\\newcommand{\\N}[1]{body}",
+    "expected": {
+      "mathCount": 0,
+      "userMacros": {},
+      "macrosNotExpanded": ["N"],
+      "fullyMasked": true
+    }
+  },
+  {
+    "id": "macro_newcommand_two_args_default_not_expanded",
+    "op": "preMask",
+    "format": "latex",
+    "input": "\\newcommand\\N[2][x]{body}",
+    "expected": {
+      "mathCount": 0,
+      "userMacros": {},
+      "macrosNotExpanded": ["N"],
+      "fullyMasked": true
+    }
+  },
+  {
+    "id": "label_blank_line_keeps_braced_paragraph",
+    "op": "preMask",
+    "format": "latex",
+    "input": "\\label{x}\n\n{text}",
+    "expected": {
+      "maskedLength": 9,
+      "unmaskedTail": "\n\n{text}"
+    }
+  },
+  {
+    "id": "latex_sub_textsuperscript_and_subscript",
+    "op": "applyLatexSubstitutions",
+    "input": "CO\\textsubscript{2} and m\\textsuperscript{2}",
+    "expected": {
+      "text": "CO_2 and m^2",
+      "map": [0, 1, 2, 17, 19, 20, 21, 22, 23, 24, 25, 42, 44],
+      "unregisteredCommands": []
+    }
+  },
+  {
+    "id": "latex_sub_ce_h2o",
+    "op": "applyLatexSubstitutions",
+    "input": "\\ce{H2O}",
+    "expected": {
+      "text": "H2O",
+      "map": [4, 5, 6, 8],
+      "unregisteredCommands": []
+    }
+  },
+  {
+    "id": "latex_sub_ce_arrow_reaction",
+    "op": "applyLatexSubstitutions",
+    "input": "\\ce{CO2 + H2O -> H2CO3}",
+    "expected": {
+      "text": "CO2 + H2O -> H2CO3",
+      "unregisteredCommands": []
+    }
+  },
+  {
+    "id": "latex_sub_todo_deleted",
+    "op": "applyLatexSubstitutions",
+    "input": "A \\todo[inline]{check} test.",
+    "expected": {
+      "text": "A  test.",
+      "map": [0, 1, 22, 23, 24, 25, 26, 27, 28],
+      "unregisteredCommands": []
+    }
+  },
+  {
+    "id": "latex_sub_textcolor_and_hl",
+    "op": "applyLatexSubstitutions",
+    "input": "\\textcolor{red}{x} and \\hl{y}",
+    "expected": {
+      "text": "x and y",
+      "map": [16, 18, 19, 20, 21, 22, 27, 29],
+      "unregisteredCommands": []
+    }
+  },
+  {
+    "id": "latex_sub_unregistered_ac_l0_25",
+    "op": "applyLatexSubstitutions",
+    "input": "\\gls{CI} \\cellcolor{gray}{12}\\newline!",
+    "expected": {
+      "text": "CI 12!",
+      "map": [5, 6, 8, 26, 27, 37, 38],
+      "unregisteredCommands": ["gls", "cellcolor", "newline"]
+    }
+  },
+  {
+    "id": "latex_sub_siunitx",
+    "op": "applyLatexSubstitutions",
+    "input": "\\SI{1.5}{\\micro\\gram\\per\\litre} and \\num{1e-3} and \\qtyrange{5}{10}{\\percent}",
+    "expected": {
+      "text": "1.5 μg/L and 1e-3 and 5-10 %",
+      "unregisteredCommands": []
+    }
+  },
+  {
+    "id": "figure_caption_extracted",
+    "op": "preMask",
+    "format": "latex",
+    "input": "Before.\n\\begin{figure}\n\\includegraphics{fig1.png}\n\\caption{Kaplan-Meier survival curve.}\n\\end{figure}\nAfter.",
+    "expected": {
+      "captions": [
+        {
+          "rawText": "Kaplan-Meier survival curve.",
+          "section": { "label": "unlabeled", "subsection": null }
+        }
+      ],
+      "footnotes": []
+    }
+  },
+  {
+    "id": "norm_sentence_cite_marker_token",
+    "op": "normSentence",
+    "format": "latex",
+    "input": "Mortality decreased \\ce{H2O} \\cite{smith20}.",
+    "markerRanges": [{ "start": 29, "end": 43 }],
+    "expected": "mortality decreased h2o ⟦c⟧."
+  }
+]

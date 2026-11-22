@@ -1,0 +1,114 @@
+[
+  {
+    "id": "pre_heading_default_unlabeled",
+    "op": "tracker",
+    "steps": [],
+    "expectedInitial": { "label": "unlabeled", "subsection": null },
+    "expected": []
+  },
+  {
+    "id": "canonical_direct_headings",
+    "op": "match",
+    "cases": [
+      { "heading": "Abstract", "isFirstHeading": true, "expected": "abstract" },
+      { "heading": "Related Work", "isFirstHeading": false, "expected": "introduction" },
+      { "heading": "Statistical Analysis", "isFirstHeading": false, "expected": "methods" },
+      { "heading": "Findings", "isFirstHeading": false, "expected": "results" },
+      { "heading": "General Discussion", "isFirstHeading": false, "expected": "discussion" },
+      { "heading": "Limitations", "isFirstHeading": false, "expected": "limitations" },
+      { "heading": "Concluding Remarks", "isFirstHeading": false, "expected": "conclusion" },
+      { "heading": "Supporting Information", "isFirstHeading": false, "expected": "supplementary" },
+      { "heading": "Works Cited", "isFirstHeading": false, "expected": "references" },
+      { "heading": "Results and Discussion", "isFirstHeading": false, "expected": "results" }
+    ]
+  },
+  {
+    "id": "numbered_headings_and_non_numbering",
+    "op": "tracker",
+    "steps": [
+      { "level": 3, "heading": "2.1 Results" },
+      { "level": 3, "heading": "II. Discussion" },
+      { "level": 3, "heading": "A. Experimental Setup" },
+      { "level": 3, "heading": "a study" },
+      { "level": 3, "heading": "IV therapy" }
+    ],
+    "expected": [
+      { "label": "results", "subsection": null },
+      { "label": "discussion", "subsection": null },
+      { "label": "methods", "subsection": null },
+      { "label": "unlabeled", "subsection": "a study" },
+      { "label": "unlabeled", "subsection": "IV therapy" }
+    ]
+  },
+  {
+    "id": "non_matching_subsection_under_methods",
+    "op": "tracker",
+    "steps": [
+      { "level": 3, "heading": "Methods" },
+      { "level": 4, "heading": "Cohort and follow-up" },
+      { "level": 5, "heading": "Baseline Screening" },
+      { "level": 4, "heading": "Data Collection" },
+      { "level": 3, "heading": "Acknowledgments" }
+    ],
+    "expected": [
+      { "label": "methods", "subsection": null },
+      { "label": "methods", "subsection": "Cohort and follow-up" },
+      { "label": "methods", "subsection": "Baseline Screening" },
+      { "label": "methods", "subsection": null },
+      { "label": "unlabeled", "subsection": "Acknowledgments" }
+    ]
+  },
+  {
+    "id": "summary_first_heading_abstract",
+    "op": "tracker",
+    "steps": [
+      { "level": 1, "heading": "Summary" },
+      { "level": 1, "heading": "Introduction" }
+    ],
+    "expected": [
+      { "label": "abstract", "subsection": null },
+      { "label": "introduction", "subsection": null }
+    ]
+  },
+  {
+    "id": "summary_later_heading_not_abstract",
+    "op": "tracker",
+    "steps": [
+      { "level": 1, "heading": "Introduction" },
+      { "level": 2, "heading": "Summary" },
+      { "level": 1, "heading": "Summary" }
+    ],
+    "expected": [
+      { "label": "introduction", "subsection": null },
+      { "label": "introduction", "subsection": "Summary" },
+      { "label": "unlabeled", "subsection": "Summary" }
+    ]
+  },
+  {
+    "id": "latex_premask_section_inheritance",
+    "op": "preMaskSections",
+    "format": "latex",
+    "input": "\\begin{abstract}\nShort summary.\n\\end{abstract}\n\\section{Methods}\n\\subsection{Mu\u0308ller Assay}\n\\subsection{Statistical Analysis}\n\\section{Ethics Approval}",
+    "expected": [
+      { "label": "abstract", "subsection": null },
+      { "label": "unlabeled", "subsection": null },
+      { "label": "methods", "subsection": null },
+      { "label": "methods", "subsection": "M\u00fcller Assay" },
+      { "label": "methods", "subsection": null },
+      { "label": "unlabeled", "subsection": "Ethics Approval" }
+    ]
+  },
+  {
+    "id": "markdown_premask_h3_under_h2_methods",
+    "op": "preMaskSections",
+    "format": "md",
+    "input": "# Summary\nOverview.\n## Methods\n### Assay Calibration\n# Results\n### Subgroup Findings",
+    "expected": [
+      { "label": "abstract", "subsection": null },
+      { "label": "methods", "subsection": null },
+      { "label": "methods", "subsection": "Assay Calibration" },
+      { "label": "results", "subsection": null },
+      { "label": "results", "subsection": "Subgroup Findings" }
+    ]
+  }
+]
