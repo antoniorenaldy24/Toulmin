@@ -346,7 +346,7 @@ A valid candidate is rejected if **any** of the following holds:
 4. **Lowercase continuation.** The next word starts with a `LOWER` letter. **Exceptions (accept the boundary)** when the next word matches any of:
    - `LOWER{1,3}` followed by an `UPPER` letter (`mRNA`, `siRNA`, `iPSC`, `pH`);
    - `LOWER{1,3}` followed by a `DIGIT` (`p53`, `t1`);
-   - `LOWER{1,2}` followed by `-` and a `LETTER` (`t-test`, `p-value`, `n-3`).
+   - `LOWER{1,2}` followed by `-` and a `LETTER` or `DIGIT` (`t-test`, `p-value`, `n-3`).
 5. **Inline numbered list.** The next token is `DIGIT{1,2}` followed by `)`.
 
 ### 4.5 Forced boundaries
@@ -466,7 +466,7 @@ Only `EXPLICIT` markers can produce `UNRESOLVED_KEY` (red, D-02).
    - Exactly one match → resolved. Several matches → `AMBIGUOUS` (the ledger shows the "Check this citation" chip and a reference picker [01 › Independent flags]).
 4. **Unmatched heuristic markers** never produce `UNRESOLVED_KEY`, never create a reference, and never produce a red mark. Their ranges are stored in `entry.possibleCitations` and shown as the grey "Check this citation" chip with the reason "Possible citation — it matches no reference in your bibliography". The import-quality report lists them with the marker text.
 
-**Golden cases (`conformance/l0/citations.json`).** At least: `\cite{a,b}`, `\citep[p.~3]{a}`, `\citet*{a}`, `\parencite{a}`, `\textcites{a}{b}`, a custom `\mycite` defined by `\newcommand`; Pandoc `[@a; @b, p. 3]` and `[-@a]`; numeric `[1–3, 5]`; author–year `(Smith et al., 2020a)`, `(see Smith & Lee, 2019; Jones, 2021, p. 4)`; narrative `Smith and Lee (2019)`; the eight strings of the table in §5.2; `[2](url)` (Markdown link, not a citation); `(March 2020)`, `WHO (2020)` and `(Table 2020)` without a match (`POSSIBLE_CITATION`, `HEURISTIC`); `WHO (2020)` with an entry `{{World Health Organization}}` (resolved by the organization rule); a numbered list under `## References` in `.md` giving the order; `\cite{missingKey}` (`UNRESOLVED_KEY`); an unclosed `\cite{` with 64 keys (no marker; linear time); an e-mail address `name@example.org` (no marker).
+**Golden cases (`conformance/l0/citations.json`).** At least: `\cite{a,b}`, `\citep[p.~3]{a}`, `\citet*{a}`, `\parencite{a}`, `\textcites{a}{b}`, a custom `\mycite` defined by `\newcommand`; Pandoc `[@a; @b, p. 3]` and `[-@a]`; numeric `[1–3, 5]`; author–year `(Smith et al., 2020a)`, `(see Smith & Lee, 2019; Jones, 2021, p. 4)`; narrative `Smith and Lee (2019)`; the eight strings of the table in §5.2; `[2](url)` (Markdown link, not a citation); `(March 2020)` and `(Table 2020)` rejected by `NON_NAME_WORDS` (0 markers); `WHO (2020)`, `(Smith 2020)` and `(Jones et al., 2021)` without a match (`POSSIBLE_CITATION`, `HEURISTIC`); `WHO (2020)` with an entry `{{World Health Organization}}` (resolved by the organization rule); a numbered list under `## References` in `.md` giving the order; `\cite{missingKey}` (`UNRESOLVED_KEY`); an unclosed `\cite{` with 64 keys (no marker; linear time); an e-mail address `name@example.org` (no marker).
 
 ---
 
@@ -495,7 +495,7 @@ LEADING_FRAMES    = ["as shown previously", "as reported previously", "as previo
                      "it has been shown that", "it has been reported that"]
 LEAD_CONNECTORS   = ["and", "but", "while", "whereas", "although", "though", "however", "moreover", "furthermore",
                      "also", "yet", "thus", "therefore", "in addition", "additionally", "which", "that", "as", "with"]
-TRAIL_CONNECTORS  = ["and", "but", "or", "while", "whereas", "although", "though", "yet"]
+TRAIL_CONNECTORS  = ["and", "but", "or", "while", "whereas", "although", "though", "yet", "however"]
 
 function partition(S, groups):
   # Step 1: split S at strong boundaries into spans P_1..P_m
@@ -535,7 +535,7 @@ function partition(S, groups):
          (d) delete leading characters in SPACE ∪ {",", ";", ":"}
       strip a LEADING_FRAME at the start (case-insensitive, whole words), followed by an optional ","; then repeat (d)
       repeat at most 3 times: strip one LEAD_CONNECTOR at the start, followed by an optional ","; then repeat (d)
-      strip trailing characters in ",;:." and repeat at most 2 times: strip one TRAIL_CONNECTOR at the end
+      repeat at most 2 times: trim trailing SPACE and characters in ",;:.", then strip one TRAIL_CONNECTOR at the end (whole word); then trim trailing SPACE and characters in ",;:."
       collapse whitespace; trim
       c.claimText = t
       c.span = smallest source range covering every character of S that contributed to t (markers inside it are allowed)
