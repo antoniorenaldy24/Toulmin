@@ -19,6 +19,7 @@ import {
   parseXmlOrdered,
   shapeEvidenceWindow,
   stripJatsAndHtmlTags,
+  tokBM25,
   type OrderedXmlNode,
   type PdfPageInput,
 } from "../src/index.js";
@@ -361,5 +362,34 @@ describe("AC-L0-15 linear-time latency on 10 KB adversarial inputs", () => {
     expect(medianMs(() => chunkJatsXml("r1", jats10k))).toBeLessThanOrEqual(5);
     expect(medianMs(() => dehyphenatePdfLines(dehyLines10k))).toBeLessThanOrEqual(5);
     expect(medianMs(() => shapeEvidenceWindow(longShaping10k, "mortality"))).toBeLessThanOrEqual(5);
+    expect(
+      medianMs(() => shapeEvidenceWindow("30mg ".repeat(2_048), "mg")),
+    ).toBeLessThanOrEqual(5);
+    const distinctDigitUnits10k = Array.from({ length: 1_621 }, (_, i) => `${i + 1}mg`)
+      .join(" ")
+      .slice(0, 10_239);
+    expect(
+      medianMs(() => shapeEvidenceWindow(distinctDigitUnits10k, "mg")),
+    ).toBeLessThanOrEqual(5);
+  });
+
+  it("matches tokBM25 unit-splitting parity inside shapeEvidenceWindow for <digit><letter> tokens", () => {
+    const pad65 = Array.from({ length: 65 }, (_, i) => `pad${i}`).join(" ");
+    for (const [tok, query] of [
+      ["30mg", "mg"],
+      ["20mg", "30 mg"],
+      ["30percent", "percent"],
+      ["5.2mg/dL", "dl"],
+      ["1990s", "1990"],
+      ["2020to", "to"],
+      ["1990foo", "foo"],
+    ] as const) {
+      const win = shapeEvidenceWindow(`${pad65} ${tok} tail0 tail1 tail2 tail3`, query);
+      const expectedHit = tokBM25(tok, { deleteCitations: false, applyLatex: false }).some((t) =>
+        new Set(tokBM25(query)).has(t),
+      );
+      expect(win.matchCount, tok).toBe(expectedHit ? 1 : 0);
+      expect(win.startWordIndex, tok).toBe(expectedHit ? 6 : 0);
+    }
   });
 });

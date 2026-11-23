@@ -12,11 +12,14 @@ import {
   scanCitations,
   type CitationMarker,
   type ScanCitationsOptions,
+  type WordSpan,
 } from "./citations.js";
 import { normSentence, type TextRangeLike } from "./latex.js";
 import { preMask, type PreMaskResult, type SourceFormat } from "./mask.js";
 import {
   codePointAtSafe,
+  isBaseLetter,
+  isCombiningMark,
   isDigit,
   isLetter,
   isLower,
@@ -189,6 +192,208 @@ function stripLeadingOpenDelimiters(token: string): string {
     i += unit.len;
   }
   return token.slice(i);
+}
+
+function isAsciiAlphaCode(cu: number): boolean {
+  return (cu >= 65 && cu <= 90) || (cu >= 97 && cu <= 122);
+}
+
+function isAsciiDigitCode(cu: number): boolean {
+  return cu >= 48 && cu <= 57;
+}
+
+/**
+ * Extracts ONLY the first `WordSpan` in `[start, limit)` matching `extractWordSpans` rules
+ * in O(first-word-length) time without scanning trailing text.
+ */
+function extractFirstWordSpan(text: string, start: number, limit: number): WordSpan | undefined {
+  let i = start;
+  while (i < limit) {
+    const cu = text.charCodeAt(i);
+    if (cu === 0xe000) {
+      i++;
+      continue;
+    }
+    let wordStart = -1;
+    let cur = i;
+    let prevIsLetter = false;
+
+    if (cu < 0x80) {
+      if (isAsciiAlphaCode(cu)) {
+        wordStart = i;
+        prevIsLetter = true;
+        cur = i + 1;
+      } else if (isAsciiDigitCode(cu)) {
+        wordStart = i;
+        prevIsLetter = false;
+        cur = i + 1;
+      } else {
+        i++;
+        continue;
+      }
+    } else {
+      const unit = codePointAtSafe(text, i);
+      if (unit.isUnpairedSurrogate) {
+        i += unit.len;
+        continue;
+      }
+      const startIsLetter = isLetter(unit.cp, false);
+      if (startIsLetter || isDigit(unit.cp)) {
+        wordStart = i;
+        prevIsLetter = startIsLetter;
+        cur = i + unit.len;
+      } else {
+        i += unit.len;
+        continue;
+      }
+    }
+
+    while (cur < limit) {
+      const nextCu = text.charCodeAt(cur);
+      if (nextCu === 0xe000) {
+        break;
+      }
+      if (nextCu < 0x80) {
+        if (isAsciiAlphaCode(nextCu)) {
+          prevIsLetter = true;
+          cur++;
+          continue;
+        }
+        if (isAsciiDigitCode(nextCu)) {
+          prevIsLetter = false;
+          cur++;
+          continue;
+        }
+        if ((nextCu === 0x27 || nextCu === 0x2d) && cur + 1 < limit) {
+          const afterCu = text.charCodeAt(cur + 1);
+          if (afterCu !== 0xe000) {
+            if (afterCu < 0x80) {
+              if (isAsciiAlphaCode(afterCu) || isAsciiDigitCode(afterCu)) {
+                prevIsLetter = isAsciiAlphaCode(afterCu);
+                cur += 2;
+                continue;
+              }
+            } else {
+              const after = codePointAtSafe(text, cur + 1);
+              if (!after.isUnpairedSurrogate) {
+                const afterIsLetter = isLetter(after.cp, false);
+                if (afterIsLetter || isDigit(after.cp)) {
+                  prevIsLetter = afterIsLetter;
+                  cur += 1 + after.len;
+                  continue;
+                }
+              }
+            }
+          }
+        }
+        break;
+      }
+      const nextUnit = codePointAtSafe(text, cur);
+      if (nextUnit.isUnpairedSurrogate) {
+        break;
+      }
+      const nextIsLetter = isLetter(nextUnit.cp, prevIsLetter);
+      if (nextIsLetter || isDigit(nextUnit.cp)) {
+        prevIsLetter = nextIsLetter;
+        cur += nextUnit.len;
+        continue;
+      }
+      break;
+    }
+
+    return {
+      start: wordStart,
+      end: cur,
+      text: text.slice(wordStart, cur),
+    };
+  }
+  return undefined;
+}
+
+/**
+ * Extracts ONLY the last `WordSpan` in `[startBound, endBound)` matching `extractWordSpans` rules
+ * in O(last-word-length) amortized time instead of re-scanning from `sentStart`.
+ */
+function extractLastWordSpanBefore(
+  text: string,
+  startBound: number,
+  endBound: number,
+): WordSpan | undefined {
+  let cursor = endBound;
+  let foundWordBase = false;
+  while (cursor > startBound) {
+    const cu1 = text.charCodeAt(cursor - 1);
+    if (cu1 < 0x80) {
+      if (isAsciiAlphaCode(cu1) || isAsciiDigitCode(cu1)) {
+        foundWordBase = true;
+        break;
+      }
+      cursor--;
+      continue;
+    }
+    if (cu1 >= 0xdc00 && cu1 <= 0xdfff && cursor - 2 >= startBound) {
+      const cu0 = text.charCodeAt(cursor - 2);
+      if (cu0 >= 0xd800 && cu0 <= 0xdbff) {
+        const cp = 0x10000 + (((cu0 - 0xd800) << 10) | (cu1 - 0xdc00));
+        if (isBaseLetter(cp) || isDigit(cp)) {
+          foundWordBase = true;
+          break;
+        }
+        cursor -= 2;
+        continue;
+      }
+    }
+    if (cu1 >= 0xd800 && cu1 <= 0xdfff) {
+      cursor--;
+      continue;
+    }
+    if (isBaseLetter(cu1) || isDigit(cu1)) {
+      foundWordBase = true;
+      break;
+    }
+    cursor--;
+  }
+
+  if (!foundWordBase) {
+    return undefined;
+  }
+
+  let localStart = cursor;
+  while (localStart > startBound) {
+    const cu = text.charCodeAt(localStart - 1);
+    if (cu === 0xe000) {
+      break;
+    }
+    if (cu < 0x80) {
+      if (isAsciiAlphaCode(cu) || isAsciiDigitCode(cu) || cu === 0x27 || cu === 0x2d) {
+        localStart--;
+        continue;
+      }
+      break;
+    }
+    if (cu >= 0xdc00 && cu <= 0xdfff && localStart - 2 >= startBound) {
+      const cu0 = text.charCodeAt(localStart - 2);
+      if (cu0 >= 0xd800 && cu0 <= 0xdbff) {
+        const cp = 0x10000 + (((cu0 - 0xd800) << 10) | (cu - 0xdc00));
+        if (isBaseLetter(cp) || isDigit(cp) || isCombiningMark(cp)) {
+          localStart -= 2;
+          continue;
+        }
+        break;
+      }
+    }
+    if (cu >= 0xd800 && cu <= 0xdfff) {
+      break;
+    }
+    if (isBaseLetter(cu) || isDigit(cu) || isCombiningMark(cu)) {
+      localStart--;
+      continue;
+    }
+    break;
+  }
+
+  const words = extractWordSpans(text, localStart, endBound);
+  return words.length > 0 ? words[words.length - 1] : undefined;
 }
 
 function countLettersInString(s: string): number {
@@ -767,8 +972,7 @@ export function segmentDocument(
       let rejected = false;
 
       // Determine next word after `look` (for Class T, Rule 2 exception, Rule 4)
-      const nextWordList = extractWordSpans(masked, look, Math.min(hr.end, look + 160));
-      const nextWord = nextWordList[0];
+      const nextWord = extractFirstWordSpan(masked, look, Math.min(hr.end, look + 160));
 
       if (cu === 46) {
         // Rule 3: decimal (`DIGIT '.' DIGIT`)
@@ -825,8 +1029,7 @@ export function segmentDocument(
           // Rule 2: Single uppercase initial + `.`
           if (!rejected && isSingleUpperInitialWithDot(cleanTok)) {
             const cleanTokOffset = tokStart + (rawTok.length - cleanTok.length);
-            const prevWords = extractWordSpans(masked, sentStart, cleanTokOffset);
-            const prevW = prevWords.length > 0 ? prevWords[prevWords.length - 1] : undefined;
+            const prevW = extractLastWordSpanBefore(masked, sentStart, cleanTokOffset);
             const prevLower = prevW !== undefined ? normLower(prevW.text) : "";
             const hasValidPreceder = INITIAL_TERMINAL_PRECEDERS.has(prevLower);
             let hasValidNext = false;

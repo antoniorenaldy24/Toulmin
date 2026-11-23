@@ -819,11 +819,83 @@ function parseAsciiInt1to4(s: string): number | null {
   return Number(s);
 }
 
+interface NumericLookbackState {
+  cursor: number;
+  w1: string | undefined;
+  w2: string | undefined;
+  tokStart: number;
+  tokEnd: number;
+  inTok: boolean;
+}
+
+function advanceNumericLookback(
+  text: string,
+  state: NumericLookbackState,
+  lastMarkerEnd: number,
+  p: number,
+): void {
+  if (lastMarkerEnd > state.cursor) {
+    state.cursor = lastMarkerEnd;
+    state.w1 = undefined;
+    state.w2 = undefined;
+    state.tokStart = lastMarkerEnd;
+    state.tokEnd = lastMarkerEnd;
+    state.inTok = false;
+  }
+
+  let segStart = state.cursor;
+  for (let k = p - 1; k >= state.cursor; k--) {
+    const cp = text.charCodeAt(k);
+    if (isMaskChar(cp) || isSentenceStopChar(cp)) {
+      segStart = k + 1;
+      state.w1 = undefined;
+      state.w2 = undefined;
+      state.tokStart = segStart;
+      state.tokEnd = segStart;
+      state.inTok = false;
+      break;
+    }
+  }
+
+  let aStart = -1;
+  let aEnd = -1;
+  let bStart = -1;
+  let bEnd = -1;
+  forEachWordSpan(text, segStart, p, undefined, (ws, we) => {
+    aStart = bStart;
+    aEnd = bEnd;
+    bStart = ws;
+    bEnd = we;
+  });
+  if (aStart !== -1) {
+    state.w2 = text.slice(aStart, aEnd);
+    state.w1 = text.slice(bStart, bEnd);
+  } else if (bStart !== -1) {
+    state.w2 = state.w1;
+    state.w1 = text.slice(bStart, bEnd);
+  }
+
+  for (let i = segStart; i < p; i++) {
+    if (isSpace(text.charCodeAt(i))) {
+      state.inTok = false;
+    } else {
+      if (!state.inTok) {
+        state.tokStart = i;
+        state.inTok = true;
+      }
+      state.tokEnd = i + 1;
+    }
+  }
+
+  state.cursor = p;
+}
+
 function tryParseNumericBracket(
   text: string,
   p: number,
   q: number,
   lastMarkerEnd: number,
+  numericLookback: NumericLookbackState,
   options: ScanCitationsOptions | undefined,
 ): CitationMarker | null {
   const inner = text.slice(p + 1, q);
@@ -883,36 +955,19 @@ function tryParseNumericBracket(
     }
   }
 
-  // Extract token immediately before `[` and last 2 words before `[` (within same sentence/block)
-  let lookbackStart = lastMarkerEnd;
-  for (let k = p - 1; k >= lastMarkerEnd; k--) {
-    const cp = text.charCodeAt(k);
-    if (isMaskChar(cp) || isSentenceStopChar(cp)) {
-      lookbackStart = k + 1;
-      break;
-    }
-  }
-
-  let tokEnd = p;
-  while (tokEnd > lookbackStart && isSpace(text.charCodeAt(tokEnd - 1))) {
-    tokEnd--;
-  }
-  let tokStart = tokEnd;
-  while (tokStart > lookbackStart && !isSpace(text.charCodeAt(tokStart - 1))) {
-    tokStart--;
-  }
-  const lastTok = text.slice(tokStart, tokEnd);
-  if (lastTok.endsWith("\u00B1")) {
+  // Advance incremental O(n) lookback for token immediately before `[` and last 2 words before `[`
+  advanceNumericLookback(text, numericLookback, lastMarkerEnd, p);
+  if (
+    numericLookback.tokEnd > numericLookback.tokStart &&
+    text.charCodeAt(numericLookback.tokEnd - 1) === 0x00b1
+  ) {
     return null;
   }
 
-  const prevWords = extractWordSpans(text, lookbackStart, p);
-  const w1 = prevWords.length >= 1 ? prevWords[prevWords.length - 1] : undefined;
-  const w2 = prevWords.length >= 2 ? prevWords[prevWords.length - 2] : undefined;
-  if (w1 !== undefined && INTERVAL_CONTEXT_WORDS.has(normLower(w1.text))) {
+  if (numericLookback.w1 !== undefined && INTERVAL_CONTEXT_WORDS.has(normLower(numericLookback.w1))) {
     return null;
   }
-  if (w2 !== undefined && INTERVAL_CONTEXT_WORDS.has(normLower(w2.text))) {
+  if (numericLookback.w2 !== undefined && INTERVAL_CONTEXT_WORDS.has(normLower(numericLookback.w2))) {
     return null;
   }
 
@@ -923,6 +978,9 @@ function tryParseNumericBracket(
       expanded[0]! < expanded[1]!) ||
     (segments.length === 1 && singleRangeLo !== -1 && singleRangeLo < singleRangeHi);
 
+  const lastTok = isExactTwoNumberInterval
+    ? text.slice(numericLookback.tokStart, numericLookback.tokEnd)
+    : "";
   if (isExactTwoNumberInterval && isBareNumberToken(lastTok)) {
     let after = q + 1;
     while (after < text.length && isSpace(text.charCodeAt(after))) {
@@ -1405,6 +1463,14 @@ export function scanCitations(text: string, options?: ScanCitationsOptions): Cit
   let p = 0;
   let docxIdx = 0;
   let lastMarkerEnd = 0;
+  const numericLookback: NumericLookbackState = {
+    cursor: 0,
+    w1: undefined,
+    w2: undefined,
+    tokStart: 0,
+    tokEnd: 0,
+    inTok: false,
+  };
 
   while (p < n) {
     while (docxIdx < sortedDocx.length && sortedDocx[docxIdx]!.end <= p) {
@@ -1486,7 +1552,7 @@ export function scanCitations(text: string, options?: ScanCitationsOptions): Cit
             p = pandoc.end;
             continue;
           }
-          const numeric = tryParseNumericBracket(text, p, q, lastMarkerEnd, options);
+          const numeric = tryParseNumericBracket(text, p, q, lastMarkerEnd, numericLookback, options);
           if (numeric !== null) {
             markers.push(numeric);
             lastMarkerEnd = numeric.end;

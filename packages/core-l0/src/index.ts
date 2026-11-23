@@ -359,3 +359,34 @@ export type {
   SelectRowCellInput,
   ShapedWindowResult,
 } from "./chunk.js";
+
+export {
+  DOI_PREFIX_MAX_DIGITS,
+  DOI_PREFIX_MIN_DIGITS,
+  DOI_SUFFIX_MAX_LEN,
+  INJ12_URL_MAX_LEN,
+  INVISIBLE_CHARS_BLOCK_THRESHOLD,
+  MIXED_SCRIPT_BLOCK_THRESHOLD,
+  buildDetectText,
+  compatFold,
+  countMixedScriptWords,
+  createSanitizerUnitBlocker,
+  escapeEvidenceDelimiters,
+  foldConfusables,
+  isEvidenceUnitBlocked,
+  isValidPromptDoi,
+  sanitizeMetadataField,
+  sanitizeText,
+  stripMarks,
+  wrapEvidenceBlock,
+} from "./sanitize.js";
+export type {
+  MetadataFieldName,
+  SanitizeBlockReason,
+  SanitizeLogReason,
+  SanitizeMetadataResult,
+  SanitizeOptions,
+  SanitizeReason,
+  SanitizeResult,
+  SanitizeTier,
+} from "./sanitize.js";

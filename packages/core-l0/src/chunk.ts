@@ -13,6 +13,7 @@ import {
   codePointAtSafe,
   isBaseLetter,
   isDigit,
+  isLetter,
   isLower,
   isSpace,
   norm,
@@ -20,9 +21,10 @@ import {
   sha256hex,
   utf8Encode,
 } from "./norm.js";
-import { formatCanonicalDecimal } from "./numberParser.js";
+import { formatCanonicalDecimal, parseFiniteNumberAt } from "./numberParser.js";
 import { BM25_STOPWORDS, porterStem } from "./porter.js";
 import { extractQuantities } from "./quantity.js";
+import { scanSuffixUnitFast } from "./units.js";
 import {
   SectionTracker,
   createEmptyImportQualityReport,
@@ -892,6 +894,252 @@ function emitBm25NumericTokensForWindowTuple(
   return [fmt(qt.valueNorm)];
 }
 
+const EMPTY_NORM_MAP: readonly number[] = [];
+
+function matchAsciiWordToken(wordText: string, queryTerms: ReadonlySet<string>): boolean {
+  if (isPureAsciiLetters(wordText)) {
+    const lower = asciiLower(wordText);
+    return !BM25_STOPWORDS.has(lower) && queryTerms.has(porterStem(lower));
+  }
+  return matchesQueryWordToken(wordText, queryTerms);
+}
+
+/**
+ * Linear-time fast path for clean ASCII `<leading-finite-number><letter-tail>` surface tokens
+ * (e.g. `"30mg"`, `"20mg"`, `"30percent"`, `"5.2mg/dL"`), preserving exact `tokBM25` Rule 8 masking
+ * without paying per-token `extractQuantities` / SHA-256 overhead. Returns the unmasked tail or
+ * `null` when full `tokBM25` inspection is needed.
+ */
+function tryStripSimpleLeadingAsciiNumber(wordText: string): string | null {
+  const n = wordText.length;
+  if (n < 2) {
+    return null;
+  }
+  const c0 = wordText.charCodeAt(0);
+  if (c0 < 48 || c0 > 57) {
+    return null;
+  }
+  for (let i = 1; i < n; i++) {
+    if (wordText.charCodeAt(i) >= 0x80) {
+      return null;
+    }
+  }
+  const num = parseFiniteNumberAt(wordText, wordText, EMPTY_NORM_MAP, 0, true, true);
+  if (num === null || num.endNorm <= 0 || num.endNorm >= n) {
+    return null;
+  }
+  const tailStart = num.endNorm;
+  const cAfter = wordText.charCodeAt(tailStart);
+  const isAlpha = (cAfter >= 65 && cAfter <= 90) || (cAfter >= 97 && cAfter <= 122);
+  if (!isAlpha) {
+    return null;
+  }
+  // Defer e/E/x/X suffixes so scientific-notation / multiplication edges go through full tokBM25.
+  if (cAfter === 101 || cAfter === 69 || cAfter === 120 || cAfter === 88) {
+    return null;
+  }
+  for (let i = tailStart; i < n; i++) {
+    const ch = wordText.charCodeAt(i);
+    if (
+      (ch >= 48 && ch <= 57) ||
+      ch === 36 || // '$'
+      ch === 96 || // '`'
+      ch === 92 || // '\'
+      ch === 37 // '%'
+    ) {
+      return null;
+    }
+  }
+  if (wordText.includes("<!--") || wordText.includes("---")) {
+    return null;
+  }
+  if (num.isYearIntCandidate) {
+    const lowerWord = asciiLower(wordText);
+    const suf = scanSuffixUnitFast(wordText, lowerWord, tailStart, false, true);
+    if (suf === null) {
+      return null;
+    }
+  }
+  return wordText.slice(tailStart);
+}
+
+function classifySurfaceWordToken(wordText: string): {
+  readonly hasPotentialLetter: boolean;
+  readonly needsBm25Fallback: boolean;
+} {
+  const n = wordText.length;
+  let hasPotentialLetter = false;
+  let hasBoundaryNumTrigger = false;
+  let dollarCount = 0;
+  let backtickCount = 0;
+  let hasBackslash = false;
+  let hasPct = false;
+  let prevIsAsciiAlnum = false;
+
+  for (let i = 0; i < n; ) {
+    const cu = wordText.charCodeAt(i);
+    if (cu < 0x80) {
+      if ((cu >= 65 && cu <= 90) || (cu >= 97 && cu <= 122)) {
+        hasPotentialLetter = true;
+        prevIsAsciiAlnum = true;
+      } else if (cu >= 48 && cu <= 57) {
+        if (!prevIsAsciiAlnum) {
+          hasBoundaryNumTrigger = true;
+        }
+        prevIsAsciiAlnum = true;
+      } else {
+        prevIsAsciiAlnum = false;
+        if (cu === 36 /* '$' */) {
+          dollarCount++;
+        } else if (cu === 96 /* '`' */) {
+          backtickCount++;
+        } else if (cu === 92 /* '\\' */) {
+          hasBackslash = true;
+        } else if (cu === 37 /* '%' */) {
+          hasPct = true;
+        }
+      }
+      i++;
+      continue;
+    }
+
+    const u = codePointAtSafe(wordText, i);
+    const cp = u.cp;
+    if (!u.isUnpairedSurrogate) {
+      if (
+        isDigit(cp) ||
+        cp === 0x00b2 ||
+        cp === 0x00b3 ||
+        cp === 0x00b9 ||
+        (cp >= 0x2070 && cp <= 0x2079) ||
+        (cp >= 0xff10 && cp <= 0xff19) ||
+        (cp >= 0xe000 && cp <= 0xf8ff)
+      ) {
+        hasBoundaryNumTrigger = true;
+      }
+      if (isBaseLetter(cp) || (cp >= 0xe000 && cp <= 0xf8ff) || (cp >= 0x24b6 && cp <= 0x24e9)) {
+        hasPotentialLetter = true;
+      }
+      if (cp === 0x27e6) {
+        return { hasPotentialLetter: true, needsBm25Fallback: true };
+      }
+    }
+    prevIsAsciiAlnum = false;
+    i += u.len;
+  }
+
+  if (!hasPotentialLetter) {
+    return { hasPotentialLetter: false, needsBm25Fallback: false };
+  }
+
+  const hasMaskTrigger =
+    dollarCount >= 2 ||
+    backtickCount >= 2 ||
+    hasPct ||
+    (hasBackslash &&
+      (wordText.includes("\\(") ||
+        wordText.includes("\\[") ||
+        wordText.includes("\\begin{") ||
+        wordText.includes("\\section") ||
+        wordText.includes("\\documentclass") ||
+        wordText.includes("\\footnote"))) ||
+    wordText.includes("<!--") ||
+    wordText.includes("---");
+
+  return {
+    hasPotentialLetter: true,
+    needsBm25Fallback: hasBoundaryNumTrigger || hasMaskTrigger,
+  };
+}
+
+function matchesQueryWordToken(wordText: string, queryTerms: ReadonlySet<string>): boolean {
+  const n = wordText.length;
+  let allAscii = true;
+  for (let i = 0; i < n; i++) {
+    if (wordText.charCodeAt(i) >= 0x80) {
+      allAscii = false;
+      break;
+    }
+  }
+
+  if (allAscii) {
+    let i = 0;
+    while (i < n) {
+      const cu = wordText.charCodeAt(i);
+      const isLet = (cu >= 65 && cu <= 90) || (cu >= 97 && cu <= 122);
+      const isDig = cu >= 48 && cu <= 57;
+      if (!isLet && !isDig) {
+        i++;
+        continue;
+      }
+      const runStart = i;
+      let hasLetter = isLet;
+      i++;
+      while (i < n) {
+        const c = wordText.charCodeAt(i);
+        if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122)) {
+          hasLetter = true;
+          i++;
+        } else if (c >= 48 && c <= 57) {
+          i++;
+        } else {
+          break;
+        }
+      }
+      if (hasLetter) {
+        const tokLower = asciiLower(wordText.slice(runStart, i));
+        if (!BM25_STOPWORDS.has(tokLower) && queryTerms.has(porterStem(tokLower))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  const lower = normLower(wordText);
+  const ln = lower.length;
+  let i = 0;
+  while (i < ln) {
+    const unit = codePointAtSafe(lower, i);
+    if (unit.isUnpairedSurrogate) {
+      i++;
+      continue;
+    }
+    const startLet = isLetter(unit.cp, false);
+    if (!startLet && !isDigit(unit.cp)) {
+      i += unit.len;
+      continue;
+    }
+    const runStart = i;
+    let hasLetter = startLet;
+    let prevIsLetter = startLet;
+    i += unit.len;
+    while (i < ln) {
+      const next = codePointAtSafe(lower, i);
+      if (next.isUnpairedSurrogate) {
+        break;
+      }
+      const nextLet = isLetter(next.cp, prevIsLetter);
+      if (nextLet || isDigit(next.cp)) {
+        if (nextLet) {
+          hasLetter = true;
+        }
+        prevIsLetter = nextLet;
+        i += next.len;
+      } else {
+        break;
+      }
+    }
+    if (hasLetter) {
+      const tok = lower.slice(runStart, i);
+      if (!BM25_STOPWORDS.has(tok) && queryTerms.has(porterStem(tok))) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 /**
  * Window shaping (`02` §8.7):
  * A unit longer than 60 words is reduced to the 60-word window with the most
@@ -1012,6 +1260,7 @@ export function shapeEvidenceWindow(
       }
     }
 
+    const bm25FallbackCache = new Map<string, boolean>();
     for (let i = 0; i < wordCount; i++) {
       if (numericWordCovered[i] === 1) {
         continue;
@@ -1024,11 +1273,29 @@ export function shapeEvidenceWindow(
           wordHit = true;
         }
       } else {
-        const toks = tokBM25(ws.text, { deleteCitations: false, applyLatex: false });
-        for (let t = 0; t < toks.length; t++) {
-          if (queryTerms.has(toks[t]!)) {
-            wordHit = true;
-            break;
+        const cls = classifySurfaceWordToken(ws.text);
+        if (cls.hasPotentialLetter) {
+          if (cls.needsBm25Fallback) {
+            const strippedTail = tryStripSimpleLeadingAsciiNumber(ws.text);
+            if (strippedTail !== null) {
+              wordHit = matchAsciiWordToken(strippedTail, queryTerms);
+            } else {
+              const cached = bm25FallbackCache.get(ws.text);
+              if (cached !== undefined) {
+                wordHit = cached;
+              } else {
+                const toks = tokBM25(ws.text, { deleteCitations: false, applyLatex: false });
+                for (let t = 0; t < toks.length; t++) {
+                  if (queryTerms.has(toks[t]!)) {
+                    wordHit = true;
+                    break;
+                  }
+                }
+                bm25FallbackCache.set(ws.text, wordHit);
+              }
+            }
+          } else {
+            wordHit = matchesQueryWordToken(ws.text, queryTerms);
           }
         }
       }

@@ -142,24 +142,18 @@ export interface LatexSubstitutionsResult {
   readonly unregisteredCommands: readonly string[];
 }
 
-function findProtectedSpanAt(spans: readonly TextRangeLike[], pos: number): TextRangeLike | null {
+function lowerBoundProtectedEnd(spans: readonly TextRangeLike[], pos: number): number {
   let lo = 0;
-  let hi = spans.length - 1;
-  while (lo <= hi) {
-    const mid = (lo + hi) >> 1;
-    const span = spans[mid];
-    if (span === undefined) {
-      break;
-    }
-    if (pos < span.start) {
-      hi = mid - 1;
-    } else if (pos >= span.end) {
+  let hi = spans.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (spans[mid]!.end <= pos) {
       lo = mid + 1;
     } else {
-      return span;
+      hi = mid;
     }
   }
-  return null;
+  return lo;
 }
 
 function buildBraceCloseMapSkippingProtected(
@@ -454,13 +448,21 @@ function substituteSlice(
   const customCiteMacros = options?.customCiteMacros;
   const report = options?.report;
   const activeProtected = fixedOrigin === null ? protectedSpans : undefined;
+  let protIdx =
+    activeProtected !== undefined && activeProtected.length > 0
+      ? lowerBoundProtectedEnd(activeProtected, start)
+      : 0;
   let i = start;
 
   while (i < end) {
-    if (activeProtected !== undefined && activeProtected.length > 0) {
-      const prot = findProtectedSpanAt(activeProtected, i);
-      if (prot !== null) {
-        const stop = Math.min(end, prot.end);
+    let nextProt: TextRangeLike | undefined;
+    if (activeProtected !== undefined) {
+      while (protIdx < activeProtected.length && activeProtected[protIdx]!.end <= i) {
+        protIdx++;
+      }
+      nextProt = activeProtected[protIdx];
+      if (nextProt !== undefined && i >= nextProt.start) {
+        const stop = Math.min(end, nextProt.end);
         if (out.map === null) {
           out.chars.push(input.slice(i, stop));
         } else {
@@ -886,13 +888,8 @@ function substituteSlice(
     // Ordinary character
     if (out.map === null) {
       let runLimit = end;
-      if (activeProtected !== undefined && activeProtected.length > 0) {
-        for (const sp of activeProtected) {
-          if (sp.start > i && sp.start < runLimit) {
-            runLimit = sp.start;
-            break;
-          }
-        }
+      if (nextProt !== undefined && nextProt.start < runLimit) {
+        runLimit = nextProt.start;
       }
       let runEnd = i + 1;
       while (runEnd < runLimit) {
