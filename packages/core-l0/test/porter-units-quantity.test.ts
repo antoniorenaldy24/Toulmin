@@ -528,4 +528,87 @@ describe("quantity.ts helpers & AC-L0-25 edge cases", () => {
     }
     expect(normalizedClaim("1e310 kg")).toBe("1e310 kg");
   });
+
+  it("respects explicit applyLatex: false even when backslashes are present", () => {
+    const tex = "\\SI{5}{\\milli\\gram}";
+    const withDefaultLatex = extractQuantities(tex);
+    expect(withDefaultLatex).toHaveLength(1);
+    expect(withDefaultLatex[0]!.unitCanon).toBe("mg");
+    expect(normalizedClaim(tex)).toBe("\u27e8v:5mg\u27e9");
+
+    const disabledQ = extractQuantities(tex, { applyLatex: false });
+    expect(disabledQ).toHaveLength(1);
+    expect(disabledQ[0]!.valueNorm).toBe(5);
+    expect(disabledQ[0]!.unitCanon).toBe("");
+
+    const disabledClaim = normalizedClaim(tex, { applyLatex: false });
+    expect(disabledClaim).not.toBe("\u27e8v:5mg\u27e9");
+    expect(disabledClaim).toContain("\u27e8v:5\u27e9");
+  });
+
+  it("handles huge >=309-digit exponents safely without mantissa fallback", () => {
+    const bigDigits = "9".repeat(310);
+    const bigSups = "\u2079".repeat(310);
+    for (const hugeOver of [
+      `1e${bigDigits}`,
+      `1 \u00d7 10^${bigDigits}`,
+      `1 \u00d7 10^{${bigDigits}}`,
+      `1 \u00d7 10${bigSups}`,
+    ]) {
+      expect(extractQuantities(hugeOver)).toEqual([]);
+      expect(normalizedClaim(hugeOver)).not.toContain("\u27e8v:1\u27e9");
+    }
+
+    for (const hugeUnder of [`1e-${bigDigits}`, `-1e-${bigDigits}`]) {
+      const q = extractQuantities(hugeUnder);
+      expect(q).toHaveLength(1);
+      expect(Object.is(q[0]!.valueNorm, 0)).toBe(true);
+      expect(normalizedClaim(hugeUnder)).toBe("\u27e8v:0\u27e9");
+    }
+
+    const zeroExp = extractQuantities(`0e${bigDigits}`);
+    expect(zeroExp).toHaveLength(1);
+    expect(Object.is(zeroExp[0]!.valueNorm, 0)).toBe(true);
+
+    const huge10k = "1e" + "9".repeat(9_998);
+    expect(medianMs(() => extractQuantities(huge10k))).toBeLessThanOrEqual(5);
+    expect(medianMs(() => normalizedClaim(huge10k))).toBeLessThanOrEqual(5);
+  });
+
+  it("normalizes -0 to +0 in Rule 4 p-values", () => {
+    for (const pNegZero of ["p = -0.0", "p = -0"]) {
+      const res = extractQuantities(pNegZero);
+      expect(res).toHaveLength(1);
+      expect(res[0]!.metricClass).toBe("p_value");
+      expect(res[0]!.pComparator).toBe("=");
+      expect(Object.is(res[0]!.valueNorm, 0)).toBe(true);
+      expect(Object.is(res[0]!.valueLo, 0)).toBe(true);
+      expect(Object.is(res[0]!.valueHi, 0)).toBe(true);
+    }
+  });
+
+  it("applies identical percentage-context detection across extractQuantities and normalizedClaim", () => {
+    for (const sample of [
+      "A 2 points drop from 5 per cent.",
+      "A 2 points drop from 5 pct.",
+    ]) {
+      const q = extractQuantities(sample);
+      expect(q).toHaveLength(2);
+      expect(q[0]!.unitCanon).toBe("pp");
+      expect(q[0]!.valueNorm).toBe(2);
+      expect(q[1]!.unitCanon).toBe("%");
+      expect(q[1]!.valueNorm).toBe(5);
+      expect(normalizedClaim(sample)).toBe("a \u27e8v:2pp\u27e9 drop from \u27e8v:5%\u27e9");
+    }
+
+    for (const negSample of [
+      "A 2 points drop per century.",
+      "A 2 points drop on the score.",
+    ]) {
+      const q = extractQuantities(negSample);
+      expect(q).toHaveLength(1);
+      expect(q[0]!.unitCanon).toBe("");
+      expect(normalizedClaim(negSample)).not.toContain("\u27e8v:2pp\u27e9");
+    }
+  });
 });

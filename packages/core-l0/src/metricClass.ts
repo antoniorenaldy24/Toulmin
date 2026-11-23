@@ -29,7 +29,7 @@ export interface MetricClassification {
   readonly metricFromUnit: boolean;
 }
 
-export const EFFECT_SIZE_SINGLE_WORDS: ReadonlySet<string> = new Set([
+const EFFECT_SIZE_SINGLE_WORDS: ReadonlySet<string> = new Set([
   "beta",
   "β",
   "correlation",
@@ -38,7 +38,7 @@ export const EFFECT_SIZE_SINGLE_WORDS: ReadonlySet<string> = new Set([
   "md"
 ]);
 
-export const SAMPLE_SIZE_SINGLE_WORDS: ReadonlySet<string> = new Set([
+const SAMPLE_SIZE_SINGLE_WORDS: ReadonlySet<string> = new Set([
   "enrolled",
   "recruited",
   "randomized",
@@ -48,12 +48,79 @@ export const SAMPLE_SIZE_SINGLE_WORDS: ReadonlySet<string> = new Set([
   "cohort"
 ]);
 
-export const DOSE_SINGLE_WORDS: ReadonlySet<string> = new Set([
+const DOSE_SINGLE_WORDS: ReadonlySet<string> = new Set([
   "dose",
   "dosage",
   "administered",
   "given"
 ]);
+
+export interface DocMetricCues {
+  readonly hasEffectCue: boolean;
+  readonly hasSampleCue: boolean;
+  readonly hasDoseCue: boolean;
+}
+
+/**
+ * Scans normalized document/table tokens once to detect whether any metric cue words exist
+ * before paying per-tuple ±6 window inspection costs (`02` §7.4).
+ */
+export function detectDocMetricCues(
+  normLowerText: string,
+  wordSpans: readonly { readonly text: string }[],
+  hasLetterMask: Uint8Array,
+  tableWindowWords: readonly string[] | null,
+  tableCombinedLower: string,
+): DocMetricCues {
+  let hasEffectCue =
+    normLowerText.includes("=") ||
+    normLowerText.includes("r^2") ||
+    normLowerText.includes("r\u00b2") ||
+    tableCombinedLower.includes("=") ||
+    tableCombinedLower.includes("r^2") ||
+    tableCombinedLower.includes("r\u00b2");
+  let hasSampleCue = false;
+  let hasDoseCue = false;
+
+  const inspectWord = (w: string): boolean => {
+    if (
+      !hasEffectCue &&
+      (EFFECT_SIZE_SINGLE_WORDS.has(w) ||
+        w === "effect" ||
+        w === "cohen" ||
+        w === "cohen's" ||
+        w === "cohen\u2019s")
+    ) {
+      hasEffectCue = true;
+    }
+    if (!hasSampleCue && (SAMPLE_SIZE_SINGLE_WORDS.has(w) || w === "sample")) {
+      hasSampleCue = true;
+    }
+    if (!hasDoseCue && DOSE_SINGLE_WORDS.has(w)) {
+      hasDoseCue = true;
+    }
+    return hasEffectCue && hasSampleCue && hasDoseCue;
+  };
+
+  if (tableWindowWords !== null) {
+    for (let i = 0; i < tableWindowWords.length; i++) {
+      if (inspectWord(tableWindowWords[i]!)) {
+        return { hasEffectCue, hasSampleCue, hasDoseCue };
+      }
+    }
+  }
+
+  for (let i = 0; i < wordSpans.length; i++) {
+    if (hasLetterMask[i] !== 1) {
+      continue;
+    }
+    if (inspectWord(wordSpans[i]!.text)) {
+      break;
+    }
+  }
+
+  return { hasEffectCue, hasSampleCue, hasDoseCue };
+}
 
 function isWordCharAsciiOrLetter(text: string, idx: number): boolean {
   if (idx < 0 || idx >= text.length) {

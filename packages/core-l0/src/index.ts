@@ -226,22 +226,28 @@ export type {
 } from "./metricClass.js";
 
 export {
-  COUNT_NOUNS,
   computeSigDigits,
+  formatCanonicalDecimal,
+  isEnglishLocale,
+} from "./numberParser.js";
+export type { TextRange } from "./numberParser.js";
+
+export {
+  COUNT_NOUNS,
   computeTupleId,
   extractQuantities,
   extractQuantitiesWithMeta,
-  formatCanonicalDecimal,
-  isEnglishLocale,
-  normalizedClaim,
-  normalizedClaimHash,
 } from "./quantity.js";
 export type {
-  ClaimNormOptions,
   ExtractQuantitiesOptions,
   PComparator,
   QuantExtractionMeta,
   QuantTuple,
-  TextRange,
   TupleSource,
 } from "./quantity.js";
+
+export {
+  normalizedClaim,
+  normalizedClaimHash,
+} from "./claimHash.js";
+export type { ClaimNormOptions } from "./claimHash.js";
