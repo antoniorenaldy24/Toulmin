@@ -10,7 +10,8 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
     "test": "pnpm -r --workspace-concurrency=1 --if-present test",
-    "generate:l0-data": "tsx tools/generate-l0-data.ts"
+    "generate:l0-data": "tsx tools/generate-l0-data.ts",
+    "generate:wordlist": "tsx tools/generate-wordlist.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",

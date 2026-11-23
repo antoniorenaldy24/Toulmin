@@ -8,6 +8,9 @@ import { describe, expect, it } from "vitest";
 import {
   generalCategory,
   getUnicode151BinBytes,
+  getWordlistEnSet,
+  getWordlistEnText,
+  isInWordlistEn,
   parseUnicode151Bin,
   sha256hex,
   simpleLowerCodePoint
@@ -48,6 +51,26 @@ describe("Tier A bundled asset parity & ESLint boundary guardrails", () => {
 
     const nodeSha = createHash("sha256").update("a\ufffdb", "utf8").digest("hex");
     expect(sha256hex("a" + String.fromCharCode(0xd800) + "b")).toBe(nodeSha);
+  });
+
+  it("wordlist_en.txt on disk is 50,000 sorted words and byte-identical to embedded TS module", () => {
+    const diskText = readFileSync(
+      resolve(REPO_ROOT, "packages", "core-l0", "wordlist_en.txt"),
+      "utf8"
+    );
+    const embeddedText = getWordlistEnText();
+
+    expect(embeddedText).toBe(diskText);
+
+    const lines = diskText.split("\n").filter((w) => w.length > 0);
+    expect(lines).toHaveLength(50_000);
+
+    const set = getWordlistEnSet();
+    expect(set.size).toBe(50_000);
+    expect(isInWordlistEn("mortality")).toBe(true);
+    expect(isInWordlistEn("treatment")).toBe(true);
+    expect(isInWordlistEn("long-term")).toBe(true);
+    expect(isInWordlistEn("longterm")).toBe(false);
   });
 
   it("packages/core-l0/src has zero forbidden regex classes or nested quantifiers", async () => {

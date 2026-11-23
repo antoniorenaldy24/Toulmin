@@ -4,11 +4,18 @@ import {
   applyLatexSubstitutions,
   buildBm25Corpus,
   buildBm25Query,
+  chunkAbstract,
+  chunkJatsXml,
+  chunkPdfPages,
+  chunkPhysicalTableRow,
+  computeChunkId,
   computeClaimCoverage,
+  dehyphenatePdfLines,
   extractCorporateInitials,
   extractQuantities,
   foldLatin,
   gridKey,
+  isInWordlistEn,
   mathText,
   norm,
   normLower,
@@ -24,6 +31,7 @@ import {
   SectionTracker,
   segmentDocument,
   selectEvidenceCandidates,
+  shapeEvidenceWindow,
   tokBM25,
 } from "../src/index.js";
 
@@ -397,5 +405,120 @@ describe("examples.meta.test.ts — 02 §2–§7 & 01 §3.2 normative examples (
     const emptySel = selectEvidenceCandidates(ftCorpus, "r-none", q4);
     expect(emptySel.candidates).toBe(0);
     expect(emptySel.selected).toEqual([]);
+  });
+
+  it("§8.7 ALL evidence chunking, chunkId, dehyphenation, JATS, PDF, shaping, and physical Select-row normative examples", () => {
+    // chunkId format & content-sensitivity
+    const textA = "Mortality fell significantly.";
+    const cidA = computeChunkId("ref-87", "ABSTRACT", "abstract", 0, textA);
+    expect(cidA).toHaveLength(24);
+    expect(cidA).not.toBe(computeChunkId("ref-87", "ABSTRACT", "abstract", 0, "Mortality rose significantly."));
+
+    // Abstract: JATS tags stripped, entities decoded, no math masking ($5 stays intact), <= 12-word neighbour extension
+    const absUnits = chunkAbstract(
+      "ref-87",
+      "<jats:p>Cost was $5 per dose &amp; p &lt; 0.05.</jats:p><jats:p>All forty adult trial subjects completed the twelve-month follow-up phase across hospital sites.</jats:p>",
+    );
+    expect(absUnits).toHaveLength(2);
+    expect(absUnits[0]!.sourceKind).toBe("ABSTRACT");
+    expect(absUnits[0]!.section).toBe("abstract");
+    expect(absUnits[0]!.text).toBe(
+      "Cost was $5 per dose & p < 0.05. All forty adult trial subjects completed the twelve-month follow-up phase across hospital sites.",
+    );
+    expect(absUnits[1]!.text).toBe(
+      "All forty adult trial subjects completed the twelve-month follow-up phase across hospital sites.",
+    );
+
+    // PDF dehyphenation normative rule: "long-term" stays "long-term" while real joined words merge
+    expect(isInWordlistEn("long-term")).toBe(true);
+    expect(isInWordlistEn("mortality")).toBe(true);
+    expect(dehyphenatePdfLines(["long-", "term therapy reduced mor-", "tality."])).toBe(
+      "long-term therapy reduced mortality.",
+    );
+
+    // PDF line reconstruction sup/sub (^ and _), 2-col, references cut >= 60%, running H/F, hidden < 2pt
+    const pdfRes = chunkPdfPages("ref-87", [
+      {
+        pageNumber: 1,
+        width: 600,
+        height: 800,
+        items: [
+          { str: "Running Header", x: 50, y: 780, width: 100, height: 9 },
+          { str: "Methods", x: 50, y: 730, width: 70, height: 14 },
+          { str: "CO", x: 50, y: 700, width: 16, height: 10 },
+          { str: "2", x: 66.5, y: 697, width: 6, height: 6 },
+          {
+            str: "fell across fourteen participating study clinics during routine treatment.",
+            x: 80,
+            y: 700,
+            width: 300,
+            height: 10,
+          },
+          { str: "hidden tiny instruction text ignored", x: 50, y: 660, width: 150, height: 1.5 },
+        ],
+      },
+      {
+        pageNumber: 2,
+        width: 600,
+        height: 800,
+        items: [
+          { str: "Running Header", x: 50, y: 780, width: 100, height: 9 },
+          { str: "Results", x: 50, y: 730, width: 70, height: 14 },
+          {
+            str: "Mortality dropped across all fourteen participating study hospital clinics during treatment.",
+            x: 50,
+            y: 700,
+            width: 400,
+            height: 10,
+          },
+        ],
+      },
+      {
+        pageNumber: 3,
+        width: 600,
+        height: 800,
+        items: [
+          { str: "Running Header", x: 50, y: 780, width: 100, height: 9 },
+          { str: "References", x: 50, y: 730, width: 90, height: 14 },
+          { str: "1. Smith 2020 omitted.", x: 50, y: 700, width: 160, height: 10 },
+        ],
+      },
+    ]);
+    expect(pdfRes.hiddenTextPages).toEqual([1]);
+    expect(pdfRes.units.map((u) => u.section)).toEqual(["methods", "results"]);
+    expect(pdfRes.units[0]!.text.startsWith("CO_2 fell")).toBe(true);
+
+    // JATS full text: mixed content flattened, <table-wrap> caption + <tr> units, <ref-list> dropped
+    const jatsRes = chunkJatsXml(
+      "ref-87",
+      "<article><body><sec><title>Results</title><p>Patients took <italic>Drug X</italic> <xref>[1]</xref> daily across fourteen participating clinical study hospital clinics.</p><table-wrap><caption><p>Summary of primary clinical events measured carefully across fourteen participating clinical hospital medical clinics.</p></caption><table><thead><tr><th>Arm</th><th>Rate</th></tr></thead><tbody><tr><td>Drug X</td><td>10%</td></tr></tbody></table></table-wrap></sec><ref-list><ref><mixed-citation>Omitted.</mixed-citation></ref></ref-list></body></article>",
+    );
+    expect(jatsRes.units.map((u) => [u.section, u.text])).toEqual([
+      ["results", "Patients took Drug X [1] daily across fourteen participating clinical study hospital clinics."],
+      ["results", "Summary of primary clinical events measured carefully across fourteen participating clinical hospital medical clinics."],
+      ["table", "Arm: Drug X; Rate: 10%"],
+    ]);
+
+    // Window shaping (> 60 words, ties -> earliest and strict max later) & Physical Select-row two-row header format
+    const words65Tie = Array.from({ length: 65 }, (_, i) => `tok${i}`);
+    words65Tie[0] = "mortality";
+    words65Tie[60] = "mortality";
+    const shapedTie = shapeEvidenceWindow(words65Tie.join(" "), "mortality");
+    expect(shapedTie.startWordIndex).toBe(0);
+    expect(shapedTie.wordCount).toBe(60);
+
+    const words65Max = Array.from({ length: 65 }, (_, i) => `tok${i}`);
+    words65Max[10] = "mortality";
+    words65Max[63] = "mortality";
+    const shapedMax = shapeEvidenceWindow(words65Max.join(" "), "mortality");
+    expect(shapedMax.startWordIndex).toBe(4);
+    expect(shapedMax.wordCount).toBe(60);
+
+    const phys = chunkPhysicalTableRow("ref-87", "0123456789abcdef0000", [
+      { upperHeader: "Treatment", header: "n (%)", cell: "48 (30%)" },
+    ]);
+    expect(phys.sourceKind).toBe("PHYSICAL_TABLE");
+    expect(phys.section).toBe("print:0123456789ab");
+    expect(phys.text).toBe("Treatment \u00b7 n (%): 48 (30%)");
   });
 });
