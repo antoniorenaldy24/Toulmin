@@ -2,6 +2,7 @@ export {
   GENERAL_CATEGORIES,
   NORM_TABLE,
   codePointAtSafe,
+  createSha256PrefixHasher,
   foldLatin,
   generalCategory,
   getUnicode151BinBytes,
@@ -19,6 +20,7 @@ export {
   isPunctuation,
   isSpace,
   isUpper,
+  lowercaseNormalized,
   norm,
   normLower,
   normLowerWithMap,
@@ -33,6 +35,7 @@ export type {
   GeneralCategory,
   NormResult,
   NormTable,
+  Sha256PrefixHasher,
   Unicode151Table
 } from "./norm.js";
 
@@ -190,3 +193,55 @@ export type {
   PartitionClausesWithTraceResult,
   PartitionedClause,
 } from "./clauses.js";
+
+export {
+  BM25_STOPWORDS,
+  PORTER_V1,
+  isStopword,
+  porterStem,
+} from "./porter.js";
+
+export {
+  UNIT_WORDS,
+  isKnownSuffixWordUnit,
+  sameFamily,
+  scanPrefixUnit,
+  scanSuffixUnit,
+  unitFamilyOf,
+} from "./units.js";
+export type {
+  SuffixScanOptions,
+  UnitFamily,
+  UnitMatch,
+} from "./units.js";
+
+export {
+  classifyMetricClass,
+  isMetricFromUnitClass,
+} from "./metricClass.js";
+export type {
+  MetricClass,
+  MetricClassInput,
+  MetricClassification,
+} from "./metricClass.js";
+
+export {
+  COUNT_NOUNS,
+  computeSigDigits,
+  computeTupleId,
+  extractQuantities,
+  extractQuantitiesWithMeta,
+  formatCanonicalDecimal,
+  isEnglishLocale,
+  normalizedClaim,
+  normalizedClaimHash,
+} from "./quantity.js";
+export type {
+  ClaimNormOptions,
+  ExtractQuantitiesOptions,
+  PComparator,
+  QuantExtractionMeta,
+  QuantTuple,
+  TextRange,
+  TupleSource,
+} from "./quantity.js";

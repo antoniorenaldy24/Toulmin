@@ -1,0 +1,86 @@
+{
+  "version": "porter_v1",
+  "standard": "Porter 1980 (Program 14(3): 130-137)",
+  "vowels": ["a", "e", "i", "o", "u"],
+  "step1a": [
+    { "suffix": "sses", "replacement": "ss" },
+    { "suffix": "ies", "replacement": "i" },
+    { "suffix": "ss", "replacement": "ss" },
+    { "suffix": "s", "replacement": "" }
+  ],
+  "step1b": {
+    "eed": { "suffix": "eed", "replacement": "ee", "minMeasure": 1 },
+    "pastOrProg": [
+      { "suffix": "ed", "replacement": "", "requiresVowel": true },
+      { "suffix": "ing", "replacement": "", "requiresVowel": true }
+    ],
+    "cleanupAppendE": ["at", "bl", "iz"],
+    "doubleConsonantKeep": ["l", "s", "z"],
+    "appendEOnMeasure1AndStarO": true
+  },
+  "step1c": [
+    { "suffix": "y", "replacement": "i", "requiresVowel": true }
+  ],
+  "step2": [
+    { "suffix": "ational", "replacement": "ate", "minMeasure": 1 },
+    { "suffix": "ization", "replacement": "ize", "minMeasure": 1 },
+    { "suffix": "iveness", "replacement": "ive", "minMeasure": 1 },
+    { "suffix": "fulness", "replacement": "ful", "minMeasure": 1 },
+    { "suffix": "ousness", "replacement": "ous", "minMeasure": 1 },
+    { "suffix": "tional", "replacement": "tion", "minMeasure": 1 },
+    { "suffix": "biliti", "replacement": "ble", "minMeasure": 1 },
+    { "suffix": "alism", "replacement": "al", "minMeasure": 1 },
+    { "suffix": "ation", "replacement": "ate", "minMeasure": 1 },
+    { "suffix": "entli", "replacement": "ent", "minMeasure": 1 },
+    { "suffix": "ousli", "replacement": "ous", "minMeasure": 1 },
+    { "suffix": "aliti", "replacement": "al", "minMeasure": 1 },
+    { "suffix": "iviti", "replacement": "ive", "minMeasure": 1 },
+    { "suffix": "enci", "replacement": "ence", "minMeasure": 1 },
+    { "suffix": "anci", "replacement": "ance", "minMeasure": 1 },
+    { "suffix": "izer", "replacement": "ize", "minMeasure": 1 },
+    { "suffix": "abli", "replacement": "able", "minMeasure": 1 },
+    { "suffix": "alli", "replacement": "al", "minMeasure": 1 },
+    { "suffix": "ator", "replacement": "ate", "minMeasure": 1 },
+    { "suffix": "eli", "replacement": "e", "minMeasure": 1 }
+  ],
+  "step3": [
+    { "suffix": "icate", "replacement": "ic", "minMeasure": 1 },
+    { "suffix": "ative", "replacement": "", "minMeasure": 1 },
+    { "suffix": "alize", "replacement": "al", "minMeasure": 1 },
+    { "suffix": "iciti", "replacement": "ic", "minMeasure": 1 },
+    { "suffix": "ical", "replacement": "ic", "minMeasure": 1 },
+    { "suffix": "ness", "replacement": "", "minMeasure": 1 },
+    { "suffix": "ful", "replacement": "", "minMeasure": 1 }
+  ],
+  "step4": [
+    { "suffix": "ement", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ance", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ence", "replacement": "", "minMeasure": 2 },
+    { "suffix": "able", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ible", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ment", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ant", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ent", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ion", "replacement": "", "minMeasure": 2, "stemEndsWithAny": ["s", "t"] },
+    { "suffix": "ism", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ate", "replacement": "", "minMeasure": 2 },
+    { "suffix": "iti", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ous", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ive", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ize", "replacement": "", "minMeasure": 2 },
+    { "suffix": "al", "replacement": "", "minMeasure": 2 },
+    { "suffix": "er", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ic", "replacement": "", "minMeasure": 2 },
+    { "suffix": "ou", "replacement": "", "minMeasure": 2 }
+  ],
+  "step5a": {
+    "suffix": "e",
+    "removeIfMeasureGt": 1,
+    "removeIfMeasureEqAndNotStarO": 1
+  },
+  "step5b": {
+    "suffix": "l",
+    "requiresDoubleConsonant": true,
+    "minMeasure": 2
+  }
+}

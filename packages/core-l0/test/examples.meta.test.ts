@@ -2,14 +2,19 @@ import { describe, expect, it } from "vitest";
 import {
   applyLatexSubstitutions,
   extractCorporateInitials,
+  extractQuantities,
   foldLatin,
   mathText,
   norm,
   normLower,
   normSentence,
+  normalizedClaim,
+  normalizedClaimHash,
   partitionClausesWithTrace,
+  porterStem,
   preMask,
   resolveCitationMarkers,
+  sameFamily,
   scanCitations,
   SectionTracker,
   segmentDocument,
@@ -18,9 +23,9 @@ import {
 /**
  * Meta-test running complete end-to-end Tier A algorithms over ALL normative
  * worked examples implemented so far in `docs/spec/02_L0_TIER_A_PRE_DECODE.md`
- * (§2–§6, spec §1.3 & `AC-L0-24`).
+ * (§2–§7, §8.1), `01` §3.2, and `03` §2.3/§2.6 (`02` §1.3, `AC-L0-24`).
  */
-describe("examples.meta.test.ts — 02 §2–§6 normative examples (AC-L0-24)", () => {
+describe("examples.meta.test.ts — 02 §2–§7 & 01 §3.2 normative examples (AC-L0-24)", () => {
   it("§2 normalization: decomposed umlaut, foldLatin, U+0130, zero-width preservation/deletion, and Lancet middle dot", () => {
     expect(norm("Mu\u0308ller").text).toBe("M\u00fcller");
     expect(foldLatin("M\u00fcller")).toBe("Muller");
@@ -247,5 +252,69 @@ describe("examples.meta.test.ts — 02 §2–§6 normative examples (AC-L0-24)",
     const s15 = "However, [2] reported that X reduces Y.";
     const ex15 = partitionClausesWithTrace(s15, scanCitations(s15));
     expect(ex15.clauses.map((c) => c.claimText)).toEqual(["reported that X reduces Y"]);
+  });
+
+  it("§7 value grammar, units, metric classes & keyLemmas normative examples", () => {
+    // §7.1 sign rule & locale grammar
+    const signEx = extractQuantities("COVID-19 raised IL-6 levels in 2018-2020.");
+    expect(signEx.map((t) => [t.valueRaw, t.valueNorm, t.valueLo, t.valueHi])).toEqual([
+      ["19", 19, 19, 19],
+      ["6", 6, 6, 6],
+      ["2018-2020", 2019, 2018, 2020],
+    ]);
+
+    expect(extractQuantities("12.345", { lang: "de" })[0]!.valueNorm).toBe(12345);
+    expect(extractQuantities("1.234.567", { lang: "de" })[0]!.valueNorm).toBe(1234567);
+    expect(extractQuantities("0.045", { lang: "de" })[0]!.valueNorm).toBe(0.045);
+    expect(extractQuantities("1.5", { lang: "de" })[0]!.valueNorm).toBe(1.5);
+    expect(extractQuantities("12.3456", { lang: "de" })[0]!.valueNorm).toBe(12.3456);
+    expect(extractQuantities("0,45", { lang: "de" })[0]!.valueNorm).toBe(0.45);
+    expect(extractQuantities(".045")[0]!.valueNorm).toBe(0.045);
+
+    // §7.2 bare paren vs interval cue & Mean (SD)
+    const aged = extractQuantities("aged 30 (12-18) years");
+    expect(aged.map((t) => [t.valueNorm, t.valueLo, t.valueHi])).toEqual([
+      [30, 30, 30],
+      [15, 12, 18],
+    ]);
+    const meanSd = extractQuantities("mean 12.5 (3.1)");
+    expect(meanSd).toHaveLength(1);
+    expect(meanSd[0]!.valueNorm).toBe(12.5);
+
+    // §7.2 exclusions & sigDigits
+    expect(extractQuantities("In 2019 outcomes changed.")).toEqual([]);
+    expect(extractQuantities("One of the main causes is staffing.")).toEqual([]);
+    expect(extractQuantities("48")[0]!.sigDigits).toBe(2);
+    expect(extractQuantities("48.0")[0]!.sigDigits).toBe(3);
+    expect(extractQuantities("0.045")[0]!.sigDigits).toBe(2);
+    expect(extractQuantities("1,200")[0]!.sigDigits).toBe(2);
+    expect(extractQuantities("1.20")[0]!.sigDigits).toBe(3);
+
+    // §7.5 no percentage reconciliation & pp != %
+    expect(sameFamily("%", "")).toBe(false);
+    expect(sameFamily("pp", "%")).toBe(false);
+  });
+
+  it("01 §3.2 normalizedClaim table & 03 §2.3/§2.6 Porter stems", () => {
+    expect(normalizedClaim(".5%")).toBe("\u27e8v:0.5%\u27e9");
+    expect(normalizedClaim("5%")).toBe("\u27e8v:5%\u27e9");
+    expect(normalizedClaim("1,5 mg", { lang: "de" })).toBe("\u27e8v:1.5mg\u27e9");
+    expect(normalizedClaim("15 mg")).toBe("\u27e8v:15mg\u27e9");
+    expect(normalizedClaim("\u22125 \u00b0C")).toBe("\u27e8v:-5\u00b0C\u27e9");
+    expect(normalizedClaim("5 \u00b0C")).toBe("\u27e8v:5\u00b0C\u27e9");
+    expect(normalizedClaim("2.50")).toBe("\u27e8v:2.5\u27e9");
+    expect(normalizedClaim("1e-3")).toBe("\u27e8v:0.001\u27e9");
+    expect(normalizedClaimHash(".5%")).not.toBe(normalizedClaimHash("5%"));
+    expect(normalizedClaimHash("-5")).not.toBe(normalizedClaimHash("5"));
+    expect(normalizedClaimHash("2.50")).toBe(normalizedClaimHash("2.5"));
+
+    expect(porterStem("significant")).toBe("signific");
+    expect(porterStem("difference")).toBe("differ");
+    expect(porterStem("mortality")).toBe("mortal");
+    expect(porterStem("treatment")).toBe("treatment");
+    expect(porterStem("anxiety")).toBe("anxieti");
+    expect(porterStem("durable")).toBe("durabl");
+    expect(porterStem("complications")).toBe("complic");
+    expect(porterStem("remission")).toBe("remiss");
   });
 });

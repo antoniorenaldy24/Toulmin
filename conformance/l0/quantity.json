@@ -1,0 +1,529 @@
+[
+  {
+    "id": "sig_digits_48_integer",
+    "input": "48",
+    "expected": [
+      {
+        "valueRaw": "48",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 48,
+        "valueLo": 48,
+        "valueHi": 48,
+        "sigDigits": 2,
+        "metricClass": "other",
+        "pComparator": null
+      }
+    ]
+  },
+  {
+    "id": "sig_digits_48_0_decimal",
+    "input": "48.0",
+    "expected": [
+      {
+        "valueRaw": "48.0",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 48,
+        "valueLo": 48,
+        "valueHi": 48,
+        "sigDigits": 3,
+        "metricClass": "other",
+        "pComparator": null
+      }
+    ]
+  },
+  {
+    "id": "sig_digits_1200_and_1_20_and_0_045",
+    "input": "Values 1,200 and 1.20 and 0.045",
+    "expected": [
+      {
+        "valueRaw": "1,200",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 1200,
+        "sigDigits": 2,
+        "metricClass": "other"
+      },
+      {
+        "valueRaw": "1.20",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 1.2,
+        "sigDigits": 3,
+        "metricClass": "other"
+      },
+      {
+        "valueRaw": "0.045",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 0.045,
+        "sigDigits": 2,
+        "metricClass": "other"
+      }
+    ]
+  },
+  {
+    "id": "percent_vs_unitless_proportion_different_families",
+    "input": "Mortality was 37% with proportion 0.37.",
+    "assertNotSameFamily": [["%", ""]],
+    "expected": [
+      {
+        "valueRaw": "37",
+        "unitRaw": "%",
+        "unitCanon": "%",
+        "valueNorm": 37,
+        "valueLo": 37,
+        "valueHi": 37,
+        "sigDigits": 2,
+        "metricClass": "percentage",
+        "keyLemmas": ["mortal", "proport"]
+      },
+      {
+        "valueRaw": "0.37",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 0.37,
+        "valueLo": 0.37,
+        "valueHi": 0.37,
+        "sigDigits": 2,
+        "metricClass": "other"
+      }
+    ]
+  },
+  {
+    "id": "en_dash_range_1_2_to_3_4",
+    "input": "Effect was 1.2\u20133.4 overall.",
+    "expected": [
+      {
+        "valueRaw": "1.2\u20133.4",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 2.3,
+        "valueLo": 1.2,
+        "valueHi": 3.4,
+        "sigDigits": 2,
+        "metricClass": "other"
+      }
+    ]
+  },
+  {
+    "id": "standalone_95_ci_range",
+    "input": "95% CI 1.1 to 2.3",
+    "expected": [
+      {
+        "valueRaw": "1.1 to 2.3",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 1.7,
+        "valueLo": 1.1,
+        "valueHi": 2.3,
+        "sigDigits": 2,
+        "metricClass": "other"
+      }
+    ]
+  },
+  {
+    "id": "aged_30_bare_paren_no_interval_cue",
+    "input": "aged 30 (12-18) years",
+    "expected": [
+      {
+        "valueRaw": "30",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 30,
+        "valueLo": 30,
+        "valueHi": 30,
+        "sigDigits": 1,
+        "metricClass": "other"
+      },
+      {
+        "valueRaw": "12-18",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 15,
+        "valueLo": 12,
+        "valueHi": 18,
+        "sigDigits": 2,
+        "metricClass": "other"
+      }
+    ]
+  },
+  {
+    "id": "or_1_8_interval_by_cue",
+    "input": "OR 1.8 (1.2-2.6)",
+    "expected": [
+      {
+        "valueRaw": "1.8",
+        "unitRaw": "OR",
+        "unitCanon": "ratio:or",
+        "valueNorm": 1.8,
+        "valueLo": 1.2,
+        "valueHi": 2.6,
+        "sigDigits": 2,
+        "metricClass": "effect_size"
+      }
+    ]
+  },
+  {
+    "id": "median_bracket_interval_days",
+    "input": "median 5 [3, 7] days",
+    "expected": [
+      {
+        "valueRaw": "5",
+        "unitRaw": "days",
+        "unitCanon": "s",
+        "valueNorm": 432000,
+        "valueLo": 259200,
+        "valueHi": 604800,
+        "sigDigits": 1,
+        "metricClass": "duration"
+      }
+    ]
+  },
+  {
+    "id": "p_value_eq_and_lt",
+    "input": "Significance p = .03 and P<0.001.",
+    "expected": [
+      {
+        "valueRaw": ".03",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 0.03,
+        "valueLo": 0.03,
+        "valueHi": 0.03,
+        "sigDigits": 1,
+        "metricClass": "p_value",
+        "pComparator": "="
+      },
+      {
+        "valueRaw": "0.001",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 0.001,
+        "valueLo": 0.001,
+        "valueHi": 0.001,
+        "sigDigits": 1,
+        "metricClass": "p_value",
+        "pComparator": "<"
+      }
+    ]
+  },
+  {
+    "id": "unicode_minus_0_2",
+    "input": "\u22120.2",
+    "expected": [
+      {
+        "valueRaw": "\u22120.2",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": -0.2,
+        "valueLo": -0.2,
+        "valueHi": -0.2,
+        "sigDigits": 1,
+        "metricClass": "other"
+      }
+    ]
+  },
+  {
+    "id": "sign_rule_covid19_and_il6",
+    "input": "COVID-19 elevated IL-6 levels.",
+    "expected": [
+      {
+        "valueRaw": "19",
+        "valueNorm": 19,
+        "sigDigits": 2,
+        "unitCanon": "",
+        "metricClass": "other"
+      },
+      {
+        "valueRaw": "6",
+        "valueNorm": 6,
+        "sigDigits": 1,
+        "unitCanon": "",
+        "metricClass": "other"
+      }
+    ]
+  },
+  {
+    "id": "comma_thousands_1_234",
+    "input": "Enrolled 1,234 participants.",
+    "expected": [
+      {
+        "valueRaw": "1,234",
+        "unitRaw": "participants",
+        "unitCanon": "count",
+        "valueNorm": 1234,
+        "sigDigits": 4,
+        "metricClass": "sample_size"
+      }
+    ]
+  },
+  {
+    "id": "thin_space_thousands_12_345",
+    "input": "Total 12\u2009345 samples.",
+    "expected": [
+      {
+        "valueRaw": "12\u2009345",
+        "unitRaw": "samples",
+        "unitCanon": "count",
+        "valueNorm": 12345,
+        "sigDigits": 5,
+        "metricClass": "sample_size"
+      }
+    ]
+  },
+  {
+    "id": "locale_de_dot_thousands_12_345",
+    "input": "12.345",
+    "lang": "de",
+    "expected": [
+      {
+        "valueRaw": "12.345",
+        "valueNorm": 12345,
+        "sigDigits": 5,
+        "unitCanon": ""
+      }
+    ]
+  },
+  {
+    "id": "locale_en_dot_decimal_12_345",
+    "input": "12.345",
+    "lang": "en",
+    "expected": [
+      {
+        "valueRaw": "12.345",
+        "valueNorm": 12.345,
+        "sigDigits": 5,
+        "unitCanon": ""
+      }
+    ]
+  },
+  {
+    "id": "locale_de_multi_dot_thousands_and_decimals_and_comma",
+    "input": "1.234.567; 0.045; 1.5; 12.3456; 0,45",
+    "lang": "de",
+    "expected": [
+      { "valueRaw": "1.234.567", "valueNorm": 1234567, "sigDigits": 7 },
+      { "valueRaw": "0.045", "valueNorm": 0.045, "sigDigits": 2 },
+      { "valueRaw": "1.5", "valueNorm": 1.5, "sigDigits": 2 },
+      { "valueRaw": "12.3456", "valueNorm": 12.3456, "sigDigits": 6 },
+      { "valueRaw": "0,45", "valueNorm": 0.45, "sigDigits": 2 }
+    ]
+  },
+  {
+    "id": "word_number_twelve_patients_and_forty_eight_hours",
+    "input": "Twelve patients rested for forty-eight hours.",
+    "expected": [
+      {
+        "valueRaw": "Twelve",
+        "unitRaw": "patients",
+        "unitCanon": "count",
+        "valueNorm": 12,
+        "sigDigits": 2,
+        "metricClass": "count"
+      },
+      {
+        "valueRaw": "forty-eight",
+        "unitRaw": "hours",
+        "unitCanon": "s",
+        "valueNorm": 172800,
+        "sigDigits": 2,
+        "metricClass": "duration"
+      }
+    ]
+  },
+  {
+    "id": "word_number_forbidden_one_phrases_yield_zero_tuples",
+    "input": "One of the main causes: no one measured; one can test; one or more patients; one another; one hand; one way.",
+    "expected": []
+  },
+  {
+    "id": "mean_sd_rule_2b_prose",
+    "input": "The mean (SD) score was 12.5 (3.1).",
+    "expected": [
+      {
+        "valueRaw": "12.5",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 12.5,
+        "valueLo": 12.5,
+        "valueHi": 12.5,
+        "sigDigits": 3,
+        "metricClass": "other"
+      }
+    ]
+  },
+  {
+    "id": "mean_sd_rule_2b_table_header",
+    "input": "12.5 (3.1)",
+    "tableHeader": "M (SD)",
+    "rowLabel": "Mortality",
+    "expected": [
+      {
+        "valueRaw": "12.5",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 12.5,
+        "valueLo": 12.5,
+        "valueHi": 12.5,
+        "sigDigits": 3,
+        "metricClass": "other",
+        "keyLemmas": ["m", "mortal", "sd"]
+      }
+    ]
+  },
+  {
+    "id": "mean_plus_minus_sd_mg",
+    "input": "12.5 \u00b1 3.1 mg administered",
+    "expected": [
+      {
+        "valueRaw": "12.5",
+        "unitRaw": "mg",
+        "unitCanon": "mg",
+        "valueNorm": 12.5,
+        "valueLo": 9.4,
+        "valueHi": 15.6,
+        "sigDigits": 3,
+        "metricClass": "dose"
+      }
+    ]
+  },
+  {
+    "id": "transition_from_12pct_to_8pct",
+    "input": "from 12% to 8%",
+    "expected": [
+      {
+        "valueRaw": "12",
+        "unitRaw": "%",
+        "unitCanon": "%",
+        "valueNorm": 12,
+        "valueLo": 12,
+        "valueHi": 12,
+        "sigDigits": 2,
+        "metricClass": "percentage"
+      },
+      {
+        "valueRaw": "8",
+        "unitRaw": "%",
+        "unitCanon": "%",
+        "valueNorm": 8,
+        "valueLo": 8,
+        "valueHi": 8,
+        "sigDigits": 1,
+        "metricClass": "percentage"
+      }
+    ]
+  },
+  {
+    "id": "range_between_5_and_10_mg",
+    "input": "between 5 and 10 mg given",
+    "expected": [
+      {
+        "valueRaw": "5 and 10",
+        "unitRaw": "mg",
+        "unitCanon": "mg",
+        "valueNorm": 7.5,
+        "valueLo": 5,
+        "valueHi": 10,
+        "sigDigits": 1,
+        "metricClass": "dose"
+      }
+    ]
+  },
+  {
+    "id": "scientific_notation_forms",
+    "input": "Values 2.5 \u00d7 10^-3, 2.5\u00b710^-3, and 1e-3",
+    "expected": [
+      { "valueRaw": "2.5 \u00d7 10^-3", "valueNorm": 0.0025, "sigDigits": 2, "unitCanon": "" },
+      { "valueRaw": "2.5\u00b710^-3", "valueNorm": 0.0025, "sigDigits": 2, "unitCanon": "" },
+      { "valueRaw": "1e-3", "valueNorm": 0.001, "sigDigits": 1, "unitCanon": "" }
+    ]
+  },
+  {
+    "id": "siunitx_si_and_num",
+    "input": "Dose \\SI{5}{\\milli\\gram} and \\num{1e-3}",
+    "expected": [
+      {
+        "valueRaw": "5",
+        "unitRaw": "mg",
+        "unitCanon": "mg",
+        "valueNorm": 5,
+        "sigDigits": 1,
+        "metricClass": "dose"
+      },
+      {
+        "valueRaw": "1e-3",
+        "unitRaw": "",
+        "unitCanon": "",
+        "valueNorm": 0.001,
+        "sigDigits": 1,
+        "metricClass": "other"
+      }
+    ]
+  },
+  {
+    "id": "hr_ratio_vs_hours_duration",
+    "input": "HR 0.7 over 3 h",
+    "expected": [
+      {
+        "valueRaw": "0.7",
+        "unitRaw": "HR",
+        "unitCanon": "ratio:hr",
+        "valueNorm": 0.7,
+        "sigDigits": 1,
+        "metricClass": "effect_size"
+      },
+      {
+        "valueRaw": "3",
+        "unitRaw": "h",
+        "unitCanon": "s",
+        "valueNorm": 10800,
+        "sigDigits": 1,
+        "metricClass": "duration"
+      }
+    ]
+  },
+  {
+    "id": "year_2019_and_dates_excluded",
+    "input": "Published in 2019 on 2024-05-12 and 12/05/2024 [1].",
+    "expected": []
+  },
+  {
+    "id": "percentage_points_pp_vs_percent_different_families",
+    "input": "A 12 pp drop from 12% baseline.",
+    "assertNotSameFamily": [["pp", "%"]],
+    "expected": [
+      {
+        "valueRaw": "12",
+        "unitRaw": "pp",
+        "unitCanon": "pp",
+        "valueNorm": 12,
+        "sigDigits": 2,
+        "metricClass": "other"
+      },
+      {
+        "valueRaw": "12",
+        "unitRaw": "%",
+        "unitCanon": "%",
+        "valueNorm": 12,
+        "sigDigits": 2,
+        "metricClass": "percentage"
+      }
+    ]
+  },
+  {
+    "id": "key_lemmas_exclude_units_stopwords_and_citation_placeholder_keep_negation",
+    "input": "Mortality did not fall by 30% in patients \u27e6c\u27e7.",
+    "expected": [
+      {
+        "valueRaw": "30",
+        "unitRaw": "%",
+        "unitCanon": "%",
+        "valueNorm": 30,
+        "metricClass": "percentage",
+        "keyLemmas": ["fall", "mortal", "not"]
+      }
+    ]
+  }
+]

@@ -9,7 +9,7 @@
   "scripts": {
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
-    "test": "pnpm -r --if-present test",
+    "test": "pnpm -r --workspace-concurrency=1 --if-present test",
     "generate:l0-data": "tsx tools/generate-l0-data.ts"
   },
   "devDependencies": {

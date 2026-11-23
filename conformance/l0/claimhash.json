@@ -1,0 +1,132 @@
+[
+  {
+    "id": "pct_point_5_vs_5",
+    "a": ".5%",
+    "b": "5%",
+    "expectedA": "\u27e8v:0.5%\u27e9",
+    "expectedB": "\u27e8v:5%\u27e9",
+    "expectedEqual": false
+  },
+  {
+    "id": "neg_5_celsius_vs_pos_5_celsius",
+    "a": "\u22125 \u00b0C",
+    "b": "5 \u00b0C",
+    "expectedA": "\u27e8v:-5\u00b0C\u27e9",
+    "expectedB": "\u27e8v:5\u00b0C\u27e9",
+    "expectedEqual": false
+  },
+  {
+    "id": "neg_5_vs_pos_5",
+    "a": "-5",
+    "b": "5",
+    "expectedA": "\u27e8v:-5\u27e9",
+    "expectedB": "\u27e8v:5\u27e9",
+    "expectedEqual": false
+  },
+  {
+    "id": "trailing_zero_2_50_vs_2_5",
+    "a": "2.50",
+    "b": "2.5",
+    "expectedA": "\u27e8v:2.5\u27e9",
+    "expectedB": "\u27e8v:2.5\u27e9",
+    "expectedEqual": true
+  },
+  {
+    "id": "scientific_1e_3_vs_decimal_0_001",
+    "a": "1e-3",
+    "b": "0.001",
+    "expectedA": "\u27e8v:0.001\u27e9",
+    "expectedB": "\u27e8v:0.001\u27e9",
+    "expectedEqual": true
+  },
+  {
+    "id": "decimal_comma_1_5_mg_vs_15_mg_de",
+    "a": "1,5 mg",
+    "b": "15 mg",
+    "lang": "de",
+    "expectedA": "\u27e8v:1.5mg\u27e9",
+    "expectedB": "\u27e8v:15mg\u27e9",
+    "expectedEqual": false
+  },
+  {
+    "id": "decimal_comma_1_5_vs_15_de",
+    "a": "1,5",
+    "b": "15",
+    "lang": "de",
+    "expectedA": "\u27e8v:1.5\u27e9",
+    "expectedB": "\u27e8v:15\u27e9",
+    "expectedEqual": false
+  },
+  {
+    "id": "comma_1_5_vs_15_en_default",
+    "a": "1,5",
+    "b": "15",
+    "expectedA": "\u27e8v:1\u27e9\u27e8v:5\u27e9",
+    "expectedB": "\u27e8v:15\u27e9",
+    "expectedEqual": false
+  },
+  {
+    "id": "comma_only_edit",
+    "a": "Drug X reduced pain, and improved sleep.",
+    "b": "Drug X reduced pain and improved sleep.",
+    "expectedA": "drug x reduced pain and improved sleep",
+    "expectedB": "drug x reduced pain and improved sleep",
+    "expectedEqual": true
+  },
+  {
+    "id": "quote_style_only_edit",
+    "a": "Treatment was termed \u201ceffective\u201d.",
+    "b": "Treatment was termed \"effective\".",
+    "expectedA": "treatment was termed effective",
+    "expectedB": "treatment was termed effective",
+    "expectedEqual": true
+  },
+  {
+    "id": "comparator_le_folding_and_spacing",
+    "a": "p <= 0.05",
+    "b": "P \u2264 .05",
+    "expectedA": "p \u2264 \u27e8v:0.05\u27e9",
+    "expectedB": "p \u2264 \u27e8v:0.05\u27e9",
+    "expectedEqual": true
+  },
+  {
+    "id": "comparator_ge_folding_and_spacing",
+    "a": "HR>=2.50",
+    "b": "hr \u2265 2.5",
+    "expectedA": "hr \u2265 \u27e8v:2.5\u27e9",
+    "expectedB": "hr \u2265 \u27e8v:2.5\u27e9",
+    "expectedEqual": true
+  },
+  {
+    "id": "unit_scale_canonical_mg",
+    "a": "1,500 \u03bcg",
+    "b": "1.5 mg",
+    "expectedA": "\u27e8v:1.5mg\u27e9",
+    "expectedB": "\u27e8v:1.5mg\u27e9",
+    "expectedEqual": true
+  },
+  {
+    "id": "minus_sign_unicode_vs_ascii",
+    "a": "\u22125",
+    "b": "-5",
+    "expectedA": "\u27e8v:-5\u27e9",
+    "expectedB": "\u27e8v:-5\u27e9",
+    "expectedEqual": true
+  },
+  {
+    "id": "trailing_zero_0_50_vs_0_5",
+    "a": "0.50",
+    "b": "0.5",
+    "expectedA": "\u27e8v:0.5\u27e9",
+    "expectedB": "\u27e8v:0.5\u27e9",
+    "expectedEqual": true
+  },
+  {
+    "id": "two_numbers_different_order",
+    "a": "Mortality was 12% with X and 18% with Y.",
+    "b": "Mortality was 18% with X and 12% with Y.",
+    "expectedA": "mortality was \u27e8v:12%\u27e9 with x and \u27e8v:18%\u27e9 with y",
+    "expectedB": "mortality was \u27e8v:18%\u27e9 with x and \u27e8v:12%\u27e9 with y",
+    "expectedEqual": false
+  }
+]

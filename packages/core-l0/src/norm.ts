@@ -752,37 +752,85 @@ export function norm(x: string): NormResult {
  * `normLower` returning both lowercased text and carried-over UTF-16 offset map (02 §2.3).
  */
 export function normLowerWithMap(x: string): NormResult {
+  const xLen = x.length;
+  let allAsciiClean = true;
+  let prevSpace = false;
+  for (let i = 0; i < xLen; i += 1) {
+    const cu = x.charCodeAt(i);
+    if (cu >= 0x80 || cu === 0x0d || cu === 0x09) {
+      allAsciiClean = false;
+      break;
+    }
+    if (cu === 0x20) {
+      if (prevSpace) {
+        allAsciiClean = false;
+        break;
+      }
+      prevSpace = true;
+    } else {
+      prevSpace = false;
+    }
+  }
+
+  if (allAsciiClean) {
+    const outMap = new Array<number>(xLen + 1);
+    let out = "";
+    let changed = false;
+    for (let i = 0; i < xLen; i += 1) {
+      outMap[i] = i;
+      const cu = x.charCodeAt(i);
+      if (cu >= 0x41 && cu <= 0x5a) {
+        if (!changed) {
+          out = x.slice(0, i);
+          changed = true;
+        }
+        out += String.fromCharCode(cu + 32);
+      } else if (changed) {
+        out += x.charAt(i);
+      }
+    }
+    outMap[xLen] = xLen;
+    return {
+      text: changed ? out : x,
+      map: outMap
+    };
+  }
+
   const { text, map } = norm(x);
   const outUnits: number[] = [];
-  const dummyOffs: number[] = [];
+  const outMap: number[] = [];
 
   let i = 0;
   while (i < text.length) {
+    const rawOff = map[i] ?? xLen;
     const cu0 = text.charCodeAt(i);
     if (cu0 < 0x80) {
       outUnits.push(cu0 >= 0x41 && cu0 <= 0x5a ? cu0 + 32 : cu0);
+      outMap.push(rawOff);
       i += 1;
       continue;
     }
     const unit = codePointAtSafe(text, i);
     if (unit.isUnpairedSurrogate) {
       outUnits.push(unit.cp);
+      outMap.push(rawOff);
       i += 1;
       continue;
     }
     const override = LOWER_OVERRIDES_BY_CP.get(unit.cp);
     if (override !== undefined) {
-      pushStrUnits(outUnits, dummyOffs, override, 0);
+      pushStrUnits(outUnits, outMap, override, rawOff);
     } else {
       const lowerCp = simpleLowerCodePoint(unit.cp);
-      pushCodePointUnits(outUnits, dummyOffs, lowerCp, 0);
+      pushCodePointUnits(outUnits, outMap, lowerCp, rawOff);
     }
     i += unit.len;
   }
 
+  outMap.push(xLen);
   return {
     text: unitsToString(outUnits),
-    map
+    map: outMap
   };
 }
 
@@ -846,6 +894,71 @@ export function normLower(x: string): string {
   }
 
   return normLowerWithMap(x).text;
+}
+
+/**
+ * Applies Unicode 15.1.0 field-13 simple lowercasing + `lower_overrides` per code point
+ * to an ALREADY-normalized (`norm()`) string without running `norm()` a second time.
+ * Preserves exact UTF-16 length alignment with `normText`.
+ */
+export function lowercaseNormalized(normText: string): string {
+  const len = normText.length;
+  let allAscii = true;
+  let hasUpper = false;
+  for (let i = 0; i < len; i += 1) {
+    const cu = normText.charCodeAt(i);
+    if (cu >= 0x80) {
+      allAscii = false;
+      break;
+    }
+    if (cu >= 0x41 && cu <= 0x5a) {
+      hasUpper = true;
+    }
+  }
+  if (allAscii) {
+    if (!hasUpper) {
+      return normText;
+    }
+    const outUnits = new Array<number>(len);
+    for (let i = 0; i < len; i += 1) {
+      const cu = normText.charCodeAt(i);
+      outUnits[i] = cu >= 0x41 && cu <= 0x5a ? cu + 32 : cu;
+    }
+    return unitsToString(outUnits);
+  }
+
+  const outUnits: number[] = [];
+  let i = 0;
+  while (i < len) {
+    const cu0 = normText.charCodeAt(i);
+    if (cu0 < 0x80) {
+      outUnits.push(cu0 >= 0x41 && cu0 <= 0x5a ? cu0 + 32 : cu0);
+      i += 1;
+      continue;
+    }
+    const unit = codePointAtSafe(normText, i);
+    if (unit.isUnpairedSurrogate) {
+      outUnits.push(unit.cp);
+      i += 1;
+      continue;
+    }
+    const override = LOWER_OVERRIDES_BY_CP.get(unit.cp);
+    if (override !== undefined) {
+      for (let k = 0; k < override.length; k += 1) {
+        outUnits.push(override.charCodeAt(k));
+      }
+    } else {
+      const lowerCp = simpleLowerCodePoint(unit.cp);
+      if (lowerCp <= 0xffff) {
+        outUnits.push(lowerCp);
+      } else {
+        const u = lowerCp - 0x10000;
+        outUnits.push(0xd800 + (u >> 10), 0xdc00 + (u & 0x3ff));
+      }
+    }
+    i += unit.len;
+  }
+  return unitsToString(outUnits);
 }
 
 /**
@@ -973,7 +1086,7 @@ export function utf8Encode(x: string): Uint8Array {
   return buf.subarray(0, pos);
 }
 
-const SHA256_K = new Uint32Array([
+const SHA256_K = new Int32Array([
   0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
   0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
   0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -984,62 +1097,74 @@ const SHA256_K = new Uint32Array([
   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 ]);
 
-const HEX_CHARS = "0123456789abcdef";
+const SHA256_W = new Int32Array(64);
+const SHA256_PAD_SCRATCH = new Uint8Array(256);
+const SHA256_STATE_SCRATCH = new Int32Array(8);
 
-function rotr(x: number, n: number): number {
-  return (x >>> n) | (x << (32 - n));
+const HEX_CHARS = "0123456789abcdef";
+const HEX_BYTE: readonly string[] = Array.from(
+  { length: 256 },
+  (_, b) => HEX_CHARS.charAt(b >>> 4) + HEX_CHARS.charAt(b & 0xf)
+);
+
+function wordToHex(word: number): string {
+  return (
+    HEX_BYTE[(word >>> 24) & 0xff]! +
+    HEX_BYTE[(word >>> 16) & 0xff]! +
+    HEX_BYTE[(word >>> 8) & 0xff]! +
+    HEX_BYTE[word & 0xff]!
+  );
 }
 
-/**
- * Pure TypeScript synchronous SHA-256 over raw bytes, returning 64 lowercase hex chars.
- */
-export function sha256hexBytes(bytes: Uint8Array): string {
-  const len = bytes.length;
-  const bitLenHi = Math.floor(len / 0x20000000) >>> 0;
-  const bitLenLo = (len << 3) >>> 0;
+function writeSha256PadAndLength(
+  buf: Uint8Array,
+  tailBytesLen: number,
+  totalMsgBytes: number,
+): number {
+  const paddedLen = ((tailBytesLen + 9 + 63) >>> 6) << 6;
+  buf[tailBytesLen] = 0x80;
+  buf.fill(0, tailBytesLen + 1, paddedLen - 8);
+  const bitLenHi = Math.floor(totalMsgBytes / 0x20000000) | 0;
+  const bitLenLo = (totalMsgBytes << 3) | 0;
+  buf[paddedLen - 8] = (bitLenHi >>> 24) & 0xff;
+  buf[paddedLen - 7] = (bitLenHi >>> 16) & 0xff;
+  buf[paddedLen - 6] = (bitLenHi >>> 8) & 0xff;
+  buf[paddedLen - 5] = bitLenHi & 0xff;
+  buf[paddedLen - 4] = (bitLenLo >>> 24) & 0xff;
+  buf[paddedLen - 3] = (bitLenLo >>> 16) & 0xff;
+  buf[paddedLen - 2] = (bitLenLo >>> 8) & 0xff;
+  buf[paddedLen - 1] = bitLenLo & 0xff;
+  return paddedLen;
+}
 
-  // Pad to a multiple of 64 bytes: message + 0x80 + zeros + 8-byte length
-  const paddedLen = Math.ceil((len + 9) / 64) * 64;
-  const padded = new Uint8Array(paddedLen);
-  padded.set(bytes);
-  padded[len] = 0x80;
+function compressSha256BlocksToState(
+  bytes: Uint8Array,
+  fullBlockBytes: number,
+  st: Int32Array,
+): void {
+  let h0 = st[0]!;
+  let h1 = st[1]!;
+  let h2 = st[2]!;
+  let h3 = st[3]!;
+  let h4 = st[4]!;
+  let h5 = st[5]!;
+  let h6 = st[6]!;
+  let h7 = st[7]!;
 
-  padded[paddedLen - 8] = (bitLenHi >>> 24) & 0xff;
-  padded[paddedLen - 7] = (bitLenHi >>> 16) & 0xff;
-  padded[paddedLen - 6] = (bitLenHi >>> 8) & 0xff;
-  padded[paddedLen - 5] = bitLenHi & 0xff;
-  padded[paddedLen - 4] = (bitLenLo >>> 24) & 0xff;
-  padded[paddedLen - 3] = (bitLenLo >>> 16) & 0xff;
-  padded[paddedLen - 2] = (bitLenLo >>> 8) & 0xff;
-  padded[paddedLen - 1] = bitLenLo & 0xff;
+  const w = SHA256_W;
+  const k = SHA256_K;
 
-  let h0 = 0x6a09e667;
-  let h1 = 0xbb67ae85;
-  let h2 = 0x3c6ef372;
-  let h3 = 0xa54ff53a;
-  let h4 = 0x510e527f;
-  let h5 = 0x9b05688c;
-  let h6 = 0x1f83d9ab;
-  let h7 = 0x5be0cd19;
-
-  const w = new Uint32Array(64);
-
-  for (let offset = 0; offset < paddedLen; offset += 64) {
+  for (let offset = 0; offset < fullBlockBytes; offset += 64) {
     for (let t = 0; t < 16; t += 1) {
-      const j = offset + t * 4;
-      w[t] =
-        ((padded[j]! << 24) |
-          (padded[j + 1]! << 16) |
-          (padded[j + 2]! << 8) |
-          padded[j + 3]!) >>>
-        0;
+      const j = offset + (t << 2);
+      w[t] = (bytes[j]! << 24) | (bytes[j + 1]! << 16) | (bytes[j + 2]! << 8) | bytes[j + 3]!;
     }
     for (let t = 16; t < 64; t += 1) {
       const w15 = w[t - 15]!;
       const w2 = w[t - 2]!;
-      const s0 = (rotr(w15, 7) ^ rotr(w15, 18) ^ (w15 >>> 3)) >>> 0;
-      const s1 = (rotr(w2, 17) ^ rotr(w2, 19) ^ (w2 >>> 10)) >>> 0;
-      w[t] = (w[t - 16]! + s0 + w[t - 7]! + s1) >>> 0;
+      const s0 = ((w15 >>> 7) | (w15 << 25)) ^ ((w15 >>> 18) | (w15 << 14)) ^ (w15 >>> 3);
+      const s1 = ((w2 >>> 17) | (w2 << 15)) ^ ((w2 >>> 19) | (w2 << 13)) ^ (w2 >>> 10);
+      w[t] = (w[t - 16]! + s0 + w[t - 7]! + s1) | 0;
     }
 
     let a = h0;
@@ -1052,41 +1177,87 @@ export function sha256hexBytes(bytes: Uint8Array): string {
     let h = h7;
 
     for (let t = 0; t < 64; t += 1) {
-      const s1 = (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) >>> 0;
-      const ch = ((e & f) ^ (~e & g)) >>> 0;
-      const temp1 = (h + s1 + ch + SHA256_K[t]! + w[t]!) >>> 0;
-      const s0 = (rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) >>> 0;
-      const maj = ((a & b) ^ (a & c) ^ (b & c)) >>> 0;
-      const temp2 = (s0 + maj) >>> 0;
+      const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+      const ch = (e & f) ^ (~e & g);
+      const temp1 = (h + S1 + ch + k[t]! + w[t]!) | 0;
+      const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (S0 + maj) | 0;
 
       h = g;
       g = f;
       f = e;
-      e = (d + temp1) >>> 0;
+      e = (d + temp1) | 0;
       d = c;
       c = b;
       b = a;
-      a = (temp1 + temp2) >>> 0;
+      a = (temp1 + temp2) | 0;
     }
 
-    h0 = (h0 + a) >>> 0;
-    h1 = (h1 + b) >>> 0;
-    h2 = (h2 + c) >>> 0;
-    h3 = (h3 + d) >>> 0;
-    h4 = (h4 + e) >>> 0;
-    h5 = (h5 + f) >>> 0;
-    h6 = (h6 + g) >>> 0;
-    h7 = (h7 + h) >>> 0;
+    h0 = (h0 + a) | 0;
+    h1 = (h1 + b) | 0;
+    h2 = (h2 + c) | 0;
+    h3 = (h3 + d) | 0;
+    h4 = (h4 + e) | 0;
+    h5 = (h5 + f) | 0;
+    h6 = (h6 + g) | 0;
+    h7 = (h7 + h) | 0;
   }
 
-  const words = [h0, h1, h2, h3, h4, h5, h6, h7];
-  let hex = "";
-  for (const word of words) {
-    for (let shift = 28; shift >= 0; shift -= 4) {
-      hex += HEX_CHARS.charAt((word >>> shift) & 0xf);
-    }
+  st[0] = h0;
+  st[1] = h1;
+  st[2] = h2;
+  st[3] = h3;
+  st[4] = h4;
+  st[5] = h5;
+  st[6] = h6;
+  st[7] = h7;
+}
+
+function initSha256State(st: Int32Array): void {
+  st[0] = 0x6a09e667 | 0;
+  st[1] = 0xbb67ae85 | 0;
+  st[2] = 0x3c6ef372 | 0;
+  st[3] = 0xa54ff53a | 0;
+  st[4] = 0x510e527f | 0;
+  st[5] = 0x9b05688c | 0;
+  st[6] = 0x1f83d9ab | 0;
+  st[7] = 0x5be0cd19 | 0;
+}
+
+function stateToHex(st: Int32Array, hex32Only: boolean): string {
+  if (hex32Only) {
+    return (
+      wordToHex(st[0]!) +
+      wordToHex(st[1]!) +
+      wordToHex(st[2]!) +
+      wordToHex(st[3]!)
+    );
   }
-  return hex;
+  return (
+    wordToHex(st[0]!) +
+    wordToHex(st[1]!) +
+    wordToHex(st[2]!) +
+    wordToHex(st[3]!) +
+    wordToHex(st[4]!) +
+    wordToHex(st[5]!) +
+    wordToHex(st[6]!) +
+    wordToHex(st[7]!)
+  );
+}
+
+/**
+ * Pure TypeScript synchronous SHA-256 over raw bytes, returning 64 lowercase hex chars.
+ */
+export function sha256hexBytes(bytes: Uint8Array): string {
+  const len = bytes.length;
+  const paddedLen = ((len + 9 + 63) >>> 6) << 6;
+  const padded = paddedLen <= 256 ? SHA256_PAD_SCRATCH : new Uint8Array(paddedLen);
+  padded.set(bytes);
+  writeSha256PadAndLength(padded, len, len);
+  initSha256State(SHA256_STATE_SCRATCH);
+  compressSha256BlocksToState(padded, paddedLen, SHA256_STATE_SCRATCH);
+  return stateToHex(SHA256_STATE_SCRATCH, false);
 }
 
 /**
@@ -1094,5 +1265,111 @@ export function sha256hexBytes(bytes: Uint8Array): string {
  * after converting any unpaired surrogates to U+FFFD.
  */
 export function sha256hex(x: string): string {
+  const len = x.length;
+  if (len <= 247) {
+    let allAscii = true;
+    for (let i = 0; i < len; i += 1) {
+      const cu = x.charCodeAt(i);
+      if (cu >= 0x80) {
+        allAscii = false;
+        break;
+      }
+      SHA256_PAD_SCRATCH[i] = cu;
+    }
+    if (allAscii) {
+      const paddedLen = writeSha256PadAndLength(SHA256_PAD_SCRATCH, len, len);
+      initSha256State(SHA256_STATE_SCRATCH);
+      compressSha256BlocksToState(SHA256_PAD_SCRATCH, paddedLen, SHA256_STATE_SCRATCH);
+      return stateToHex(SHA256_STATE_SCRATCH, false);
+    }
+  }
   return sha256hexBytes(utf8Encode(x));
+}
+
+export interface Sha256PrefixHasher {
+  digestHex32(suffix: string): string;
+  digestHex(suffix: string): string;
+}
+
+/**
+ * Pre-computes SHA-256 midstate over the full 64-byte blocks of `prefix` so repeated
+ * `sha256hex(prefix + suffix)` calls hash only the remaining tail bytes.
+ */
+export function createSha256PrefixHasher(prefix: string): Sha256PrefixHasher {
+  const prefixBytes = utf8Encode(prefix);
+  const prefixByteLen = prefixBytes.length;
+  const fullBlockBytes = prefixByteLen & ~63;
+  const remLen = prefixByteLen - fullBlockBytes;
+  const rem = prefixBytes.slice(fullBlockBytes);
+
+  const mid = new Int32Array(8);
+  initSha256State(mid);
+  if (fullBlockBytes > 0) {
+    compressSha256BlocksToState(prefixBytes, fullBlockBytes, mid);
+  }
+  const b0 = mid[0]!;
+  const b1 = mid[1]!;
+  const b2 = mid[2]!;
+  const b3 = mid[3]!;
+  const b4 = mid[4]!;
+  const b5 = mid[5]!;
+  const b6 = mid[6]!;
+  const b7 = mid[7]!;
+
+  const hashSuffix = (suffix: string, hex32Only: boolean): string => {
+    const sLen = suffix.length;
+    if (remLen + sLen <= 247) {
+      let allAscii = true;
+      for (let i = 0; i < remLen; i += 1) {
+        SHA256_PAD_SCRATCH[i] = rem[i]!;
+      }
+      for (let i = 0; i < sLen; i += 1) {
+        const cu = suffix.charCodeAt(i);
+        if (cu >= 0x80) {
+          allAscii = false;
+          break;
+        }
+        SHA256_PAD_SCRATCH[remLen + i] = cu;
+      }
+      if (allAscii) {
+        const tailLen = remLen + sLen;
+        const totalMsgBytes = prefixByteLen + sLen;
+        const paddedLen = writeSha256PadAndLength(SHA256_PAD_SCRATCH, tailLen, totalMsgBytes);
+        SHA256_STATE_SCRATCH[0] = b0;
+        SHA256_STATE_SCRATCH[1] = b1;
+        SHA256_STATE_SCRATCH[2] = b2;
+        SHA256_STATE_SCRATCH[3] = b3;
+        SHA256_STATE_SCRATCH[4] = b4;
+        SHA256_STATE_SCRATCH[5] = b5;
+        SHA256_STATE_SCRATCH[6] = b6;
+        SHA256_STATE_SCRATCH[7] = b7;
+        compressSha256BlocksToState(SHA256_PAD_SCRATCH, paddedLen, SHA256_STATE_SCRATCH);
+        return stateToHex(SHA256_STATE_SCRATCH, hex32Only);
+      }
+    }
+
+    const sufBytes = utf8Encode(suffix);
+    const tailLen = remLen + sufBytes.length;
+    const totalMsgBytes = prefixByteLen + sufBytes.length;
+    const paddedLen = ((tailLen + 9 + 63) >>> 6) << 6;
+    const buf = paddedLen <= 256 ? SHA256_PAD_SCRATCH : new Uint8Array(paddedLen);
+    buf.set(rem, 0);
+    buf.set(sufBytes, remLen);
+    writeSha256PadAndLength(buf, tailLen, totalMsgBytes);
+    SHA256_STATE_SCRATCH[0] = b0;
+    SHA256_STATE_SCRATCH[1] = b1;
+    SHA256_STATE_SCRATCH[2] = b2;
+    SHA256_STATE_SCRATCH[3] = b3;
+    SHA256_STATE_SCRATCH[4] = b4;
+    SHA256_STATE_SCRATCH[5] = b5;
+    SHA256_STATE_SCRATCH[6] = b6;
+    SHA256_STATE_SCRATCH[7] = b7;
+    compressSha256BlocksToState(buf, paddedLen, SHA256_STATE_SCRATCH);
+    return stateToHex(SHA256_STATE_SCRATCH, hex32Only);
+  };
+
+  return {
+    digestHex32: (suffix: string): string => hashSuffix(suffix, true),
+    digestHex: (suffix: string): string => hashSuffix(suffix, false),
+  };
 }
