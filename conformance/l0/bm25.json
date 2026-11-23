@@ -1,0 +1,471 @@
+[
+  {
+    "id": "tok_decimal_0_045",
+    "op": "tokBM25",
+    "input": "0.045",
+    "expected": ["#0.045"]
+  },
+  {
+    "id": "tok_leading_dot_045",
+    "op": "tokBM25",
+    "input": ".045",
+    "expected": ["#0.045"]
+  },
+  {
+    "id": "tok_trailing_zero_30",
+    "op": "tokBM25",
+    "input": "30.0",
+    "expected": ["#30"]
+  },
+  {
+    "id": "tok_percent_30",
+    "op": "tokBM25",
+    "input": "30.0%",
+    "expected": ["#30%"]
+  },
+  {
+    "id": "tok_covid_19",
+    "op": "tokBM25",
+    "input": "COVID-19",
+    "expected": ["covid", "#19"]
+  },
+  {
+    "id": "tok_il_6",
+    "op": "tokBM25",
+    "input": "IL-6",
+    "expected": ["il", "#6"]
+  },
+  {
+    "id": "tok_range_endpoints",
+    "op": "tokBM25",
+    "input": "1.2\u20133.4",
+    "expected": ["#1.2", "#3.4"]
+  },
+  {
+    "id": "tok_interval_endpoints",
+    "op": "tokBM25",
+    "input": "OR 1.8 (1.2-2.6)",
+    "expected": ["#1.8", "#1.2", "#2.6"]
+  },
+  {
+    "id": "tok_negation_preserved",
+    "op": "tokBM25",
+    "input": "Drug X did not reduce mortality without events and never showed no harm nor risk.",
+    "expected": [
+      "drug",
+      "x",
+      "not",
+      "reduc",
+      "mortal",
+      "without",
+      "event",
+      "never",
+      "show",
+      "no",
+      "harm",
+      "nor",
+      "risk"
+    ]
+  },
+  {
+    "id": "tok_citation_deleted_and_math",
+    "op": "tokBM25",
+    "input": "Treatment reduced mortality ($p < 0.05$) by 30.0% [1].",
+    "expected": ["treatment", "reduc", "mortal", "p", "#0.05", "#30%"]
+  },
+  {
+    "id": "tok_all_stopwords_empty",
+    "op": "tokBM25",
+    "input": "the and of in to for",
+    "expected": []
+  },
+  {
+    "id": "cov_normative_worked_example",
+    "op": "coverage",
+    "claimWordTerms": ["a", "b", "x", "y"],
+    "idf": {
+      "a": 4.0,
+      "b": 4.0,
+      "x": 0.5,
+      "y": 0.5,
+      "c1": 1.0,
+      "c2": 1.0,
+      "c3": 1.0,
+      "c4": 1.0,
+      "c5": 1.0,
+      "c6": 1.0
+    },
+    "bm25MinCov": 0.25,
+    "units": [
+      {
+        "chunkId": "d1",
+        "tokens": ["a", "c1", "c2", "c3", "c4", "c5", "c6"],
+        "expectedCov": 0.4444444444444444,
+        "expectedCovGrid": 444444444,
+        "expectedStems": 1,
+        "expectedKept": true
+      },
+      {
+        "chunkId": "d2",
+        "tokens": ["x", "y", "c1", "c2", "c3", "c4", "c5", "c6"],
+        "expectedCov": 0.1111111111111111,
+        "expectedCovGrid": 111111111,
+        "expectedStems": 2,
+        "expectedKept": true
+      },
+      {
+        "chunkId": "d3",
+        "tokens": ["x", "c1", "c2", "c3", "c4", "c5", "c6"],
+        "expectedCov": 0.05555555555555555,
+        "expectedCovGrid": 55555556,
+        "expectedStems": 1,
+        "expectedKept": false
+      },
+      {
+        "chunkId": "d4",
+        "tokens": ["a", "b", "x", "y", "c1", "c2", "c3", "c4", "c5", "c6"],
+        "expectedCov": 1.0,
+        "expectedCovGrid": 1000000000,
+        "expectedStems": 4,
+        "expectedKept": true
+      },
+      {
+        "chunkId": "d5",
+        "tokens": ["c1", "c2", "c3", "c4", "c5", "c6"],
+        "expectedCov": 0.0,
+        "expectedCovGrid": 0,
+        "expectedStems": 0,
+        "expectedKept": false
+      }
+    ]
+  },
+  {
+    "id": "cov_eight_equal_idf_terms_half",
+    "op": "coverage",
+    "claimWordTerms": ["t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8"],
+    "idf": {
+      "t1": 2.0,
+      "t2": 2.0,
+      "t3": 2.0,
+      "t4": 2.0,
+      "t5": 2.0,
+      "t6": 2.0,
+      "t7": 2.0,
+      "t8": 2.0
+    },
+    "bm25MinCov": 0.25,
+    "units": [
+      {
+        "chunkId": "u_half",
+        "tokens": ["t1", "t2", "t3", "t4"],
+        "expectedCov": 0.5,
+        "expectedCovGrid": 500000000,
+        "expectedStems": 4,
+        "expectedKept": true
+      }
+    ]
+  },
+  {
+    "id": "cov_empty_word_terms_returns_one",
+    "op": "coverage",
+    "claimText": "30% and 40%",
+    "idf": {},
+    "bm25MinCov": 0.25,
+    "units": [
+      {
+        "chunkId": "u_other",
+        "tokens": ["other"],
+        "expectedCov": 1.0,
+        "expectedCovGrid": 1000000000,
+        "expectedStems": 0,
+        "expectedKept": true
+      }
+    ]
+  },
+  {
+    "id": "score_equal_len_clause_vs_context",
+    "op": "score",
+    "claimText": "alpha zeta",
+    "sentenceText": "alpha zeta delta",
+    "units": [
+      {
+        "chunkId": "u0",
+        "refId": "r1",
+        "sourceKind": "ABSTRACT",
+        "ordinal": 0,
+        "text": "alpha beta delta"
+      },
+      {
+        "chunkId": "u1",
+        "refId": "r1",
+        "sourceKind": "ABSTRACT",
+        "ordinal": 1,
+        "text": "alpha gamma delta"
+      },
+      {
+        "chunkId": "u2",
+        "refId": "r1",
+        "sourceKind": "ABSTRACT",
+        "ordinal": 2,
+        "text": "beta gamma zeta"
+      }
+    ],
+    "expectedRanking": ["u2", "u0", "u1"],
+    "expectedScores": {
+      "u0": { "bm25": 0.7050054438686033, "bonus": 0, "score": 0.7050054438686033, "gridScore": 705005444 },
+      "u1": { "bm25": 0.7050054438686033, "bonus": 0, "score": 0.7050054438686033, "gridScore": 705005444 },
+      "u2": { "bm25": 0.9808292530117262, "bonus": 0, "score": 0.9808292530117262, "gridScore": 980829253 }
+    }
+  },
+  {
+    "id": "score_length_norm_and_tf2",
+    "op": "score",
+    "claimText": "alpha",
+    "units": [
+      {
+        "chunkId": "v0",
+        "refId": "r1",
+        "sourceKind": "ABSTRACT",
+        "ordinal": 0,
+        "text": "alpha alpha"
+      },
+      {
+        "chunkId": "v1",
+        "refId": "r1",
+        "sourceKind": "ABSTRACT",
+        "ordinal": 1,
+        "text": "alpha beta gamma delta tau zeta"
+      }
+    ],
+    "expectedRanking": ["v0", "v1"],
+    "expectedScores": {
+      "v0": { "bm25": 0.29171449087032736, "bonus": 0, "score": 0.29171449087032736, "gridScore": 291714491 },
+      "v1": { "bm25": 0.15136129243271704, "bonus": 0, "score": 0.15136129243271704, "gridScore": 151361292 }
+    }
+  },
+  {
+    "id": "rank_gridkey_sub_1e9_tie_transitive",
+    "op": "rankTie",
+    "claimText": "w1 w2 w3 w4",
+    "idfOverrides": {
+      "w1": 2.0000000004,
+      "w2": 2.0000000001,
+      "w3": 1.9999999998,
+      "w4": 2.0000000003
+    },
+    "units": [
+      {
+        "chunkId": "t_ft",
+        "refId": "r1",
+        "sourceKind": "FULLTEXT",
+        "ordinal": 1,
+        "text": "w1",
+        "tokens": ["w1"]
+      },
+      {
+        "chunkId": "t_pdf0",
+        "refId": "r1",
+        "sourceKind": "USER_PDF",
+        "ordinal": 0,
+        "text": "w4",
+        "tokens": ["w4"]
+      },
+      {
+        "chunkId": "t_abs2",
+        "refId": "r1",
+        "sourceKind": "ABSTRACT",
+        "ordinal": 2,
+        "text": "w2",
+        "tokens": ["w2"]
+      },
+      {
+        "chunkId": "t_abs0",
+        "refId": "r1",
+        "sourceKind": "ABSTRACT",
+        "ordinal": 0,
+        "text": "w3",
+        "tokens": ["w3"]
+      }
+    ],
+    "expectedGridScore": 2000000000,
+    "expectedRanking": ["t_abs0", "t_abs2", "t_ft", "t_pdf0"]
+  },
+  {
+    "id": "quantity_bonus_applied_vs_withheld",
+    "op": "quantityBonus",
+    "claimText": "Drug X reduced mortality by 30%.",
+    "units": [
+      {
+        "chunkId": "q1_contradict_with_lemma",
+        "refId": "r1",
+        "sourceKind": "ABSTRACT",
+        "ordinal": 0,
+        "text": "Mortality increased by 12% in the cohort."
+      },
+      {
+        "chunkId": "q2_same_num_no_lemma",
+        "refId": "r1",
+        "sourceKind": "ABSTRACT",
+        "ordinal": 1,
+        "text": "Adherence reached 30% overall."
+      },
+      {
+        "chunkId": "q3_pp_diff_family",
+        "refId": "r1",
+        "sourceKind": "ABSTRACT",
+        "ordinal": 2,
+        "text": "Mortality fell by 12 pp."
+      }
+    ],
+    "expectedBonusByChunk": {
+      "q1_contradict_with_lemma": 1.0,
+      "q2_same_num_no_lemma": 0.0,
+      "q3_pp_diff_family": 0.0
+    },
+    "expectedScoresByChunk": {
+      "q1_contradict_with_lemma": { "bm25": 0.4700036292457356, "bonus": 1.0, "score": 1.4700036292457357, "gridScore": 1470003629 },
+      "q2_same_num_no_lemma": { "bm25": 0.9808292530117262, "bonus": 0.0, "score": 0.9808292530117262, "gridScore": 980829253 },
+      "q3_pp_diff_family": { "bm25": 0.4700036292457356, "bonus": 0.0, "score": 0.4700036292457356, "gridScore": 470003629 }
+    },
+    "expectedRanking": ["q1_contradict_with_lemma", "q2_same_num_no_lemma", "q3_pp_diff_family"]
+  },
+  {
+    "id": "quantity_bonus_duration_short_vs_long_withheld",
+    "op": "quantityBonus",
+    "claimText": "Survival was 12 months overall.",
+    "units": [
+      {
+        "chunkId": "dur_long_match",
+        "refId": "r1",
+        "sourceKind": "ABSTRACT",
+        "ordinal": 0,
+        "text": "Survival reached 18 months."
+      },
+      {
+        "chunkId": "dur_short_mismatch",
+        "refId": "r1",
+        "sourceKind": "ABSTRACT",
+        "ordinal": 1,
+        "text": "Survival reached 30 days."
+      }
+    ],
+    "expectedBonusByChunk": {
+      "dur_long_match": 1.0,
+      "dur_short_mismatch": 0.0
+    }
+  },
+  {
+    "id": "corpus_scale_10_refs",
+    "op": "corpusScale",
+    "claimText": "alpha delta",
+    "targetRefId": "r-target",
+    "targetUnit": { "chunkId": "u-target", "text": "alpha beta gamma" },
+    "backgroundRefCount": 9,
+    "backgroundUnitText": "delta tau zeta",
+    "expectedDocCount": 10,
+    "expectedTargetScore": 1.992430164690206,
+    "expectedTargetGridScore": 1992430165,
+    "expectedTargetCov": 0.931462754242381,
+    "expectedTargetCovGrid": 931462754,
+    "expectedTargetKept": true,
+    "expectedBgCov": 0.06853724575761909,
+    "expectedBgCovGrid": 68537246,
+    "expectedBgKept": false,
+    "expectedSelectedChunkIds": ["u-target"]
+  },
+  {
+    "id": "corpus_scale_50_refs",
+    "op": "corpusScale",
+    "claimText": "alpha delta",
+    "targetRefId": "r-target",
+    "targetUnit": { "chunkId": "u-target", "text": "alpha beta gamma" },
+    "backgroundRefCount": 49,
+    "backgroundUnitText": "delta tau zeta",
+    "expectedDocCount": 50,
+    "expectedTargetScore": 3.5263605246161616,
+    "expectedTargetGridScore": 3526360525,
+    "expectedTargetCov": 0.9916054074783806,
+    "expectedTargetCovGrid": 991605407,
+    "expectedTargetKept": true,
+    "expectedBgCov": 0.008394592521619382,
+    "expectedBgCovGrid": 8394593,
+    "expectedBgKept": false,
+    "expectedSelectedChunkIds": ["u-target"]
+  },
+  {
+    "id": "corpus_scale_150_refs",
+    "op": "corpusScale",
+    "claimText": "alpha delta",
+    "targetRefId": "r-target",
+    "targetUnit": { "chunkId": "u-target", "text": "alpha beta gamma" },
+    "backgroundRefCount": 149,
+    "backgroundUnitText": "delta tau zeta",
+    "expectedDocCount": 150,
+    "expectedTargetScore": 4.61181472870676,
+    "expectedTargetGridScore": 4611814729,
+    "expectedTargetCov": 0.9978399221231311,
+    "expectedTargetCovGrid": 997839922,
+    "expectedTargetKept": true,
+    "expectedBgCov": 0.002160077876868985,
+    "expectedBgCovGrid": 2160078,
+    "expectedBgKept": false,
+    "expectedSelectedChunkIds": ["u-target"]
+  },
+  {
+    "id": "cov_below_tau_2_stems_kept_vs_1_stem_discarded",
+    "op": "coverage",
+    "claimWordTerms": ["k1", "k2", "k3"],
+    "idf": { "k1": 5.0, "k2": 0.5, "k3": 0.5 },
+    "bm25MinCov": 0.25,
+    "units": [
+      {
+        "chunkId": "below_tau_two_stems",
+        "tokens": ["k2", "k3"],
+        "expectedCov": 0.16666666666666666,
+        "expectedCovGrid": 166666667,
+        "expectedStems": 2,
+        "expectedKept": true
+      },
+      {
+        "chunkId": "below_tau_one_stem",
+        "tokens": ["k2"],
+        "expectedCov": 0.08333333333333333,
+        "expectedCovGrid": 83333333,
+        "expectedStems": 1,
+        "expectedKept": false
+      }
+    ]
+  },
+  {
+    "id": "select_fulltext_only_reference",
+    "op": "select",
+    "claimText": "alpha beta gamma delta",
+    "refId": "ref-ft",
+    "units": [
+      { "chunkId": "ft0", "refId": "ref-ft", "sourceKind": "FULLTEXT", "ordinal": 0, "text": "alpha beta" },
+      { "chunkId": "ft1", "refId": "ref-ft", "sourceKind": "FULLTEXT", "ordinal": 1, "text": "alpha gamma" },
+      { "chunkId": "ft2", "refId": "ref-ft", "sourceKind": "FULLTEXT", "ordinal": 2, "text": "alpha beta gamma" },
+      { "chunkId": "ft3", "refId": "ref-ft", "sourceKind": "FULLTEXT", "ordinal": 3, "text": "alpha beta gamma delta" },
+      { "chunkId": "ft4", "refId": "ref-ft", "sourceKind": "FULLTEXT", "ordinal": 4, "text": "gamma delta" },
+      { "chunkId": "ft5", "refId": "ref-ft", "sourceKind": "FULLTEXT", "ordinal": 5, "text": "beta gamma tau" }
+    ],
+    "expectedSelectedChunkIds": ["ft3", "ft4", "ft2", "ft0", "ft1"],
+    "expectedCandidates": 5,
+    "expectedSuspicious": false
+  },
+  {
+    "id": "select_zero_candidates",
+    "op": "select",
+    "claimText": "alpha beta gamma delta",
+    "refId": "ref-empty",
+    "units": [
+      { "chunkId": "e0", "refId": "ref-empty", "sourceKind": "ABSTRACT", "ordinal": 0, "text": "tau zeta omega" },
+      { "chunkId": "e1", "refId": "ref-empty", "sourceKind": "ABSTRACT", "ordinal": 1, "text": "tau zeta omega" },
+      { "chunkId": "e2", "refId": "ref-empty", "sourceKind": "FULLTEXT", "ordinal": 0, "text": "tau zeta omega" },
+      { "chunkId": "e3", "refId": "ref-other", "sourceKind": "ABSTRACT", "ordinal": 0, "text": "alpha beta gamma delta" }
+    ],
+    "expectedSelectedChunkIds": [],
+    "expectedCandidates": 0,
+    "expectedSuspicious": false
+  }
+]

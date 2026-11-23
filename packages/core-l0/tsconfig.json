@@ -8,6 +8,7 @@
     "src/**/*.ts",
     "test/**/*.ts",
     "norm_table.json.d.ts",
-    "porter_v1.json.d.ts"
+    "porter_v1.json.d.ts",
+    "bm25_min_cov.json.d.ts"
   ]
 }

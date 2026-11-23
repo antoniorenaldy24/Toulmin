@@ -251,3 +251,61 @@ export {
   normalizedClaimHash,
 } from "./claimHash.js";
 export type { ClaimNormOptions } from "./claimHash.js";
+
+export {
+  BM25_B,
+  BM25_CLAUSE_WEIGHT,
+  BM25_CONTEXT_WEIGHT,
+  BM25_K1,
+  BM25_QUANTITY_BONUS,
+  GRID_KEY_SCALE,
+  buildB4Query,
+  buildBm25Corpus,
+  buildBm25Query,
+  compareBm25Candidates,
+  compareCodeUnits,
+  computeIdf,
+  computeQuantityBonus,
+  getCorpusIdf,
+  gridKey,
+  isNumericBm25Token,
+  isWordBm25Token,
+  rankBm25Units,
+  scoreBm25Unit,
+  sourceKindRank,
+  tokBM25,
+} from "./bm25.js";
+export type {
+  Bm25Corpus,
+  Bm25IndexedUnit,
+  Bm25Query,
+  Bm25ScoreBreakdown,
+  Bm25ScoredUnit,
+  Bm25UnitInput,
+  BuildBm25CorpusOptions,
+  BuildBm25QueryOptions,
+  EvidenceSourceKind,
+  TokBM25Options,
+} from "./bm25.js";
+
+export {
+  BM25_MIN_COV,
+  BM25_MIN_COV_CONFIG,
+  DEFAULT_BM25_MIN_COV,
+  MAX_ABSTRACT_CANDIDATES,
+  MAX_EVIDENCE_CANDIDATES,
+  MAX_FULLTEXT_CANDIDATES,
+  computeClaimCoverage,
+  passesCoverageFilter,
+  resolveBm25MinCov,
+  selectEvidenceCandidates,
+} from "./coverage.js";
+export type {
+  Bm25MinCovConfig,
+  Bm25MinCovResolution,
+  ClaimCoverageResult,
+  EvaluatedCandidate,
+  IdfLookup,
+  SelectEvidenceOptions,
+} from "./coverage.js";
+export type { EvidenceSelectionResult } from "./coverage.js";

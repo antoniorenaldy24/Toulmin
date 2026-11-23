@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  BM25_MIN_COV,
   applyLatexSubstitutions,
+  buildBm25Corpus,
+  buildBm25Query,
+  computeClaimCoverage,
   extractCorporateInitials,
   extractQuantities,
   foldLatin,
+  gridKey,
   mathText,
   norm,
   normLower,
@@ -18,6 +23,8 @@ import {
   scanCitations,
   SectionTracker,
   segmentDocument,
+  selectEvidenceCandidates,
+  tokBM25,
 } from "../src/index.js";
 
 /**
@@ -316,5 +323,79 @@ describe("examples.meta.test.ts — 02 §2–§7 & 01 §3.2 normative examples (
     expect(porterStem("durable")).toBe("durabl");
     expect(porterStem("complications")).toBe("complic");
     expect(porterStem("remission")).toBe("remiss");
+  });
+
+  it("§8 ALL BM25 tokenization, coverage worked example (d1..d5), equal-IDF, empty-word, and selection examples", () => {
+    expect(BM25_MIN_COV).toBe(0.25);
+
+    // §8.1 worked examples
+    expect(tokBM25("0.045")).toEqual(["#0.045"]);
+    expect(tokBM25(".045")).toEqual(["#0.045"]);
+    expect(tokBM25("30.0")).toEqual(["#30"]);
+    expect(tokBM25("30.0%")).toEqual(["#30%"]);
+    expect(tokBM25("COVID-19")).toEqual(["covid", "#19"]);
+    expect(tokBM25("IL-6")).toEqual(["il", "#6"]);
+    expect(tokBM25("not no nor never without")).toEqual(["not", "no", "nor", "never", "without"]);
+
+    // §8.4 Worked normative example table (d1..d5)
+    const idfTable = new Map<string, number>([
+      ["a", 4.0],
+      ["b", 4.0],
+      ["x", 0.5],
+      ["y", 0.5],
+      ["c1", 1.0],
+      ["c2", 1.0],
+      ["c3", 1.0],
+      ["c4", 1.0],
+      ["c5", 1.0],
+      ["c6", 1.0],
+    ]);
+    const claimTerms = ["a", "b", "x", "y"];
+    const ctxTokens = ["c1", "c2", "c3", "c4", "c5", "c6"];
+    const tableExpected = [
+      { id: "d1", unitTokens: ["a", ...ctxTokens], cov: 4.0 / 9.0, stems: 1, thresholdMet: true, kept: true },
+      { id: "d2", unitTokens: ["x", "y", ...ctxTokens], cov: 1.0 / 9.0, stems: 2, thresholdMet: false, kept: true },
+      { id: "d3", unitTokens: ["x", ...ctxTokens], cov: 0.5 / 9.0, stems: 1, thresholdMet: false, kept: false },
+      { id: "d4", unitTokens: ["a", "b", "x", "y", ...ctxTokens], cov: 1.0, stems: 4, thresholdMet: true, kept: true },
+      { id: "d5", unitTokens: [...ctxTokens], cov: 0.0, stems: 0, thresholdMet: false, kept: false },
+    ] as const;
+
+    for (const row of tableExpected) {
+      const res = computeClaimCoverage(claimTerms, row.unitTokens, idfTable, 0.25);
+      expect(res.cov).toBeCloseTo(row.cov, 12);
+      expect(res.stems).toBe(row.stems);
+      expect(res.covGrid >= gridKey(0.25)).toBe(row.thresholdMet);
+      expect(res.kept).toBe(row.kept);
+    }
+
+    // §8.4 Second case: 8 claim terms of equal IDF, unit contains 4 of them -> cov = 0.50, kept
+    const eightTerms = ["t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8"];
+    const equalIdf = new Map(eightTerms.map((t) => [t, 1.5] as const));
+    const halfCov = computeClaimCoverage(eightTerms, ["t1", "t2", "t3", "t4"], equalIdf, 0.25);
+    expect(halfCov.cov).toBe(0.5);
+    expect(halfCov.kept).toBe(true);
+
+    // §8.4 Claim with no word terms -> cov = 1.0 for every unit
+    const numericOnlyQuery = buildBm25Query("30% and 40%");
+    expect(numericOnlyQuery.claimWordTerms).toEqual([]);
+    const noWordCov = computeClaimCoverage(numericOnlyQuery.claimWordTerms, ["unrelated"], equalIdf, 0.25);
+    expect(noWordCov.cov).toBe(1.0);
+    expect(noWordCov.kept).toBe(true);
+
+    // §8.4 Selection with candidates = 0 & full-text only reference
+    const ftCorpus = buildBm25Corpus([
+      { chunkId: "ft0", refId: "r-ft", sourceKind: "FULLTEXT", ordinal: 0, text: "alpha beta" },
+      { chunkId: "ft1", refId: "r-ft", sourceKind: "FULLTEXT", ordinal: 1, text: "alpha gamma" },
+      { chunkId: "ft2", refId: "r-ft", sourceKind: "FULLTEXT", ordinal: 2, text: "alpha beta gamma" },
+      { chunkId: "ft3", refId: "r-ft", sourceKind: "FULLTEXT", ordinal: 3, text: "alpha beta gamma delta" },
+      { chunkId: "ft4", refId: "r-ft", sourceKind: "FULLTEXT", ordinal: 4, text: "gamma delta" },
+      { chunkId: "ft5", refId: "r-ft", sourceKind: "FULLTEXT", ordinal: 5, text: "beta gamma tau" },
+      { chunkId: "none0", refId: "r-none", sourceKind: "ABSTRACT", ordinal: 0, text: "unrelated words" },
+    ]);
+    const q4 = buildBm25Query("alpha beta gamma delta");
+    expect(selectEvidenceCandidates(ftCorpus, "r-ft", q4).candidates).toBe(5);
+    const emptySel = selectEvidenceCandidates(ftCorpus, "r-none", q4);
+    expect(emptySel.candidates).toBe(0);
+    expect(emptySel.selected).toEqual([]);
   });
 });

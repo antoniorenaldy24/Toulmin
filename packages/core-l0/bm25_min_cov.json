@@ -1,0 +1,5 @@
+{
+  "bm25_min_cov": 0.25,
+  "status": "default_uncalibrated",
+  "note": "Default pre-calibration threshold (0.25). Phase 0 DEV calibration is descriptive on DEV and not a population guarantee; structural retrieval bound is stems >= 2."
+}
