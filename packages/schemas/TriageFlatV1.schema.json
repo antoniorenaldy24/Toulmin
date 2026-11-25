@@ -1,0 +1,16 @@
+{
+  "$id": "toulmin://schema/TriageFlatV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["s1_start", "s2_end", "s3_type", "s4_worth", "s5_uncited"],
+  "properties": {
+    "s1_start": { "type": "integer", "minimum": 0, "maximum": 79 },
+    "s2_end": { "type": "integer", "minimum": 0, "maximum": 79 },
+    "s3_type": {
+      "type": "string",
+      "enum": ["QUANTITATIVE", "CAUSAL", "COMPARATIVE", "EXISTENCE", "METHODOLOGICAL", "NON_EMPIRICAL"]
+    },
+    "s4_worth": { "type": "string", "enum": ["HIGH", "LOW"] },
+    "s5_uncited": { "type": "boolean" }
+  }
+}

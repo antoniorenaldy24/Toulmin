@@ -145,7 +145,7 @@ The calibration runs depend on two separately hashed packages and one locked bas
 | **Tier B** (post-decode) | `/freeze/tier_b.txt` | `tier_b_hash` | key-order check, JSON parsing and schema validation of decoded outputs; the anchor validator (including `NO_DIFFERENCE_SIGNAL` and the refined L2 rule) and reasoning↔verdict check; gates, Wilson and bootstrap statistics, Holm and `checkAuthority`; the reducer, the Coverage Meter and routing publication | changes only through replay (§2.5) |
 | **CF-1 baselines** | `/freeze/cf1_baselines.txt` | `cf1_baseline_hash` | triage baseline, BM25 top-1 alignment baseline, three-class B5 baseline, Select-row value matching | locked **before the first CF-1 run** (§2.6) |
 
-Hashes are computed by `tools/freeze-hash.ts`: SHA-256 over the concatenation, in file-list order, of `path + "\0" + sha256hex(bytes) + "\n"` for every listed file.
+Hashes are computed by `tools/freeze-hash.ts`: `sha256hex` of the lines `"{path}\t{sha256hex(file bytes)}"` for every listed file (paths normalized to `/` separators and sorted ascending by UTF-8 byte order), joined by `"\n"` (no trailing newline). All tier hashes are bare 64-character lowercase hex strings.
 
 **Run manifest.** Before any R1-E, PROBE, CF-1, O2, DEV or R1-E-L2 run, the harness writes `/eval-harness/runs/{runId}/manifest.json` with `tier_a_hash`, `tier_b_hash`, `cf1_baseline_hash` (CF-1 runs), the git commit, the SHA-256 of every dataset file, `samplingMode`, the browser or AICore version, `baseModelName`, `calibratedVariant` and the seeds used.
 

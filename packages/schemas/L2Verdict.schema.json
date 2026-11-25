@@ -1,0 +1,36 @@
+{
+  "$id": "toulmin://schema/L2Verdict",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "s1_source_identified",
+    "s2_quote",
+    "s3_quote_origin",
+    "s4_reasoning",
+    "s5_verdict",
+    "s6_alternatives"
+  ],
+  "properties": {
+    "s1_source_identified": {
+      "type": "string",
+      "enum": ["CITED_DOI_MATCHED", "CITED_TITLE_MATCHED", "NOT_IDENTIFIED"]
+    },
+    "s2_quote": { "type": "string", "maxLength": 400 },
+    "s3_quote_origin": { "type": "string", "enum": ["PROVIDED_EVIDENCE", "WEB_SOURCE", "NONE"] },
+    "s4_reasoning": { "type": "string", "maxLength": 600 },
+    "s5_verdict": { "type": "string", "enum": ["SUPPORTED", "PARTIAL", "CONTRADICTED", "NEI"] },
+    "s6_alternatives": {
+      "type": "array",
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["a1_doi", "a2_relation"],
+        "properties": {
+          "a1_doi": { "type": "string", "maxLength": 100 },
+          "a2_relation": { "type": "string", "enum": ["SUPPORTS_CLAIM", "CONTRADICTS_CLAIM"] }
+        }
+      }
+    }
+  }
+}

@@ -432,5 +432,38 @@ export default tseslint.config(
       "no-restricted-globals": ["error", ...CORE_L0_SRC_EXTRA_GLOBALS],
       "toulmin/no-implicit-l0-regex": "error"
     }
+  },
+  {
+    files: ["packages/schemas/src/**/*.ts"],
+    plugins: {
+      toulmin: toulminPlugin
+    },
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: CORE_L0_FORBIDDEN_PATHS.map((name) => ({
+            name,
+            message: "packages/schemas must remain 100% pure: no Firebase, DOM, network, Node I/O, crypto, or scheduling imports (00 §7.1, 06 §5.3)."
+          })),
+          patterns: [
+            {
+              group: CORE_L0_FORBIDDEN_PATTERNS,
+              message: "packages/schemas must remain 100% pure: no Firebase, DOM, network, Node I/O, crypto, or scheduling imports (00 §7.1, 06 §5.3)."
+            }
+          ]
+        }
+      ],
+      "no-restricted-globals": ["error", ...CORE_L0_SRC_EXTRA_GLOBALS],
+      "no-restricted-properties": [
+        "error",
+        {
+          object: "Math",
+          property: "random",
+          message: "Unseeded Math.random() is forbidden in packages/schemas (00 §7.1)."
+        }
+      ],
+      "toulmin/no-implicit-l0-regex": "error"
+    }
   }
 );

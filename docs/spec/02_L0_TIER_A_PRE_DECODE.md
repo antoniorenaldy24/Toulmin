@@ -45,7 +45,7 @@ The on-device prompt templates `p2.1`, their schemas and prompt assembly are als
 
 **Freeze mechanics.**
 1. Every Tier A file is listed in `/freeze/tier_a.txt`.
-2. `tools/freeze-hash.ts` computes `tier_a_hash` = `sha256hex` of the lines `"{path}\t{sha256hex(file bytes)}"` for every listed file, sorted by path and joined by `\n`. CI recomputes it on every commit.
+2. `tools/freeze-hash.ts` computes `tier_a_hash` = `sha256hex` of the lines `"{path}\t{sha256hex(file bytes)}"` for every listed file (paths normalized to `/` separators, sorted ascending by UTF-8 byte order), joined by `\n` [07 › Tiered freeze rule]. CI recomputes it on every commit.
 3. In **Phase 0 (Tier A Freeze, git tag `l0-freeze-a`)** the tag is cut and `tier_a_hash` is recorded. From that point every Tier A file is **read-only**. CI fails any pull request that changes a listed file unless it carries the label `tier-a-refreeze` and repeats every affected evaluation run (D-30).
 4. Every client build embeds `tier_a_hash`. Every published routing table carries `freeze.tier_a_hash`. A client refuses a routing table whose `freeze.tier_a_hash` differs from its embedded value and keeps its bundled defaults (Path B, everything advisory).
 5. Every evaluation run manifest records `tier_a_hash`. A run whose hash differs from the hash of `l0-freeze-a` is invalid [07 › Tiered freeze rule].

@@ -1,0 +1,14 @@
+{
+  "$id": "toulmin://schema/B5CheckV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["s1_what", "s2_same_population", "s3_verdict"],
+  "properties": {
+    "s1_what": { "type": "string", "maxLength": 150 },
+    "s2_same_population": { "type": "boolean" },
+    "s3_verdict": {
+      "type": "string",
+      "enum": ["INCONSISTENT", "CONSISTENT_DIFFERENT_SUBSET", "DIFFERENT_QUANTITY"]
+    }
+  }
+}

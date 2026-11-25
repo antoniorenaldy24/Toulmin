@@ -45,6 +45,9 @@ importers:
       '@toulmin/core-l0':
         specifier: workspace:*
         version: link:../packages/core-l0
+      '@toulmin/schemas':
+        specifier: workspace:*
+        version: link:../packages/schemas
 
 packages:
 

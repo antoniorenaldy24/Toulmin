@@ -1,0 +1,24 @@
+{
+  "$id": "toulmin://schema/O2PhysicalExtractV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["s1_kind", "s2_facts", "s3_doi"],
+  "properties": {
+    "s1_kind": { "type": "string", "enum": ["TABLE_ROW", "TEXT", "LAB_NOTE"] },
+    "s2_facts": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["f1_quote", "f2_column", "f3_value"],
+        "properties": {
+          "f1_quote": { "type": "string", "maxLength": 120 },
+          "f2_column": { "type": "string", "maxLength": 80 },
+          "f3_value": { "type": "string", "maxLength": 40 }
+        }
+      }
+    },
+    "s3_doi": { "type": "string", "maxLength": 100 }
+  }
+}

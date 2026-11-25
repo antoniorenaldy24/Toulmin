@@ -22,7 +22,7 @@
 
 ### 1.1 Tier B scope
 
-Tier B consists of every deterministic module that runs **after decoding**: it reads a model's decoded output (`rawText`) but never changes what a model receives. Its files are listed in `/freeze/tier_b.txt`, and `tools/freeze-hash.ts` computes `tier_b_hash` over them exactly as `tier_a_hash` is computed [02 › Tier A scope].
+Tier B consists of every deterministic module that runs **after decoding**: it reads a model's decoded output (`rawText`) but never changes what a model receives. Its files are listed in `/freeze/tier_b.txt`, and `tools/freeze-hash.ts` computes `tier_b_hash` over them exactly as `tier_a_hash` is computed [07 › Tiered freeze rule].
 
 | Tier B module | Specified in |
 |---|---|

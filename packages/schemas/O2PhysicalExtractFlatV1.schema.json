@@ -1,0 +1,13 @@
+{
+  "$id": "toulmin://schema/O2PhysicalExtractFlatV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["s1_kind", "s2_quote", "s3_column", "s4_value", "s5_doi"],
+  "properties": {
+    "s1_kind": { "type": "string" },
+    "s2_quote": { "type": "string", "maxLength": 120 },
+    "s3_column": { "type": "string", "maxLength": 80 },
+    "s4_value": { "type": "string", "maxLength": 40 },
+    "s5_doi": { "type": "string", "maxLength": 100 }
+  }
+}

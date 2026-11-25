@@ -1,0 +1,33 @@
+{
+  "$id": "toulmin://schema/TriageV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["s1_atoms", "s2_worth", "s3_uncited", "s4_bib"],
+  "properties": {
+    "s1_atoms": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["a1_start", "a2_end", "a3_type"],
+        "properties": {
+          "a1_start": { "type": "integer", "minimum": 0, "maximum": 79 },
+          "a2_end": { "type": "integer", "minimum": 0, "maximum": 79 },
+          "a3_type": {
+            "type": "string",
+            "enum": ["QUANTITATIVE", "CAUSAL", "COMPARATIVE", "EXISTENCE", "METHODOLOGICAL", "NON_EMPIRICAL"]
+          }
+        }
+      }
+    },
+    "s2_worth": { "type": "string", "enum": ["HIGH", "LOW"] },
+    "s3_uncited": { "type": "boolean" },
+    "s4_bib": {
+      "type": "array",
+      "maxItems": 2,
+      "items": { "type": "integer", "minimum": 0, "maximum": 4 }
+    }
+  }
+}

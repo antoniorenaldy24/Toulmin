@@ -1,0 +1,18 @@
+{
+  "$id": "toulmin://schema/AltSourcesV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["s1_library_idx", "s2_dois"],
+  "properties": {
+    "s1_library_idx": {
+      "type": "array",
+      "maxItems": 3,
+      "items": { "type": "integer", "minimum": 0, "maximum": 19 }
+    },
+    "s2_dois": {
+      "type": "array",
+      "maxItems": 2,
+      "items": { "type": "string", "maxLength": 100 }
+    }
+  }
+}

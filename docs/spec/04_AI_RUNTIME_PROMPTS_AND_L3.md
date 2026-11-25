@@ -1697,7 +1697,7 @@ The published table is written only by `publish_routing.ts --confirm` [07 › Ou
   "version": "r1",
   "gate": { "precision_min": 0.70, "wilson_lb_min": 0.50, "stability_min": 0.60, "pp_pairs_min": 15,
             "support_wilson_lb_min": 0.80, "ps_pairs_min": 16 },
-  "freeze": { "tier_a_hash": "sha256:<64 hex>", "tier_b_hash": "sha256:<64 hex>", "cf1_baseline_hash": "sha256:<64 hex>", "replay_report": "H4_DECISION.md" },
+  "freeze": { "tier_a_hash": "<64 hex>", "tier_b_hash": "<64 hex>", "cf1_baseline_hash": "<64 hex>", "replay_report": "H4_DECISION.md" },
   "kappa_ok": true,
   "profiles": {
     "web_chrome_nano": {
