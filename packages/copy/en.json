@@ -1,0 +1,429 @@
+{
+  "product": {
+    "name": "Toulmin — The Self-Calibrating Claim Ledger",
+    "shortName": "Toulmin",
+    "singlePromise": "Know which of your claims your sources actually support — while you write.",
+    "onDeviceRole": "reads the candidate passages from the cited paper and decides which one answers the claim",
+    "license": "Open source (Apache-2.0)",
+    "endCardRequirements": "On-device checks need a supported computer · cloud checks limited daily",
+    "emptyStateHeading": "Check your manuscript's claims against its sources.",
+    "emptyStateDropZone": "Drop a LaTeX project (.zip), .tex + .bib, .md or .docx here",
+    "trySampleButton": "Try a sample manuscript",
+    "startBlankButton": "Start a blank document",
+    "untitledTitle": "Untitled",
+    "mobileWorkbenchNotice": "Toulmin's workbench needs Chrome on a desktop computer. Use the Android app for offline review."
+  },
+  "disclaimers": {
+    "onDeviceNotVerdicts": "On-device results are not verdicts.",
+    "unmarkedNotVerified": "Unmarked text has not been verified."
+  },
+  "clauseStatus": {
+    "REFERENCE_PROBLEM": "Reference problem",
+    "CONTRADICTED": "Conflicts with source",
+    "HINT": "On-device hint · unconfirmed",
+    "PARTLY_SUPPORTED": "Partly supported",
+    "MIXED_SUPPORT": "Supported by {k} of {n} · others not verifiable",
+    "UNCITED_EMPIRICAL": "Uncited empirical claim",
+    "CHECK_METADATA": "Check metadata",
+    "WAITING": "Waiting for cloud check",
+    "WAITING_EXHAUSTED": "Waiting · no cloud checks left today",
+    "SOURCE_FLAGGED": "Source flagged",
+    "UNVERIFIABLE": "Can't verify with available sources",
+    "LOCAL_EVIDENCE": "Evidence found on this device · not a verdict",
+    "SUPPORTED_LOCAL": "Supported on this device · unconfirmed",
+    "SUPPORTED": "Supported",
+    "SUPPORTED_PRINTED_SUFFIX": " (printed source)",
+    "REVIEWED_BY_AUTHOR": "Reviewed by you · not a verdict",
+    "CHECKING": "Checking…",
+    "UNCHECKED": "Not checked yet",
+    "NOT_CHECKABLE": "Not checkable"
+  },
+  "clauseAria": {
+    "REFERENCE_PROBLEM": "Reference problem: {reason}",
+    "referenceProblemReasons": {
+      "doiNotFound": "DOI not found",
+      "retracted": "retracted",
+      "unresolvedKey": "citation key not in your bibliography"
+    },
+    "CONTRADICTED": "Contradicted by the source — checked in the cloud",
+    "HINT": "On-device hint — unconfirmed",
+    "PARTLY_SUPPORTED": "Partly supported by the cited source — checked in the cloud",
+    "CHECK_METADATA": "Check metadata: reference details differ from the published record",
+    "UNCITED_EMPIRICAL": "Empirical claim without a citation",
+    "MIXED_SUPPORT": "Supported by {k} of {n} cited sources; the others could not be verified",
+    "SUPPORTED_CLOUD": "Supported — checked in the cloud",
+    "SUPPORTED_PRINTED": "Supported — confirmed from a printed source",
+    "REVIEWED_BY_AUTHOR": "Reviewed by you — not a verdict",
+    "SUPPORTED_LOCAL": "Supported on this device — unconfirmed",
+    "LOCAL_EVIDENCE": "Evidence found on this device · not a verdict",
+    "CHECKING": "Checking",
+    "WAITING": "Waiting for cloud check",
+    "SOURCE_FLAGGED": "Source flagged",
+    "UNVERIFIABLE": "Can't verify with available sources",
+    "UNCHECKED": "Not checked yet",
+    "NOT_CHECKABLE": "Not checkable"
+  },
+  "provenance": {
+    "DETERMINISTIC": "Deterministic",
+    "ON_DEVICE": "On-device",
+    "CLOUD": "Cloud",
+    "PHYSICAL_SOURCE": "Printed source",
+    "PRINTED_SOURCE_AUTHOR": "Printed source · Author",
+    "LAB_NOTE": "Lab note",
+    "AUTHOR": "Author"
+  },
+  "bibStatus": {
+    "PENDING": "Resolving reference…",
+    "RESOLVED": "Resolved",
+    "DOI_NOT_FOUND": "DOI not found",
+    "NOT_INDEXED": "Not found in bibliographic indexes",
+    "AMBIGUOUS": "Matches multiple references",
+    "METADATA_MISMATCH": "Metadata mismatch",
+    "UNRESOLVED_KEY": "Citation key not in your bibliography",
+    "UPSTREAM_UNAVAILABLE": "Bibliographic lookup unavailable",
+    "RATE_LIMITED": "Lookup rate limited — retrying"
+  },
+  "flags": {
+    "b5Badge": "≠ {section}",
+    "b5Aria": "This number differs from {section} ({value})",
+    "labNoteBadge": "≠ lab note",
+    "labNoteAria": "Differs from your lab note ({pageLabel})",
+    "checkCitationChip": "Check this citation",
+    "checkCitationAria": "Check this citation: {reason}",
+    "checkCitationReasons": {
+      "POSSIBLE_CITATION": "Possible citation — it matches no reference in your bibliography",
+      "NOT_INDEXED": "No DOI, and not found in the bibliographic indexes",
+      "AMBIGUOUS": "This citation matches more than one reference"
+    },
+    "checkCitationActions": {
+      "linkToReference": "Link to a reference",
+      "notACitation": "Not a citation",
+      "addDoi": "Add a DOI",
+      "chooseReference": "Choose the reference"
+    },
+    "checkMetadataChip": "Check metadata",
+    "checkMetadataAction": "Show differences",
+    "checkingAgainBadge": "Checking…",
+    "checkingAgainAria": "Checking again",
+    "changedSinceImportBadge": "Changed since last import",
+    "parseTimeoutReason": "This sentence could not be analysed (too complex)"
+  },
+  "meter": {
+    "header": "{supported} supported · {reviewed} reviewed · {problems} problems · {to_review} to review · {waiting} waiting · {unverifiable} can't verify · {notYetChecked} not yet checked — of {total} claims",
+    "headerExhaustedSuffix": " · cloud checks resume at {local time}",
+    "headerAriaSuffix": "Press Enter for details",
+    "drillDown": {
+      "supported": "Supported (checked in the cloud or confirmed from a printed source)",
+      "reviewed": "Reviewed by you",
+      "problems": "Problems",
+      "toReview": "To review",
+      "waiting": "Waiting for cloud check",
+      "unverifiable": "Can't verify",
+      "notYetChecked": "Not yet checked: {notYetChecked}",
+      "onThisDevice": "On this device",
+      "notCheckedYet": "Not checked yet",
+      "numberMismatches": "Number mismatches: {numberMismatches}",
+      "notCheckable": "Not checkable (method statements and sentences without citations): {notCheckable}",
+      "provenanceDeterministic": "Deterministic checks: {count}",
+      "provenanceOnDevice": "On-device model: {count}",
+      "provenanceCloud": "Cloud model: {count}",
+      "provenancePhysicalSource": "Printed source: {count}",
+      "provenanceAuthor": "Your reviews: {count}"
+    }
+  },
+  "filters": {
+    "web": [
+      "All",
+      "Problems",
+      "To review",
+      "Waiting",
+      "Can't verify",
+      "Not yet checked"
+    ],
+    "android": [
+      "Waiting",
+      "Possible conflicts",
+      "Unresolved",
+      "All"
+    ]
+  },
+  "drawers": {
+    "waiting": {
+      "title": "Waiting for cloud check",
+      "primaryAction": "Send {n} claims to cloud check",
+      "empty": "Nothing is waiting."
+    },
+    "unverifiable": {
+      "title": "Can't verify with available sources",
+      "primaryActionAddSource": "Add a source",
+      "secondaryActionMarkReviewed": "Mark reviewed",
+      "primaryActionChooseRef": "Choose the reference",
+      "empty": "Every checked claim had usable sources."
+    },
+    "sourceFlagged": {
+      "title": "Source flagged",
+      "primaryAction": "View warning",
+      "empty": "No sources were flagged."
+    },
+    "reviewed": {
+      "title": "Reviewed by you",
+      "primaryAction": "Undo review",
+      "empty": "You haven't marked any claim as reviewed."
+    }
+  },
+  "l3": {
+    "PROBE_ENV": {
+      "chip": "Checking on-device model…"
+    },
+    "OFFER_DOWNLOAD": {
+      "chip": "On-device model available",
+      "cardTitle": "Enable on-device verification",
+      "cardBody": "Toulmin can check your claims on this computer with Chrome's built-in model (a one-time download managed by Chrome). In Confidential mode your manuscript never leaves this device.",
+      "enableButton": "Enable",
+      "notNowButton": "Not now"
+    },
+    "DOWNLOADING": {
+      "text": "Downloading the on-device model ({pct}%). Reference checks are running; claim checks start when the download finishes."
+    },
+    "WARM_PROBING": {
+      "chip": "Calibrating on-device model… (runs when you pause typing)"
+    },
+    "READY_CALIBRATED": {
+      "chip": "On-device · measured on this device"
+    },
+    "READY_DRIFTED": {
+      "chip": "On-device hints paused",
+      "banner": "On-device hints are paused on this device until the model is re-measured. Reference checks and evidence alignment continue.",
+      "button": "Re-measure now"
+    },
+    "LOCAL_STALLED": {
+      "chip": "On-device model is busy — retrying shortly."
+    },
+    "LOCAL_LOST": {
+      "chip": "On-device model stopped responding — reload to retry",
+      "button": "Reload"
+    },
+    "NO_LOCAL_MODEL": {
+      "confidentialChip": "No on-device model — reference checks only",
+      "standardConsentAChip": "Cloud fallback for this document"
+    }
+  },
+  "environment": {
+    "NOT_CHROME": "On-device checking needs Google Chrome on a desktop computer.",
+    "CHROME_TOO_OLD": "Update Chrome to version 148 or later to check claims on this device.",
+    "API_MISSING": "This Chrome build does not offer the built-in model.",
+    "UNAVAILABLE_HARDWARE_OR_DISK": "This computer can't run Chrome's built-in model. It needs 22 GB of free disk space and either a graphics card with more than 4 GB of memory or 16 GB of RAM with 4 CPU cores.",
+    "LANGUAGE_UNSUPPORTED": "The built-in model doesn't support this language setting.",
+    "iosUnavailable": "This iPhone can't run Apple's on-device model."
+  },
+  "consent": {
+    "standardReminder": "Cloud checks send the exact claims you approve to Google Gemini with Google Search. Details",
+    "standardBannerTitle": "Standard mode.",
+    "standardBannerBody": "Standard mode. Toulmin checks claims on this device when it can. You choose which claims to send to Google Gemini in the cloud (a paid service, through Firebase); you see the exact text first. Each claim is sent with the evidence Toulmin found for it: abstracts, openly licensed full text, and — only if you allow it — text from PDFs you added. Cloud checks use Google Search: Google keeps those prompts and search results for 30 days to provide grounded answers, and does not use them to train its models. Reference titles and DOIs are sent to Toulmin's servers and to OpenAlex, Semantic Scholar and Crossref to look up your references. The built-in sample manuscript can be checked in the cloud with one click, because it contains no text of yours.\nTo protect the service from abuse, Toulmin uses Google reCAPTCHA Enterprise, which sends signals about your browser and device to Google.",
+    "standardBannerConfirm": "Use Standard mode",
+    "standardBannerCancel": "Stay in Confidential mode",
+    "confidentialNotice": "Confidential mode. Confidential keeps your manuscript text on this device: claim checking runs only here. Reference titles and DOIs are still looked up — they are sent to Toulmin's servers and to OpenAlex, Semantic Scholar and Crossref — unless you turn on DOI-only lookup (references without a DOI then can't be checked). To protect the service from abuse, Toulmin uses Google reCAPTCHA Enterprise, which sends signals about your browser and device to Google.",
+    "confidentialShortcutBlocked": "Cloud checks are off in Confidential mode.",
+    "consentACardTitle": "This device can't run the on-device model.",
+    "consentACardConfidential": "Confidential — reference checks only; your manuscript text stays on this device.",
+    "consentACardStandard": "Standard with cloud fallback — each passage you check is sent to Gemini in the cloud through Firebase, with the evidence from its cited sources. Google keeps the requests for a limited time for abuse detection and does not use them to train its models.",
+    "consentAButtonConfidential": "Use Confidential",
+    "consentAButtonStandard": "Use cloud fallback for this document",
+    "batchSheetTitle": "Send {k} claims to cloud check?",
+    "batchSheetBody": "Each selected claim is sent to Gemini in the cloud with Google Search, together with its cited reference and the evidence Toulmin found for it (abstracts and openly licensed full text). Google keeps prompts and search results for 30 days to provide grounded answers. The rest of your manuscript is not sent.",
+    "batchIncludePdfs": "Include text from my PDFs",
+    "batchEvidenceKinds": {
+      "abstract": "abstract",
+      "fulltext": "open-access full text",
+      "userPdf": "your PDF",
+      "none": "no abstract or full text available"
+    },
+    "batchSuspiciousLabel": "Source contains instruction-like text.",
+    "batchReasons": {
+      "hint": "On-device hint",
+      "noEvidence": "No evidence on this device",
+      "fullTextNeeded": "Full text needed",
+      "changedSinceImport": "Changed since last import"
+    },
+    "batchMoreAfter": "{rest} more will be offered after this batch",
+    "batchSendButton": "Send {k} claims",
+    "batchCancelButton": "Cancel",
+    "batchNotCheckedRow": "Not checked — {reason}",
+    "localStorageNotice": "Your ledger is stored only on this device. It is excluded from phone and computer backups and is never synced to other devices or to Toulmin's servers. Delete local data (in the ⋯ menu, on the web and on Android) deletes every document, ledger and cached source from this device.",
+    "localStorageWebWarning": "Your browser may clear this document when storage is low. Download source regularly.",
+    "localStorageWebDetailWarning": "Your browser may clear stored data when the computer is low on storage. For documents you edit here, use 'Download source' regularly.",
+    "positioningLine": "Toulmin is for checking your own manuscripts. Do not use it to process confidential manuscripts you are reviewing for others."
+  },
+  "quota": {
+    "indicator": "Cloud checks left today: {remaining} ({pool})",
+    "pools": {
+      "sharedPreview": "shared preview",
+      "sample": "sample",
+      "judgeAccess": "judge access"
+    },
+    "resetsTooltip": "Resets at {local time}",
+    "exhausted": "No cloud checks left today — resets at {local time}",
+    "exhaustedJudgeTooltip": "Judges: open ⋯ → Judge access to use the reserved judge quota.",
+    "batchExhausted": "Today's shared cloud checks are used up. On-device checks and reference checks keep working. Judges can use their judge code (⋯ → Judge access) for reserved quota.",
+    "killSwitchChip": "Cloud checks paused",
+    "killSwitchSheet": "Cloud checks are paused right now. On-device checks and reference checks keep working.",
+    "functionsCapBanner": "Cloud features are paused for a short time. On-device checks still work.",
+    "degradedChip": "Cloud features aren't available in this browser"
+  },
+  "sample": {
+    "badge": "Sample",
+    "checkButton": "Check the sample in the cloud",
+    "checkedButton": "Sample checked in the cloud",
+    "poolExhaustedTooltip": "Today's sample checks are used up — the on-device results are shown. Judges: use your judge access code.",
+    "confidentialTooltip": "Switch to Standard mode to use cloud checks."
+  },
+  "document": {
+    "auditBadge": "Audit copy · read-only",
+    "auditReadOnlyHint": "This is a read-only audit copy. Edit your project in your own editor, then use Re-import.",
+    "auditBanner": "This is a read-only audit copy. Edit your project in your own editor, then choose Re-import. Toulmin keeps your results.",
+    "docxAuditBanner": "This is a read-only audit copy of your Word file. Fix the original, then choose Re-import.",
+    "scopeMultiFile": "Multi-file projects open as a read-only audit copy: keep editing in your own editor and re-import to refresh.",
+    "scopeSingleFile": "Single files (.tex without includes, .md) open as editable documents and are checked while you write."
+  },
+  "cloud": {
+    "quoteFromPaper": "From the cited paper",
+    "quoteFromWeb": "From a web source",
+    "webSourcesOnly": "Web sources only — doesn't change this claim's status",
+    "noDifferenceNote": "No difference in numbers, negation or direction was found; the cloud judged the meaning.",
+    "providedEvidenceOnly": "Checked against the paper's text only (no web search).",
+    "recheckAfterReload": "Checked in the cloud on {date} — re-run to see sources",
+    "sourceNotConfirmed": "Couldn't confirm which paper this citation refers to",
+    "unreadableJson": "Cloud answer could not be read",
+    "rerunCheck": "Re-run check",
+    "thisPaperBadge": "This paper",
+    "findAlternativeSources": "Find alternative sources",
+    "fromYourLibrary": "From your library",
+    "noPassageMatches": "No passage of this source matches the claim",
+    "orientationNote": "Shown for orientation; not a verdict."
+  },
+  "overflowMenu": {
+    "judgeAccess": "Judge access",
+    "judgeAccessSuccess": "Judge access active until {local date}. Your checks now use the reserved judge quota.",
+    "judgeAccessInvalid": "This code isn't valid on this browser. Check the code, or contact the Toulmin team through the Devpost judging contact for a replacement.",
+    "proofMode": "Proof mode",
+    "showLocalSupports": "Show on-device supports",
+    "keyboardShortcuts": "Keyboard shortcuts",
+    "deleteLocalData": "Delete local data",
+    "deleteLocalDataConfirm": "Delete every document, ledger and cached source Toulmin stored in this browser? Download the source of any document you want to keep first.",
+    "deleteEverythingButton": "Delete everything",
+    "cancelButton": "Cancel",
+    "aboutAndLicences": "About and licences"
+  },
+  "importExport": {
+    "progress": [
+      "Reading files",
+      "Finding main document",
+      "Parsing bibliography ({n} entries)",
+      "Resolving references ({resolved}/{n})",
+      "Fetching open-access full text ({k})",
+      "Building evidence index",
+      "Ready: {sentences} sentences, {claims} claims to check"
+    ],
+    "quotaExpectation": "{n} claims will need a cloud check; {m} available today",
+    "quotaExpectationRest": "The rest stay in Waiting and can be sent on later days.",
+    "reimportToast": "Re-imported: {kept} claims kept their results, {changed} changed and will be re-checked, {gone} are no longer in the document.",
+    "startAudit": "Start audit",
+    "auditButton": "Audit whole manuscript",
+    "auditProgress": "Auditing {done}/{total} sentences · about {remainingMinutes} min left",
+    "startWriting": "Start writing",
+    "openAuditCopy": "Open audit copy",
+    "downloadSource": "Download source",
+    "reimport": "Re-import",
+    "exportMenu": {
+      "integrityReportMd": "Integrity report (.md)",
+      "integrityReportPdf": "Integrity report (PDF)",
+      "correctedBib": "Corrected bibliography (.bib)",
+      "onDeviceHeader": "On this device (not confirmed)",
+      "reviewedByAuthorHeader": "Reviewed by author",
+      "zoteroOverwriteWarning": "If Zotero Better BibTeX auto-export writes this .bib file, your next Zotero export will overwrite these annotations.",
+      "sections": {
+        "fixReferences": "Fix references",
+        "rewriteClaims": "Rewrite or re-check claims",
+        "addSources": "Add sources",
+        "waiting": "Waiting",
+        "reviewedByAuthor": "Reviewed by author",
+        "supported": "Supported"
+      }
+    },
+    "errors": {
+      "archiveTooLarge": "This archive is too large or too compressed to import safely.",
+      "inputExpansionLimit": "The included files expand to more than 2 MB of text. Import the chapter you are working on.",
+      "noMainFile": "No main .tex file found (it needs \\documentclass and \\begin{document}). Pick one:",
+      "unsupportedFile": "Toulmin can import LaTeX projects (.zip), .tex with .bib, .md and .docx files."
+    }
+  },
+  "proof": {
+    "foundContradictions": "Found {TP_pairs} of 50 contradictions in our test set",
+    "supportGateStatus": "On-device supports are shown: {yes|no} (needs at least 16 on-device supports and a lower bound of at least 0.80; expected to stay off)",
+    "supportGateHudRule": "Support gate needs ≥ 16 support verdicts and a 95 % lower bound ≥ 0.80",
+    "b3AuthorityNote": "B3 decides which passage is shown as evidence; it does not decide whether a claim is supported.",
+    "sanityCheckNote": "The sanity check catches large changes in the on-device model; it is not a calibration.",
+    "notMeasuredOnProfile": "Not measured on this device profile — on-device hints are off.",
+    "notMeasuredShort": "Not measured on this device profile",
+    "reportedNotGated": "reported, not gated",
+    "counterStrip": "On-device {n} · Cloud {m}"
+  },
+  "android": {
+    "settings": {
+      "privacyMode": "Privacy mode",
+      "privacyModeLine": "Confidential — this build makes no network calls.",
+      "showLocalSupports": "Show on-device supports",
+      "onDeviceModel": "On-device model",
+      "deleteLocalData": "Delete local data",
+      "deleteConfirm": "Delete everything Toulmin stored on this phone?",
+      "aboutAndLicences": "About and licences"
+    },
+    "offlineReadinessMeter": "Offline ready: {nAbs}/{nRefs} references with abstract · {nFt}/{nRefs} with full text · retraction snapshot {yyyy-mm-dd} · model: {tier} ({baseModelName})",
+    "networkUnavailable": "Not available in this build. Use the web app for cloud features.",
+    "canCheckOfflineBadge": "Can check offline",
+    "quotaLimitReachedToday": "On-device limit reached on this phone today.",
+    "o1": {
+      "keepScreenOpen": "Keep this screen open while checking.",
+      "checkedOnPhone": "Checked on this phone (unconfirmed)"
+    },
+    "o2": {
+      "findDoiOnPage": "Find the DOI on the page",
+      "captureGuide": "Fit the table inside the frame and hold the phone parallel to the page",
+      "ocrSpinner": "Reading the page on this phone…",
+      "tiltRejected": "The page is tilted. Hold the phone parallel to the page and try again.",
+      "tapRowPrompt": "Tap the row with the number you cited.",
+      "confirmHeaderPrompt": "Is this the column header?",
+      "confirmHeaderYes": "Yes",
+      "pickAnotherRow": "Pick another row",
+      "addRowAbove": "Add the row above",
+      "numericSanityWarning": "Check this value against the photo.",
+      "matchesPhotoButton": "Matches the photo",
+      "editValueButton": "Edit",
+      "entailmentPrompt": "Does this row support your claim?",
+      "rowSupportsClaimButton": "This row supports my claim",
+      "notSureButton": "Not sure",
+      "supportedPrintedLabel": "Supported (printed source)",
+      "neiRowPrompt": "This row doesn't settle the claim. Try another row or page.",
+      "reviewedByYouLabel": "Reviewed by you",
+      "readWholeTableToggle": "Read the whole table"
+    },
+    "o3": {
+      "typedOrPrintedOnly": "Typed or printed notes only.",
+      "differsFromLabNote": "Your manuscript differs from your lab note ({pageLabel}).",
+      "matchesLabNote": "Matches your lab note ({pageLabel}).",
+      "confirmDifferenceButton": "I confirm this difference"
+    },
+    "o4": {
+      "copyCitationButton": "Copy citation",
+      "honestyLine": "Suggestions come only from references already on this phone. Finding new sources needs a connection."
+    }
+  },
+  "ios": {
+    "modelChip": "Cloud (this iPhone can't run the on-device model)",
+    "confidentialDisabled": "This iPhone has no on-device model. In Confidential mode only reference checks are available.",
+    "cloudAnsweredLine": "Answered by the cloud model because this device isn't eligible"
+  },
+  "devpost": {
+    "testingInstructions": "1. Open https://toulmin.web.app/ in Chrome on a desktop computer and click 'Try a sample manuscript'. Every feature works without signing in. The sample is editable: type a new claim and watch it being checked. Imported multi-file projects (.zip, .docx) open as read-only audit copies.\n2. In Standard mode, click 'Check the sample in the cloud' to send the sample's five predefined claims to the cloud check in one click. Public cloud checks are a cost-bounded daily preview: this sample check is shared by all visitors for up to 20 runs a day. With a judge code, the sample check and every other cloud check use the reserved judge quota instead.\n3. To see whether each check ran on this device or in the cloud, open Proof mode from the ⋯ menu in the header (⋯ → Proof mode). It turns on automatically after you enter a judge code.\n4. To use the reserved judge quota, open the ⋯ menu, choose 'Judge access' and enter one of these codes. Each code works on up to 5 browsers or devices: {CODE_1}, {CODE_2}, {CODE_3}, {CODE_4}, {CODE_5}, {CODE_6}, {CODE_7}, {CODE_8}, {CODE_9}, {CODE_10}. If a code does not work, contact us through the Devpost judging contact and we will send a replacement.\n5. On-device checking needs Chrome 148 or later on a computer with 22 GB of free disk space and either a graphics card with more than 4 GB of memory or 16 GB of RAM and 4 CPU cores. On other computers Toulmin explains why the on-device model is unavailable: choose Confidential for reference checks only, or Standard and 'Use cloud fallback for this document' to see the cloud fallback.\n6. Android: install the APK from {APK_URL} (allow installs from this source, then open Toulmin). This APK is an offline demonstration of the Pocket Ledger on the bundled sample manuscript: it runs Firebase AI Logic on-device inference on the phone, including checks against a printed table or a typed lab note you photograph (printable pages: {PRINT_PAGES_URL}). It needs a phone with Gemini Nano through AICore."
+  }
+}

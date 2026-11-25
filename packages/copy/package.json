@@ -2,5 +2,18 @@
   "name": "@toulmin/copy",
   "private": true,
   "type": "module",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./en.json": "./en.json",
+    "./tokens.json": "./tokens.json",
+    "./glyphs.json": "./glyphs.json"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@toulmin/schemas": "workspace:*"
+  }
 }

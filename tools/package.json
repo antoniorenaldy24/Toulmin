@@ -8,7 +8,9 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@toulmin/copy": "workspace:*",
     "@toulmin/core-l0": "workspace:*",
+    "@toulmin/prompts": "workspace:*",
     "@toulmin/schemas": "workspace:*"
   }
 }

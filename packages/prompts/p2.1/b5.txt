@@ -1,0 +1,12 @@
+Two numbers were found in the SAME scientific manuscript. Decide whether they describe the same quantity.
+Return ONLY a JSON object that matches the required schema, fields in order.
+
+s1_what: at most 20 words stating what A measures and what B measures.
+s2_same_population: true if A and B measure the same thing, in the same population or group, under the same condition and time point.
+s3_verdict:
+  INCONSISTENT = same quantity (s2_same_population is true) but the values differ.
+  CONSISTENT_DIFFERENT_SUBSET = they describe different subgroups, time points, analyses, or subsets of the same study.
+  DIFFERENT_QUANTITY = they measure different things.
+
+A (section: {section_a}; value: {value_a} {unit_a}): """{window_a}"""
+B (section: {section_b}; value: {value_b} {unit_b}): """{window_b}"""

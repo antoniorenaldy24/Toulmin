@@ -1,0 +1,17 @@
+{
+  "fontFamily": "toulmin-glyphs",
+  "glyphs": {
+    "referenceProblem": { "symbol": "⚑", "codepoints": ["U+2691"], "role": "REFERENCE_PROBLEM" },
+    "contradicted": { "symbol": "✕", "codepoints": ["U+2715"], "role": "CONTRADICTED" },
+    "hint": { "symbol": "◌", "codepoints": ["U+25CC"], "role": "HINT" },
+    "partlySupported": { "symbol": "◐", "codepoints": ["U+25D0"], "role": "PARTLY_SUPPORTED" },
+    "checkMetadata": { "symbol": "ⓜ", "codepoints": ["U+24DC"], "role": "CHECK_METADATA" },
+    "uncitedEmpirical": { "symbol": "ⓘ", "codepoints": ["U+24D8"], "role": "UNCITED_EMPIRICAL" },
+    "mixedSupport": { "symbol": "✓?", "codepoints": ["U+2713", "U+003F"], "role": "MIXED_SUPPORT" },
+    "supported": { "symbol": "✓", "codepoints": ["U+2713"], "role": "SUPPORTED_AND_SUPPORTED_LOCAL" },
+    "reviewed": { "symbol": "☑", "codepoints": ["U+2611"], "role": "REVIEWED_BY_AUTHOR" },
+    "mismatch": { "symbol": "≠", "codepoints": ["U+2260"], "role": "B5_AND_LAB_NOTE_MISMATCH" },
+    "checkCitation": { "symbol": "?", "codepoints": ["U+003F"], "role": "CHECK_THIS_CITATION" },
+    "checking": { "symbol": "⋯", "codepoints": ["U+22EF"], "role": "CHECKING" }
+  }
+}

@@ -196,6 +196,13 @@ describe("tools/freeze-hash.ts deterministic manifest & hash verification", () =
     expect(tierAFiles).toContain("conformance/l0/bm25.json");
     expect(tierAFiles).toContain("packages/schemas/VerdictV1.schema.json");
     expect(tierAFiles).not.toContain("packages/schemas/L2Verdict.schema.json");
+    expect(tierAFiles).toContain("packages/prompts/p2.1/stage1.txt");
+    expect(tierAFiles).toContain("packages/prompts/p2.1/stage2.txt");
+    expect(tierAFiles).toContain("packages/prompts/p2.1/b5.txt");
+    expect(tierAFiles).toContain("packages/prompts/p2.1/o2.txt");
+    expect(tierAFiles).toContain("packages/prompts/p2.1/alt_sources.txt");
+    expect(tierAFiles).toContain("packages/prompts/src/builders.ts");
+    expect(tierAFiles).not.toContain("packages/prompts/p2.1/l2.txt");
 
     // Verify ascending UTF-8 byte order
     for (let i = 1; i < tierAFiles.length; i += 1) {

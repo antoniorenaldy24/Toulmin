@@ -275,6 +275,24 @@ export function collectTierATsFiles(repoRoot: string = DEFAULT_REPO_ROOT): strin
     }
   }
 
+  const promptsTxtDir = resolve(repoRoot, "packages", "prompts", "p2.1");
+  if (existsSync(promptsTxtDir)) {
+    for (const entry of readdirSync(promptsTxtDir, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.endsWith(".txt") && entry.name !== "l2.txt") {
+        collected.push(normalizeManifestPath(relative(repoRoot, resolve(promptsTxtDir, entry.name))));
+      }
+    }
+  }
+
+  const promptsSrcDir = resolve(repoRoot, "packages", "prompts", "src");
+  if (existsSync(promptsSrcDir)) {
+    for (const entry of readdirSync(promptsSrcDir, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.endsWith(".ts")) {
+        collected.push(normalizeManifestPath(relative(repoRoot, resolve(promptsSrcDir, entry.name))));
+      }
+    }
+  }
+
   collected.sort(compareUtf8Bytes);
   return collected;
 }

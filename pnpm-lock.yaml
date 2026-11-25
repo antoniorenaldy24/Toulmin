@@ -30,21 +30,38 @@ importers:
         specifier: ^3.0.0
         version: 3.2.7(@types/node@22.20.5)(supports-color@7.2.0)(tsx@4.23.15)
 
-  packages/copy: {}
+  packages/copy:
+    dependencies:
+      '@toulmin/schemas':
+        specifier: workspace:*
+        version: link:../schemas
 
   packages/core-l0: {}
 
   packages/firebase-client: {}
 
-  packages/prompts: {}
+  packages/prompts:
+    dependencies:
+      '@toulmin/core-l0':
+        specifier: workspace:*
+        version: link:../core-l0
+      '@toulmin/schemas':
+        specifier: workspace:*
+        version: link:../schemas
 
   packages/schemas: {}
 
   tools:
     dependencies:
+      '@toulmin/copy':
+        specifier: workspace:*
+        version: link:../packages/copy
       '@toulmin/core-l0':
         specifier: workspace:*
         version: link:../packages/core-l0
+      '@toulmin/prompts':
+        specifier: workspace:*
+        version: link:../packages/prompts
       '@toulmin/schemas':
         specifier: workspace:*
         version: link:../packages/schemas
