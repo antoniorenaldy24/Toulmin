@@ -1,0 +1,340 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "all_eight_buckets_standard_online",
+      "description": "All 8 meter buckets, C0/C4b excluded, archived excluded, override over CONTRADICTED in reviewed, numberMismatches drill-down only",
+      "policy": "standard_path_a_support_auth",
+      "mode": "standard_online",
+      "session": "default",
+      "resetLocalTime": "00:00",
+      "refFacts": [
+        { "refId": "ref-ok", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 },
+        { "refId": "ref-ret", "bibStatus": "RESOLVED", "retracted": true, "checkMetadata": false, "evidenceVersion": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "hasEvidence": false, "updatedSeq": 1 },
+        { "refId": "ref-amb", "bibStatus": "AMBIGUOUS", "retracted": false, "checkMetadata": false, "evidenceVersion": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "hasEvidence": false, "updatedSeq": 1 },
+        { "refId": "ref-meta", "bibStatus": "METADATA_MISMATCH", "retracted": false, "checkMetadata": true, "evidenceVersion": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "hasEvidence": false, "updatedSeq": 1 }
+      ],
+      "entries": [
+        {
+          "claimId": "m-supported",
+          "refs": [{ "refId": "ref-ok", "cloud": { "verdict": "SUPPORTED" } }]
+        },
+        {
+          "claimId": "m-reviewed-over-contradicted",
+          "normalizedClaimHash": "362798e22ccc7ab5a2d1bce94290b1559c90e4ff0e8286e40326afef6c09e703",
+          "override": {
+            "value": {
+              "dismissedState": "CONTRADICTED",
+              "basis": "REVIEW",
+              "captureId": null,
+              "normalizedClaimHash": "362798e22ccc7ab5a2d1bce94290b1559c90e4ff0e8286e40326afef6c09e703",
+              "refIdsKey": "ref-ok",
+              "note": "Reviewed",
+              "createdAt": 1700000001000
+            },
+            "seq": 1
+          },
+          "refs": [{ "refId": "ref-ok", "cloud": { "verdict": "CONTRADICTED" } }]
+        },
+        {
+          "claimId": "m-local-supported",
+          "refs": [
+            {
+              "refId": "ref-ok",
+              "local": { "verdict": "SUPPORTED", "rawVerdict": "SUPPORTED", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 }
+            }
+          ]
+        },
+        {
+          "claimId": "m-problem-ref",
+          "b5": { "inconsistentWith": ["m-supported"] },
+          "refs": [{ "refId": "ref-ret" }]
+        },
+        {
+          "claimId": "m-problem-con",
+          "refs": [{ "refId": "ref-ok", "cloud": { "verdict": "CONTRADICTED" } }]
+        },
+        {
+          "claimId": "m-to-review-meta",
+          "refs": [{ "refId": "ref-meta" }]
+        },
+        {
+          "claimId": "m-to-review-uncited",
+          "baseline": { "claimType": "QUANTITATIVE", "worth": "HIGH", "uncited": true },
+          "refs": []
+        },
+        {
+          "claimId": "m-waiting",
+          "refs": [
+            {
+              "refId": "ref-ok",
+              "local": { "verdict": "NEI_SILENT_ESCALATE", "rawVerdict": "NEI_SILENT_ESCALATE", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 }
+            }
+          ]
+        },
+        {
+          "claimId": "m-source-flagged",
+          "refs": [
+            {
+              "refId": "ref-ok",
+              "selection": { "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "candidates": 2, "suspicious": true, "seq": 1 }
+            }
+          ]
+        },
+        {
+          "claimId": "m-mixed-support",
+          "refs": [
+            { "refId": "ref-ok", "cloud": { "verdict": "SUPPORTED" } },
+            { "refId": "ref-amb" }
+          ]
+        },
+        {
+          "claimId": "m-unchecked",
+          "labNoteMismatch": [
+            { "captureId": "cap-1", "flag": { "value": { "pageLabel": "Log 1", "confirmedByAuthorAt": 1700000001000 }, "seq": 1 } }
+          ],
+          "refs": [{ "refId": "ref-ok" }]
+        },
+        {
+          "claimId": "m-not-checkable-c0",
+          "baseline": { "claimType": "EXISTENCE", "worth": "LOW", "uncited": false },
+          "refs": []
+        },
+        {
+          "claimId": "m-not-checkable-c4b",
+          "baseline": { "claimType": "METHODOLOGICAL", "worth": "LOW", "uncited": false },
+          "refs": [{ "refId": "ref-ok" }]
+        },
+        {
+          "claimId": "m-archived",
+          "archived": true,
+          "refs": [{ "refId": "ref-ok", "cloud": { "verdict": "SUPPORTED" } }]
+        }
+      ],
+      "expected": {
+        "total": 11,
+        "supported": 1,
+        "reviewed": 1,
+        "local": 1,
+        "problems": 2,
+        "to_review": 2,
+        "waiting": 2,
+        "unverifiable": 1,
+        "unchecked": 1,
+        "notYetChecked": 2,
+        "notCheckable": 2,
+        "numberMismatches": 2,
+        "quotaExhausted": false,
+        "quotaResetAt": null,
+        "byProvenance": {
+          "DETERMINISTIC": 3,
+          "ON_DEVICE": 2,
+          "CLOUD": 2,
+          "PHYSICAL_SOURCE": 0,
+          "AUTHOR": 1
+        },
+        "header": "1 supported \u00b7 1 reviewed \u00b7 2 problems \u00b7 2 to review \u00b7 2 waiting \u00b7 1 can't verify \u00b7 2 not yet checked \u2014 of 11 claims"
+      }
+    },
+    {
+      "id": "local_evidence_in_confidential_mode",
+      "description": "Uncalibrated local SUPPORTED in CONFIDENTIAL mode derives LOCAL_EVIDENCE and counts in local / notYetChecked",
+      "policy": "standard_path_a_support_auth",
+      "mode": "confidential",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-ok", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entries": [
+        {
+          "claimId": "c-loc-ev",
+          "refs": [
+            {
+              "refId": "ref-ok",
+              "local": { "verdict": "SUPPORTED", "rawVerdict": "SUPPORTED", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1_cap20", "reasoningCap": 20 }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "total": 1,
+        "supported": 0,
+        "reviewed": 0,
+        "local": 1,
+        "problems": 0,
+        "to_review": 0,
+        "waiting": 0,
+        "unverifiable": 0,
+        "unchecked": 0,
+        "notYetChecked": 1,
+        "notCheckable": 0,
+        "numberMismatches": 0,
+        "quotaExhausted": false,
+        "quotaResetAt": null,
+        "byProvenance": {
+          "DETERMINISTIC": 0,
+          "ON_DEVICE": 1,
+          "CLOUD": 0,
+          "PHYSICAL_SOURCE": 0,
+          "AUTHOR": 0
+        },
+        "header": "0 supported \u00b7 0 reviewed \u00b7 0 problems \u00b7 0 to review \u00b7 0 waiting \u00b7 0 can't verify \u00b7 1 not yet checked \u2014 of 1 claims"
+      }
+    },
+    {
+      "id": "confidential_mode_and_b4_false",
+      "description": "SOURCE_FLAGGED moves to unverifiable in CONFIDENTIAL mode; UNCITED_EMPIRICAL counts in unchecked when b4CountsAsReview=false",
+      "policy": "standard_path_a_b4_false",
+      "mode": "confidential",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-ok", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entries": [
+        {
+          "claimId": "c-flagged",
+          "refs": [
+            {
+              "refId": "ref-ok",
+              "selection": { "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "candidates": 1, "suspicious": true, "seq": 1 }
+            }
+          ]
+        },
+        {
+          "claimId": "c-uncited",
+          "baseline": { "claimType": "CAUSAL", "worth": "HIGH", "uncited": true },
+          "refs": []
+        }
+      ],
+      "expected": {
+        "total": 2,
+        "supported": 0,
+        "reviewed": 0,
+        "local": 0,
+        "problems": 0,
+        "to_review": 0,
+        "waiting": 0,
+        "unverifiable": 1,
+        "unchecked": 1,
+        "notYetChecked": 1,
+        "notCheckable": 0,
+        "numberMismatches": 0,
+        "quotaExhausted": false,
+        "quotaResetAt": null,
+        "byProvenance": {
+          "DETERMINISTIC": 0,
+          "ON_DEVICE": 0,
+          "CLOUD": 0,
+          "PHYSICAL_SOURCE": 0,
+          "AUTHOR": 0
+        },
+        "header": "0 supported \u00b7 0 reviewed \u00b7 0 problems \u00b7 0 to review \u00b7 0 waiting \u00b7 1 can't verify \u00b7 1 not yet checked \u2014 of 2 claims"
+      }
+    },
+    {
+      "id": "exhausted_pool_keeps_waiting_and_appends_resume_time",
+      "description": "Exhausted pool keeps WAITING clauses in waiting and appends reset local time suffix",
+      "policy": "standard_path_a",
+      "mode": "standard_exhausted",
+      "session": "default",
+      "resetLocalTime": "12:00 AM",
+      "refFacts": [
+        { "refId": "ref-ok", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entries": [
+        {
+          "claimId": "c-wait",
+          "refs": [
+            {
+              "refId": "ref-ok",
+              "local": { "verdict": "NEI_SILENT_ESCALATE", "rawVerdict": "NEI_SILENT_ESCALATE", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "total": 1,
+        "supported": 0,
+        "reviewed": 0,
+        "local": 0,
+        "problems": 0,
+        "to_review": 0,
+        "waiting": 1,
+        "unverifiable": 0,
+        "unchecked": 0,
+        "notYetChecked": 0,
+        "notCheckable": 0,
+        "numberMismatches": 0,
+        "quotaExhausted": true,
+        "quotaResetAt": 1700067600000,
+        "byProvenance": {
+          "DETERMINISTIC": 0,
+          "ON_DEVICE": 1,
+          "CLOUD": 0,
+          "PHYSICAL_SOURCE": 0,
+          "AUTHOR": 0
+        },
+        "header": "0 supported \u00b7 0 reviewed \u00b7 0 problems \u00b7 0 to review \u00b7 1 waiting \u00b7 0 can't verify \u00b7 0 not yet checked \u2014 of 1 claims \u00b7 cloud checks resume at 12:00 AM"
+      }
+    },
+    {
+      "id": "bundled_sample_waiting_zero",
+      "description": "bundledSample privacy context always yields waiting=0 while keeping 7-count header format",
+      "policy": "android_path_b",
+      "mode": "bundled_sample",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-ok", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entries": [
+        {
+          "claimId": "c-bs-1",
+          "refs": [
+            {
+              "refId": "ref-ok",
+              "physical": {
+                "verdict": "SUPPORTED",
+                "kind": "PHYSICAL_TABLE",
+                "confirmedByAuthorAt": 1700000001000,
+                "entailmentConfirmedByAuthorAt": 1700000002000
+              }
+            }
+          ]
+        },
+        {
+          "claimId": "c-bs-2",
+          "refs": [
+            {
+              "refId": "ref-ok",
+              "local": { "verdict": "NEI_SILENT_ESCALATE", "rawVerdict": "NEI_SILENT_ESCALATE", "modelProfile": "android_aicore_stable", "schemaId": "VerdictV1", "reasoningCap": 40 }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "total": 2,
+        "supported": 1,
+        "reviewed": 0,
+        "local": 0,
+        "problems": 0,
+        "to_review": 0,
+        "waiting": 0,
+        "unverifiable": 1,
+        "unchecked": 0,
+        "notYetChecked": 0,
+        "notCheckable": 0,
+        "numberMismatches": 0,
+        "quotaExhausted": false,
+        "quotaResetAt": null,
+        "byProvenance": {
+          "DETERMINISTIC": 0,
+          "ON_DEVICE": 1,
+          "CLOUD": 0,
+          "PHYSICAL_SOURCE": 1,
+          "AUTHOR": 0
+        },
+        "header": "1 supported \u00b7 0 reviewed \u00b7 0 problems \u00b7 0 to review \u00b7 0 waiting \u00b7 1 can't verify \u00b7 0 not yet checked \u2014 of 2 claims"
+      }
+    }
+  ]
+}

@@ -36,7 +36,11 @@ importers:
         specifier: workspace:*
         version: link:../schemas
 
-  packages/core-l0: {}
+  packages/core-l0:
+    dependencies:
+      '@toulmin/schemas':
+        specifier: workspace:*
+        version: link:../schemas
 
   packages/firebase-client: {}
 

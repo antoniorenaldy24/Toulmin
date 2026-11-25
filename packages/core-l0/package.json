@@ -5,7 +5,11 @@
   "license": "Apache-2.0",
   "exports": {
     ".": "./src/index.ts",
-    "./norm": "./src/norm.ts"
+    "./norm": "./src/norm.ts",
+    "./ledger": "./src/ledger.ts"
+  },
+  "dependencies": {
+    "@toulmin/schemas": "workspace:*"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

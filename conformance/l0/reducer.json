@@ -1,0 +1,1268 @@
+{
+  "schemaVersion": 1,
+  "deriveCases": [
+    {
+      "id": "r1_doi_not_found",
+      "description": "R1 + C2: explicit DOI unregistered -> REF_PROBLEM -> REFERENCE_PROBLEM (DETERMINISTIC)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "DOI_NOT_FOUND", "retracted": false, "checkMetadata": false, "evidenceVersion": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "hasEvidence": false, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r1-doi",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "local": { "verdict": "SUPPORTED", "rawVerdict": "SUPPORTED", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 },
+            "cloud": { "verdict": "SUPPORTED" }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "REF_PROBLEM" }],
+        "state": "REFERENCE_PROBLEM",
+        "category": "problems",
+        "provenance": "DETERMINISTIC"
+      }
+    },
+    {
+      "id": "r1_unresolved_key",
+      "description": "R1 + C2: UNRESOLVED_KEY -> REF_PROBLEM -> REFERENCE_PROBLEM",
+      "policy": "standard_path_b",
+      "mode": "confidential",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "UNRESOLVED_KEY", "retracted": false, "checkMetadata": false, "evidenceVersion": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "hasEvidence": false, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r1-key",
+        "refs": [{ "refId": "ref-1" }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "REF_PROBLEM" }],
+        "state": "REFERENCE_PROBLEM",
+        "category": "problems",
+        "provenance": "DETERMINISTIC"
+      }
+    },
+    {
+      "id": "r1_retracted_precedence_ac_l0_18",
+      "description": "AC-L0-18: retracted reference stays REFERENCE_PROBLEM even with local and cloud SUPPORTED",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": true, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 2 }
+      ],
+      "entry": {
+        "claimId": "c-r1-ret",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "local": { "verdict": "SUPPORTED", "rawVerdict": "SUPPORTED", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 },
+            "cloud": { "verdict": "SUPPORTED" }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "REF_PROBLEM" }],
+        "state": "REFERENCE_PROBLEM",
+        "category": "problems",
+        "provenance": "DETERMINISTIC"
+      }
+    },
+    {
+      "id": "r2_cloud_contradicted_c3",
+      "description": "R2 + C3: cloud CONTRADICTED -> CONTRADICTED_CONFIRMED -> CONTRADICTED (CLOUD)",
+      "policy": "standard_path_b",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r2",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "local": { "verdict": "SUPPORTED", "rawVerdict": "SUPPORTED", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 },
+            "cloud": { "verdict": "CONTRADICTED" }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "CONTRADICTED_CONFIRMED" }],
+        "state": "CONTRADICTED",
+        "category": "problems",
+        "provenance": "CLOUD"
+      }
+    },
+    {
+      "id": "r3_cloud_partial_c6",
+      "description": "R3 + C6: cloud PARTIAL -> PARTIAL_CONFIRMED -> PARTLY_SUPPORTED (CLOUD)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r3",
+        "refs": [{ "refId": "ref-1", "cloud": { "verdict": "PARTIAL" } }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "PARTIAL_CONFIRMED" }],
+        "state": "PARTLY_SUPPORTED",
+        "category": "to_review",
+        "provenance": "CLOUD"
+      }
+    },
+    {
+      "id": "r4_cloud_supported_c13",
+      "description": "R4 + C13: cloud SUPPORTED -> SUPPORTED_CONFIRMED -> SUPPORTED (CLOUD)",
+      "policy": "standard_path_b",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r4-cloud",
+        "refs": [{ "refId": "ref-1", "cloud": { "verdict": "SUPPORTED" } }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "SUPPORTED_CONFIRMED" }],
+        "state": "SUPPORTED",
+        "category": "supported",
+        "provenance": "CLOUD"
+      }
+    },
+    {
+      "id": "r4_physical_entail_confirmed_c13",
+      "description": "R4 + C13: physical SUPPORTED with entailmentConfirmedByAuthorAt -> SUPPORTED (PHYSICAL_SOURCE)",
+      "policy": "standard_path_b",
+      "mode": "confidential",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r4-phys",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "physical": {
+              "verdict": "SUPPORTED",
+              "kind": "PHYSICAL_TABLE",
+              "confirmedByAuthorAt": 1700000001000,
+              "entailmentConfirmedByAuthorAt": 1700000002000
+            }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "SUPPORTED_CONFIRMED" }],
+        "state": "SUPPORTED",
+        "category": "supported",
+        "provenance": "PHYSICAL_SOURCE"
+      }
+    },
+    {
+      "id": "r5_cloud_nei_c12",
+      "description": "R5 + C12: cloud NEI -> UNVERIFIABLE (CLOUD)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r5",
+        "refs": [{ "refId": "ref-1", "cloud": { "verdict": "NEI" } }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "UNVERIFIABLE" }],
+        "state": "UNVERIFIABLE",
+        "category": "unverifiable",
+        "provenance": "CLOUD"
+      }
+    },
+    {
+      "id": "r6_physical_contradicts_path_a_c4",
+      "description": "R6 + C4: physical CONTRADICTS confirmed values under Path A -> HINT (PHYSICAL_SOURCE)",
+      "policy": "standard_path_a",
+      "mode": "confidential",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r6-a",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "physical": {
+              "verdict": "CONTRADICTS",
+              "kind": "PHYSICAL_TEXT",
+              "confirmedByAuthorAt": 1700000001000,
+              "entailmentConfirmedByAuthorAt": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "HINT" }],
+        "state": "HINT",
+        "category": "to_review",
+        "provenance": "PHYSICAL_SOURCE"
+      }
+    },
+    {
+      "id": "r6_physical_contradicts_path_b_offline",
+      "description": "R6 + C12: physical CONTRADICTS under Path B without cloud -> ALIGNED_ESCALATING -> UNVERIFIABLE",
+      "policy": "standard_path_b",
+      "mode": "confidential",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r6-b",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "physical": {
+              "verdict": "CONTRADICTS",
+              "kind": "PHYSICAL_TABLE",
+              "confirmedByAuthorAt": 1700000001000,
+              "entailmentConfirmedByAuthorAt": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "ALIGNED_ESCALATING" }],
+        "state": "UNVERIFIABLE",
+        "category": "unverifiable",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "r7_selection_suspicious_c11",
+      "description": "R7 + C11: current selection with suspicious=true -> SOURCE_FLAGGED (waiting in STANDARD)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r7",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "selection": { "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "candidates": 3, "suspicious": true, "seq": 1 }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "SOURCE_FLAGGED" }],
+        "state": "SOURCE_FLAGGED",
+        "category": "waiting",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "r8_local_contradicts_path_a_c4",
+      "description": "R8 + C4: local CONTRADICTS under Path A -> HINT (ON_DEVICE)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r8-a",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "local": { "verdict": "CONTRADICTS", "rawVerdict": "CONTRADICTS", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "HINT" }],
+        "state": "HINT",
+        "category": "to_review",
+        "provenance": "ON_DEVICE"
+      }
+    },
+    {
+      "id": "r8_local_contradicts_path_b_cloud_c10",
+      "description": "R8 + C10: local CONTRADICTS under Path B with cloudAvailable -> ALIGNED_ESCALATING -> WAITING",
+      "policy": "standard_path_b",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r8-b",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "local": { "verdict": "CONTRADICTS", "rawVerdict": "CONTRADICTS", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "ALIGNED_ESCALATING" }],
+        "state": "WAITING",
+        "category": "waiting",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "r8_unknown_profile_fallback",
+      "description": "R8 + C10: local CONTRADICTS from profile absent from policy.profiles -> conservative Path B fallback",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-unknown-prof",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "local": { "verdict": "CONTRADICTS", "rawVerdict": "CONTRADICTS", "modelProfile": "unknown_legacy_model", "schemaId": "VerdictV1", "reasoningCap": 40 }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "ALIGNED_ESCALATING" }],
+        "state": "WAITING",
+        "category": "waiting",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "r9_calibrated_authoritative_support_c14",
+      "description": "R9 + C14: calibrated local SUPPORTED with authoritative supportVerdicts -> SUPPORTED_LOCAL (ON_DEVICE)",
+      "policy": "standard_path_a_support_auth",
+      "mode": "confidential",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r9-local",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "local": { "verdict": "SUPPORTED", "rawVerdict": "SUPPORTED", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "SUPPORTED_LOCAL" }],
+        "state": "SUPPORTED_LOCAL",
+        "category": "local",
+        "provenance": "ON_DEVICE"
+      }
+    },
+    {
+      "id": "r10_uncalibrated_support_advisory_offline_c14b",
+      "description": "R10 + C14b: uncalibrated VerdictV1_cap20 SUPPORTED without cloud -> EVIDENCE_FOUND_LOCAL -> LOCAL_EVIDENCE",
+      "policy": "standard_path_a_support_auth",
+      "mode": "confidential",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r10-uncal",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "local": { "verdict": "SUPPORTED", "rawVerdict": "SUPPORTED", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1_cap20", "reasoningCap": 20 }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "EVIDENCE_FOUND_LOCAL" }],
+        "state": "LOCAL_EVIDENCE",
+        "category": "local",
+        "provenance": "ON_DEVICE"
+      }
+    },
+    {
+      "id": "r10_physical_values_only_cloud_c10",
+      "description": "R10 + C10: physical SUPPORTED without entailment confirmation when cloudAvailable -> WAITING (ON_DEVICE)",
+      "policy": "standard_path_b",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r10-phys",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "physical": {
+              "verdict": "SUPPORTED",
+              "kind": "PHYSICAL_TABLE",
+              "confirmedByAuthorAt": 1700000001000,
+              "entailmentConfirmedByAuthorAt": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "WAITING" }],
+        "state": "WAITING",
+        "category": "waiting",
+        "provenance": "ON_DEVICE"
+      }
+    },
+    {
+      "id": "r10_physical_values_only_offline_c14b",
+      "description": "R10 + C14b: physical SUPPORTED without entailment confirmation in Confidential -> EVIDENCE_FOUND_LOCAL -> LOCAL_EVIDENCE",
+      "policy": "standard_path_b",
+      "mode": "confidential",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r10-phys-off",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "physical": {
+              "verdict": "SUPPORTED",
+              "kind": "PHYSICAL_TEXT",
+              "confirmedByAuthorAt": 1700000001000,
+              "entailmentConfirmedByAuthorAt": null
+            }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "EVIDENCE_FOUND_LOCAL" }],
+        "state": "LOCAL_EVIDENCE",
+        "category": "local",
+        "provenance": "ON_DEVICE"
+      }
+    },
+    {
+      "id": "r11_job_in_flight_c9",
+      "description": "R11 + C9: job.value=true with no higher result -> CHECKING",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r11",
+        "job": { "value": true, "seq": 1 },
+        "refs": [{ "refId": "ref-1" }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "CHECKING" }],
+        "state": "CHECKING",
+        "category": "unchecked",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "r12a_nei_silent_escalate_cloud",
+      "description": "R12(a) + C10: NEI_SILENT_ESCALATE with cloudAvailable -> WAITING (ON_DEVICE)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r12a",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "local": { "verdict": "NEI_SILENT_ESCALATE", "rawVerdict": "NEI_SILENT_ESCALATE", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "WAITING" }],
+        "state": "WAITING",
+        "category": "waiting",
+        "provenance": "ON_DEVICE"
+      }
+    },
+    {
+      "id": "r12c_ambiguous_never_waits",
+      "description": "R12(c) + C12: AMBIGUOUS never waits even when cloudAvailable -> UNVERIFIABLE",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "AMBIGUOUS", "retracted": false, "checkMetadata": false, "evidenceVersion": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "hasEvidence": false, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r12c",
+        "refs": [{ "refId": "ref-1" }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "UNVERIFIABLE" }],
+        "state": "UNVERIFIABLE",
+        "category": "unverifiable",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "r12d_zero_candidates_ac_l0_20",
+      "description": "AC-L0-20 / R12(d): RESOLVED + hasEvidence + selection.candidates=0 -> WAITING (never UNCHECKED)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r12d",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "selection": { "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "candidates": 0, "suspicious": false, "seq": 1 }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "WAITING" }],
+        "state": "WAITING",
+        "category": "waiting",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "r12d_stale_selection_ignored_ac_l0_20",
+      "description": "AC-L0-20: stale selection (evidenceVersion mismatch) is ignored -> UNCHECKED via R14",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "b6f3c15844fe12f966ad90db59da8332a9a6d9dfd198ac83949be2045ec6dc1e", "hasEvidence": true, "updatedSeq": 2 }
+      ],
+      "entry": {
+        "claimId": "c-stale-sel",
+        "refs": [
+          {
+            "refId": "ref-1",
+            "selection": { "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "candidates": 0, "suspicious": true, "seq": 1 }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "UNCHECKED" }],
+        "state": "UNCHECKED",
+        "category": "unchecked",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "r12e_local_unavailable",
+      "description": "R12(e): l=null and session.localUnavailable=true -> UNVERIFIABLE in confidential",
+      "policy": "standard_path_a",
+      "mode": "confidential",
+      "session": "local_unavailable",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r12e-unavail",
+        "refs": [{ "refId": "ref-1" }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "UNVERIFIABLE" }],
+        "state": "UNVERIFIABLE",
+        "category": "unverifiable",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "r12e_three_transient_attempts",
+      "description": "R12(e): l=null and transient attempts=3 -> WAITING in standard",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "three_attempts_c_tr",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-tr",
+        "refs": [{ "refId": "ref-1" }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "WAITING" }],
+        "state": "WAITING",
+        "category": "waiting",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "r13_pending_unchecked",
+      "description": "R13 + C16: PENDING with no results -> UNCHECKED",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "PENDING", "retracted": false, "checkMetadata": false, "evidenceVersion": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "hasEvidence": false, "updatedSeq": 0 }
+      ],
+      "entry": {
+        "claimId": "c-r13",
+        "refs": [{ "refId": "ref-1" }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "UNCHECKED" }],
+        "state": "UNCHECKED",
+        "category": "unchecked",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "r14_resolved_unchecked",
+      "description": "R14 + C16: RESOLVED with evidence and no selection/local yet -> UNCHECKED",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-r14",
+        "refs": [{ "refId": "ref-1" }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "UNCHECKED" }],
+        "state": "UNCHECKED",
+        "category": "unchecked",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "c0_no_refs_not_uncited",
+      "description": "C0: n=0 and !t.uncited -> NOT_CHECKABLE (category null)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [],
+      "entry": {
+        "claimId": "c-c0",
+        "baseline": { "claimType": "EXISTENCE", "worth": "LOW", "uncited": false },
+        "refs": []
+      },
+      "expected": {
+        "refStates": [],
+        "state": "NOT_CHECKABLE",
+        "category": null,
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "c1_override_across_family_waiting_to_unverifiable",
+      "description": "C1: override dismissedState=WAITING holds when derived state becomes UNVERIFIABLE (same unresolved family)",
+      "policy": "standard_path_a",
+      "mode": "confidential",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-c1-fam",
+        "normalizedClaimHash": "362798e22ccc7ab5a2d1bce94290b1559c90e4ff0e8286e40326afef6c09e703",
+        "override": {
+          "value": {
+            "dismissedState": "WAITING",
+            "basis": "REVIEW",
+            "captureId": null,
+            "normalizedClaimHash": "362798e22ccc7ab5a2d1bce94290b1559c90e4ff0e8286e40326afef6c09e703",
+            "refIdsKey": "ref-1",
+            "note": "Checked manually",
+            "createdAt": 1700000001000
+          },
+          "seq": 1
+        },
+        "refs": [
+          {
+            "refId": "ref-1",
+            "local": { "verdict": "NEI_SILENT_ESCALATE", "rawVerdict": "NEI_SILENT_ESCALATE", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "UNVERIFIABLE" }],
+        "state": "REVIEWED_BY_AUTHOR",
+        "category": "reviewed",
+        "provenance": "AUTHOR"
+      }
+    },
+    {
+      "id": "c1_override_over_contradicted",
+      "description": "C1: override over CONTRADICTED -> REVIEWED_BY_AUTHOR (reviewed, AUTHOR)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-c1-con",
+        "normalizedClaimHash": "362798e22ccc7ab5a2d1bce94290b1559c90e4ff0e8286e40326afef6c09e703",
+        "override": {
+          "value": {
+            "dismissedState": "CONTRADICTED",
+            "basis": "REVIEW",
+            "captureId": null,
+            "normalizedClaimHash": "362798e22ccc7ab5a2d1bce94290b1559c90e4ff0e8286e40326afef6c09e703",
+            "refIdsKey": "ref-1",
+            "note": "Intentional framing",
+            "createdAt": 1700000001000
+          },
+          "seq": 1
+        },
+        "refs": [{ "refId": "ref-1", "cloud": { "verdict": "CONTRADICTED" } }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "CONTRADICTED_CONFIRMED" }],
+        "state": "REVIEWED_BY_AUTHOR",
+        "category": "reviewed",
+        "provenance": "AUTHOR"
+      }
+    },
+    {
+      "id": "c4b_methodological_not_checkable",
+      "description": "C4b: cited METHODOLOGICAL without support/partial and heldNei=null -> NOT_CHECKABLE",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-c4b-meth",
+        "baseline": { "claimType": "METHODOLOGICAL", "worth": "LOW", "uncited": false },
+        "refs": [
+          {
+            "refId": "ref-1",
+            "local": { "verdict": "NEI_SILENT_ESCALATE", "rawVerdict": "NEI_SILENT_ESCALATE", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "WAITING" }],
+        "state": "NOT_CHECKABLE",
+        "category": null,
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "c4b_non_empirical_stays_checkable",
+      "description": "C4b: cited NON_EMPIRICAL does NOT trigger C4b -> WAITING",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-c4b-nonemp",
+        "baseline": { "claimType": "NON_EMPIRICAL", "worth": "LOW", "uncited": false },
+        "refs": [
+          {
+            "refId": "ref-1",
+            "local": { "verdict": "NEI_SILENT_ESCALATE", "rawVerdict": "NEI_SILENT_ESCALATE", "modelProfile": "web_chrome_nano", "schemaId": "VerdictV1", "reasoningCap": 40 }
+          }
+        ]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "WAITING" }],
+        "state": "WAITING",
+        "category": "waiting",
+        "provenance": "ON_DEVICE"
+      }
+    },
+    {
+      "id": "c5_uncited_empirical_baseline",
+      "description": "C5: n=0 and t.uncited from baseline -> UNCITED_EMPIRICAL (DETERMINISTIC)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [],
+      "entry": {
+        "claimId": "c-c5",
+        "baseline": { "claimType": "QUANTITATIVE", "worth": "HIGH", "uncited": true },
+        "refs": []
+      },
+      "expected": {
+        "refStates": [],
+        "state": "UNCITED_EMPIRICAL",
+        "category": "to_review",
+        "provenance": "DETERMINISTIC"
+      }
+    },
+    {
+      "id": "c7_mixed_support",
+      "description": "C7: n>=2 with SUPPORTED_CONFIRMED and UNVERIFIABLE -> MIXED_SUPPORT (unverifiable, NONE)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "RESOLVED", "retracted": false, "checkMetadata": false, "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5", "hasEvidence": true, "updatedSeq": 1 },
+        { "refId": "ref-2", "bibStatus": "AMBIGUOUS", "retracted": false, "checkMetadata": false, "evidenceVersion": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "hasEvidence": false, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-c7",
+        "refs": [
+          { "refId": "ref-1", "cloud": { "verdict": "SUPPORTED" } },
+          { "refId": "ref-2" }
+        ]
+      },
+      "expected": {
+        "refStates": [
+          { "refId": "ref-1", "state": "SUPPORTED_CONFIRMED" },
+          { "refId": "ref-2", "state": "UNVERIFIABLE" }
+        ],
+        "state": "MIXED_SUPPORT",
+        "category": "unverifiable",
+        "provenance": "NONE"
+      }
+    },
+    {
+      "id": "c8_l0_timeout",
+      "description": "C8: l0Error=PARSE_TIMEOUT -> UNVERIFIABLE (DETERMINISTIC)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "PENDING", "retracted": false, "checkMetadata": false, "evidenceVersion": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "hasEvidence": false, "updatedSeq": 0 }
+      ],
+      "entry": {
+        "claimId": "c-c8",
+        "l0Error": "PARSE_TIMEOUT",
+        "refs": [{ "refId": "ref-1" }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "UNCHECKED" }],
+        "state": "UNVERIFIABLE",
+        "category": "unverifiable",
+        "provenance": "DETERMINISTIC"
+      }
+    },
+    {
+      "id": "c15_check_metadata",
+      "description": "C15: METADATA_MISMATCH (checkMetadata=true) with no higher state -> CHECK_METADATA (DETERMINISTIC)",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "refFacts": [
+        { "refId": "ref-1", "bibStatus": "METADATA_MISMATCH", "retracted": false, "checkMetadata": true, "evidenceVersion": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "hasEvidence": false, "updatedSeq": 1 }
+      ],
+      "entry": {
+        "claimId": "c-c15",
+        "refs": [{ "refId": "ref-1" }]
+      },
+      "expected": {
+        "refStates": [{ "refId": "ref-1", "state": "UNCHECKED" }],
+        "state": "CHECK_METADATA",
+        "category": "to_review",
+        "provenance": "DETERMINISTIC"
+      }
+    }
+  ],
+  "reduceCases": [
+    {
+      "id": "stale_result_key_and_wrong_approved_sha_ignored",
+      "description": "Stale L| resultKey and wrong approvedTextSha256 C| resultKey never materialize",
+      "policy": "standard_path_a",
+      "mode": "standard_online",
+      "session": "default",
+      "events": [
+        {
+          "type": "EvidenceChanged",
+          "refId": "ref-1",
+          "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5",
+          "hasEvidence": true,
+          "seq": 1
+        },
+        {
+          "type": "BibResolved",
+          "refId": "ref-1",
+          "bibStatus": "RESOLVED",
+          "retracted": false,
+          "checkMetadata": false,
+          "seq": 1
+        },
+        {
+          "type": "LocalResultArrived",
+          "claimId": "c-key-1",
+          "refId": "ref-1",
+          "result": {
+            "resultKey": "d7b2ed77d0430aa7abe76a73bfc480b4272e60b38f42265cd79f83c2b16a2d2e",
+            "verdict": "CONTRADICTS",
+            "rawVerdict": "CONTRADICTS",
+            "anchor": null,
+            "anchorFailReason": null,
+            "microReasoning": "Stale evidence",
+            "inferenceSource": "ON_DEVICE",
+            "modelProfile": "web_chrome_nano",
+            "schemaId": "VerdictV1",
+            "reasoningCap": 40,
+            "promptVersion": "p2.1",
+            "decidedAt": 1700000001000
+          }
+        },
+        {
+          "type": "CloudResultArrived",
+          "claimId": "c-key-1",
+          "refId": "ref-1",
+          "result": {
+            "resultKey": "dca2c24304d3bedeb36eb63aed2722b730eabadcedf971b916a320c10d8da157",
+            "normalizedClaimHash": "362798e22ccc7ab5a2d1bce94290b1559c90e4ff0e8286e40326afef6c09e703",
+            "refId": "ref-1",
+            "verdict": "SUPPORTED",
+            "quote": null,
+            "quoteAnchor": null,
+            "approvedTextSha256": "7a1e02e8b472d1d22f7f8922c3e5dceff9ebd6dad2d3e39bfa75d1ab55f984f5",
+            "alternativesDois": [],
+            "noDifferenceNote": false,
+            "adjudicator": "l2AdjudicateProvided",
+            "inferenceSource": "IN_CLOUD",
+            "promptVersion": "p2.1",
+            "decidedAt": 1700000002000
+          }
+        },
+        {
+          "type": "ClauseCreated",
+          "entry": {
+            "claimId": "c-key-1",
+            "docId": "doc-1",
+            "sentenceHash": "6f07f50a092a01d82c6a7bd7afa23a0740fc7776b2b0ef22adfdecef3da04a20",
+            "occurrenceIndex": 0,
+            "clauseIndex": 0,
+            "section": "results",
+            "subsection": null,
+            "span": { "start": 0, "end": 35 },
+            "claimText": "Drug X reduced mortality by 30%.",
+            "normalizedClaimHash": "362798e22ccc7ab5a2d1bce94290b1559c90e4ff0e8286e40326afef6c09e703",
+            "baseline": {
+              "atoms": [{ "start": 0, "end": 5, "claimType": "QUANTITATIVE" }],
+              "worth": "HIGH",
+              "claimType": "QUANTITATIVE",
+              "uncited": false
+            },
+            "stage1": null,
+            "citationKeys": ["ref-1"],
+            "possibleCitations": [],
+            "refs": [{ "refId": "ref-1", "selection": null, "local": null, "cloud": null, "physical": null }],
+            "heldNei": { "value": null, "seq": 0 },
+            "job": { "value": false, "seq": 0 },
+            "l0Error": null,
+            "b5": { "inconsistentWith": [] },
+            "labNoteMismatch": [],
+            "suggestedRefIds": [],
+            "override": { "value": null, "seq": 0 },
+            "archived": false,
+            "updatedAt": 1700000000000
+          }
+        }
+      ],
+      "expected": {
+        "claimId": "c-key-1",
+        "localNull": true,
+        "cloudNull": true,
+        "state": "UNCHECKED"
+      }
+    },
+    {
+      "id": "decided_at_tie_break_larger_wins",
+      "description": "Two results with same resultKey and different decidedAt: larger decidedAt wins even when arriving earlier and having smaller JCS hash",
+      "policy": "standard_path_a_support_auth",
+      "mode": "confidential",
+      "session": "default",
+      "events": [
+        {
+          "type": "EvidenceChanged",
+          "refId": "ref-1",
+          "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5",
+          "hasEvidence": true,
+          "seq": 1
+        },
+        {
+          "type": "BibResolved",
+          "refId": "ref-1",
+          "bibStatus": "RESOLVED",
+          "retracted": false,
+          "checkMetadata": false,
+          "seq": 1
+        },
+        {
+          "type": "LocalResultArrived",
+          "claimId": "c-decided-1",
+          "refId": "ref-1",
+          "result": {
+            "resultKey": "aba4cc8f4eb99c09edb90bef1170131968e2a3785cc6ca9b970809db0840098e",
+            "verdict": "NEI_SILENT_ESCALATE",
+            "rawVerdict": "NEI_SILENT_ESCALATE",
+            "anchor": null,
+            "anchorFailReason": null,
+            "microReasoning": "Reason B",
+            "inferenceSource": "ON_DEVICE",
+            "modelProfile": "web_chrome_nano",
+            "schemaId": "VerdictV1",
+            "reasoningCap": 40,
+            "promptVersion": "p2.1",
+            "decidedAt": 1700000005000
+          }
+        },
+        {
+          "type": "LocalResultArrived",
+          "claimId": "c-decided-1",
+          "refId": "ref-1",
+          "result": {
+            "resultKey": "aba4cc8f4eb99c09edb90bef1170131968e2a3785cc6ca9b970809db0840098e",
+            "verdict": "SUPPORTED",
+            "rawVerdict": "SUPPORTED",
+            "anchor": null,
+            "anchorFailReason": null,
+            "microReasoning": "Reason A",
+            "inferenceSource": "ON_DEVICE",
+            "modelProfile": "web_chrome_nano",
+            "schemaId": "VerdictV1",
+            "reasoningCap": 40,
+            "promptVersion": "p2.1",
+            "decidedAt": 1700000001000
+          }
+        },
+        {
+          "type": "ClauseCreated",
+          "entry": {
+            "claimId": "c-decided-1",
+            "docId": "doc-1",
+            "sentenceHash": "6f07f50a092a01d82c6a7bd7afa23a0740fc7776b2b0ef22adfdecef3da04a20",
+            "occurrenceIndex": 0,
+            "clauseIndex": 0,
+            "section": "results",
+            "subsection": null,
+            "span": { "start": 0, "end": 35 },
+            "claimText": "Drug X reduced mortality by 30%.",
+            "normalizedClaimHash": "362798e22ccc7ab5a2d1bce94290b1559c90e4ff0e8286e40326afef6c09e703",
+            "baseline": {
+              "atoms": [{ "start": 0, "end": 5, "claimType": "QUANTITATIVE" }],
+              "worth": "HIGH",
+              "claimType": "QUANTITATIVE",
+              "uncited": false
+            },
+            "stage1": null,
+            "citationKeys": ["ref-1"],
+            "possibleCitations": [],
+            "refs": [{ "refId": "ref-1", "selection": null, "local": null, "cloud": null, "physical": null }],
+            "heldNei": { "value": null, "seq": 0 },
+            "job": { "value": false, "seq": 0 },
+            "l0Error": null,
+            "b5": { "inconsistentWith": [] },
+            "labNoteMismatch": [],
+            "suggestedRefIds": [],
+            "override": { "value": null, "seq": 0 },
+            "archived": false,
+            "updatedAt": 1700000000000
+          }
+        }
+      ],
+      "expected": {
+        "claimId": "c-decided-1",
+        "localVerdict": "NEI_SILENT_ESCALATE",
+        "localReasoning": "Reason B",
+        "state": "UNVERIFIABLE"
+      }
+    },
+    {
+      "id": "jcs_tie_break_decided_at_equal",
+      "description": "Two results with same resultKey and decidedAt break tie by lexicographically larger sha256hex(JCS(result))",
+      "policy": "standard_path_a_support_auth",
+      "mode": "confidential",
+      "session": "default",
+      "events": [
+        {
+          "type": "EvidenceChanged",
+          "refId": "ref-1",
+          "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5",
+          "hasEvidence": true,
+          "seq": 1
+        },
+        {
+          "type": "BibResolved",
+          "refId": "ref-1",
+          "bibStatus": "RESOLVED",
+          "retracted": false,
+          "checkMetadata": false,
+          "seq": 1
+        },
+        {
+          "type": "LocalResultArrived",
+          "claimId": "c-tie-1",
+          "refId": "ref-1",
+          "result": {
+            "resultKey": "aba4cc8f4eb99c09edb90bef1170131968e2a3785cc6ca9b970809db0840098e",
+            "verdict": "NEI_SILENT_ESCALATE",
+            "rawVerdict": "NEI_SILENT_ESCALATE",
+            "anchor": null,
+            "anchorFailReason": null,
+            "microReasoning": "Reason B",
+            "inferenceSource": "ON_DEVICE",
+            "modelProfile": "web_chrome_nano",
+            "schemaId": "VerdictV1",
+            "reasoningCap": 40,
+            "promptVersion": "p2.1",
+            "decidedAt": 1700000000000
+          }
+        },
+        {
+          "type": "LocalResultArrived",
+          "claimId": "c-tie-1",
+          "refId": "ref-1",
+          "result": {
+            "resultKey": "aba4cc8f4eb99c09edb90bef1170131968e2a3785cc6ca9b970809db0840098e",
+            "verdict": "SUPPORTED",
+            "rawVerdict": "SUPPORTED",
+            "anchor": null,
+            "anchorFailReason": null,
+            "microReasoning": "Reason A",
+            "inferenceSource": "ON_DEVICE",
+            "modelProfile": "web_chrome_nano",
+            "schemaId": "VerdictV1",
+            "reasoningCap": 40,
+            "promptVersion": "p2.1",
+            "decidedAt": 1700000000000
+          }
+        },
+        {
+          "type": "ClauseCreated",
+          "entry": {
+            "claimId": "c-tie-1",
+            "docId": "doc-1",
+            "sentenceHash": "6f07f50a092a01d82c6a7bd7afa23a0740fc7776b2b0ef22adfdecef3da04a20",
+            "occurrenceIndex": 0,
+            "clauseIndex": 0,
+            "section": "results",
+            "subsection": null,
+            "span": { "start": 0, "end": 35 },
+            "claimText": "Drug X reduced mortality by 30%.",
+            "normalizedClaimHash": "362798e22ccc7ab5a2d1bce94290b1559c90e4ff0e8286e40326afef6c09e703",
+            "baseline": {
+              "atoms": [{ "start": 0, "end": 5, "claimType": "QUANTITATIVE" }],
+              "worth": "HIGH",
+              "claimType": "QUANTITATIVE",
+              "uncited": false
+            },
+            "stage1": null,
+            "citationKeys": ["ref-1"],
+            "possibleCitations": [],
+            "refs": [{ "refId": "ref-1", "selection": null, "local": null, "cloud": null, "physical": null }],
+            "heldNei": { "value": null, "seq": 0 },
+            "job": { "value": false, "seq": 0 },
+            "l0Error": null,
+            "b5": { "inconsistentWith": [] },
+            "labNoteMismatch": [],
+            "suggestedRefIds": [],
+            "override": { "value": null, "seq": 0 },
+            "archived": false,
+            "updatedAt": 1700000000000
+          }
+        }
+      ],
+      "expected": {
+        "claimId": "c-tie-1",
+        "localVerdict": "SUPPORTED",
+        "localReasoning": "Reason A",
+        "state": "SUPPORTED_LOCAL"
+      }
+    },
+    {
+      "id": "e1_after_e2_preserves_ref_facts_and_e16_never_sets_state",
+      "description": "E2 then E1 keeps refFacts intact; E16 lab-note mismatch sets purple flag only without changing clause state",
+      "policy": "standard_path_a",
+      "mode": "confidential",
+      "session": "default",
+      "events": [
+        {
+          "type": "BibResolved",
+          "refId": "ref-1",
+          "bibStatus": "RESOLVED",
+          "retracted": false,
+          "checkMetadata": false,
+          "seq": 1
+        },
+        {
+          "type": "EvidenceChanged",
+          "refId": "ref-1",
+          "evidenceVersion": "2725aea2d2dea736fbe38e41ecb518f6098cb68ac77362c5e34faafb356567c5",
+          "hasEvidence": true,
+          "seq": 1
+        },
+        {
+          "type": "ClauseCreated",
+          "entry": {
+            "claimId": "c-e16",
+            "docId": "doc-1",
+            "sentenceHash": "6f07f50a092a01d82c6a7bd7afa23a0740fc7776b2b0ef22adfdecef3da04a20",
+            "occurrenceIndex": 0,
+            "clauseIndex": 0,
+            "section": "results",
+            "subsection": null,
+            "span": { "start": 0, "end": 35 },
+            "claimText": "Drug X reduced mortality by 30%.",
+            "normalizedClaimHash": "362798e22ccc7ab5a2d1bce94290b1559c90e4ff0e8286e40326afef6c09e703",
+            "baseline": {
+              "atoms": [{ "start": 0, "end": 5, "claimType": "QUANTITATIVE" }],
+              "worth": "HIGH",
+              "claimType": "QUANTITATIVE",
+              "uncited": false
+            },
+            "stage1": null,
+            "citationKeys": ["ref-1"],
+            "possibleCitations": [],
+            "refs": [{ "refId": "ref-1", "selection": null, "local": null, "cloud": null, "physical": null }],
+            "heldNei": { "value": null, "seq": 0 },
+            "job": { "value": false, "seq": 0 },
+            "l0Error": null,
+            "b5": { "inconsistentWith": [] },
+            "labNoteMismatch": [],
+            "suggestedRefIds": [],
+            "override": { "value": null, "seq": 0 },
+            "archived": false,
+            "updatedAt": 1700000000000
+          }
+        },
+        {
+          "type": "LabNoteMismatch",
+          "claimId": "c-e16",
+          "captureId": "cap-lab-1",
+          "value": { "pageLabel": "Logbook 3, p. 27", "confirmedByAuthorAt": 1700000005000 },
+          "seq": 1
+        }
+      ],
+      "expected": {
+        "claimId": "c-e16",
+        "refBibStatus": "RESOLVED",
+        "labNoteCount": 1,
+        "state": "UNCHECKED"
+      }
+    }
+  ]
+}
