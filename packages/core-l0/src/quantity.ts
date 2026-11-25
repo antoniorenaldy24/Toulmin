@@ -41,6 +41,7 @@ import { BM25_STOPWORDS, porterStem } from "./porter.js";
 import {
   UNIT_WORDS,
   isKnownSuffixWordUnit,
+  scanLeadingPrefixCurrency,
   scanPrefixUnit,
   scanSuffixUnitFast,
   type UnitFamily,
@@ -393,7 +394,7 @@ function buildProseWordSpans(
     }
   }
   const spans = extractWordSpans(cleaned);
-  const { hasLetterMask, anyLetter } = buildWordMask(normLowerText, spans);
+  const { hasLetterMask, anyLetter } = buildWordMask(cleaned, spans);
   return { cleanedLower: cleaned, spans, hasLetterMask, anyLetterInDoc: anyLetter };
 }
 
@@ -902,6 +903,7 @@ interface ScanRuntimeCtx {
   readonly prep: PreparedInput;
   readonly normText: string;
   readonly normLowerText: string;
+  readonly cleanedLower: string;
   readonly n: number;
   readonly tupleIdHasher: Sha256PrefixHasher;
   readonly section: string;
@@ -1068,7 +1070,7 @@ function pushTupleFromSpan(
         win.beforeStart < win.beforeEnd ? ctx.wordSpans[win.beforeStart]!.start : spanStartNorm;
       const wEndNorm =
         win.afterEnd > win.afterIdx ? ctx.wordSpans[win.afterEnd - 1]!.end : spanEndNorm;
-      windowTextForMetric = ctx.normLowerText.slice(wStartNorm, wEndNorm);
+      windowTextForMetric = ctx.cleanedLower.slice(wStartNorm, wEndNorm);
     }
     metric = classifyMetricClass({
       unitFamily: unitMatch.unitFamily,
@@ -1260,7 +1262,23 @@ function tryRule7Between(ctx: ScanRuntimeCtx, i: number): number {
   if (aStart <= betEnd) {
     return -1;
   }
-  const aNum = parseFiniteNumberAt(normText, prep.subText, prep.normMap, aStart, prep.isEnglish, true);
+  const aPrefix = scanLeadingPrefixCurrency(normText, normLowerText, aStart);
+  let aNumStart = aStart;
+  if (aPrefix !== null) {
+    aNumStart = skipSpaces(normText, aPrefix.endNorm);
+    if (aNumStart - aPrefix.endNorm > 1) {
+      return -1;
+    }
+  }
+  const aNum = parseFiniteNumberAt(
+    normText,
+    prep.subText,
+    prep.normMap,
+    aNumStart,
+    prep.isEnglish,
+    true,
+    aPrefix !== null,
+  );
   if (aNum === null) {
     return -1;
   }
@@ -1272,6 +1290,9 @@ function tryRule7Between(ctx: ScanRuntimeCtx, i: number): number {
     hasPct,
     aNum.isYearIntCandidate,
   );
+  if (aPrefix !== null && aSuf !== null && (aSuf.family === "unknown" || aPrefix.unitCanon !== aSuf.unitCanon)) {
+    return -1;
+  }
   const aAfterUnit = aSuf !== null ? aSuf.endNorm : aNum.endNorm;
   const spBeforeAnd = skipSpaces(normText, aAfterUnit);
   const andEnd = spBeforeAnd > aAfterUnit ? matchWordLowerAt(normLowerText, spBeforeAnd, "and") : -1;
@@ -1282,7 +1303,23 @@ function tryRule7Between(ctx: ScanRuntimeCtx, i: number): number {
   if (bStart <= andEnd) {
     return -1;
   }
-  const bNum = parseFiniteNumberAt(normText, prep.subText, prep.normMap, bStart, prep.isEnglish, true);
+  const bPrefix = scanLeadingPrefixCurrency(normText, normLowerText, bStart);
+  let bNumStart = bStart;
+  if (bPrefix !== null) {
+    bNumStart = skipSpaces(normText, bPrefix.endNorm);
+    if (bNumStart - bPrefix.endNorm > 1) {
+      return -1;
+    }
+  }
+  const bNum = parseFiniteNumberAt(
+    normText,
+    prep.subText,
+    prep.normMap,
+    bNumStart,
+    prep.isEnglish,
+    true,
+    bPrefix !== null,
+  );
   if (bNum === null) {
     return -1;
   }
@@ -1293,16 +1330,27 @@ function tryRule7Between(ctx: ScanRuntimeCtx, i: number): number {
     hasPct || aSuf?.family === "percent",
     bNum.isYearIntCandidate,
   );
-  if (!isRangeUnitCompatible(aSuf, bSuf)) {
+  if (bPrefix !== null && bSuf !== null && (bSuf.family === "unknown" || bPrefix.unitCanon !== bSuf.unitCanon)) {
     return -1;
+  }
+  const effB = bSuf ?? bPrefix;
+  if (aSuf !== null) {
+    if (effB === null || effB.family === "unknown" || aSuf.unitCanon !== effB.unitCanon) {
+      return -1;
+    }
+  } else if (aPrefix !== null && effB !== null) {
+    if (effB.family === "unknown" || aPrefix.unitCanon !== effB.unitCanon) {
+      return -1;
+    }
   }
   const bAfterUnit = bSuf !== null ? bSuf.endNorm : bNum.endNorm;
   if (overlapsExcludedSpan(ctx.excludedNormSpans, i, bAfterUnit)) {
     return -1;
   }
   const sharedSuf = bSuf ?? aSuf;
-  const unitA = resolveCombinedUnit(prep, aSuf ?? sharedSuf, null);
-  const unitB = resolveCombinedUnit(prep, bSuf ?? sharedSuf, null);
+  const sharedPrefix = aPrefix ?? bPrefix;
+  const unitA = resolveCombinedUnit(prep, aSuf ?? sharedSuf, sharedSuf === null ? sharedPrefix : null);
+  const unitB = resolveCombinedUnit(prep, bSuf ?? sharedSuf, sharedSuf === null ? sharedPrefix : null);
   const valLo = scaleParsedNumber(aNum, unitA.factor);
   const valHi = scaleParsedNumber(bNum, unitB.factor);
   pushTupleFromSpan(
@@ -1556,7 +1604,7 @@ function tryRule2bMeanSd(
       win.beforeStart < win.beforeEnd ? ctx.wordSpans[win.beforeStart]!.start : exprStartBase;
     const wEndNorm =
       win.afterEnd > win.afterIdx ? ctx.wordSpans[win.afterEnd - 1]!.end : finalEnd;
-    localWindowLower = normLowerText.slice(wStartNorm, wEndNorm);
+    localWindowLower = ctx.cleanedLower.slice(wStartNorm, wEndNorm);
   }
   if (!containsMeanSdCue(winWords, localWindowLower, ctx.tableHeaderLower, ctx.tableWindowWords)) {
     return -1;
@@ -1834,7 +1882,7 @@ export function extractQuantitiesWithMeta(
   }
 
   const cues = detectDocMetricCues(
-    normLowerText,
+    cleanedLower,
     wordSpans,
     hasLetterMask,
     tableWindowWords,
@@ -1871,6 +1919,7 @@ export function extractQuantitiesWithMeta(
     prep,
     normText,
     normLowerText,
+    cleanedLower,
     n,
     tupleIdHasher: createSha256PrefixHasher(`${docId}|${sentenceHash}|${occurrenceIndex}|`),
     section,
@@ -2021,18 +2070,29 @@ export function extractQuantitiesWithMeta(
     }
 
     // Rules 1, 2, 2b, 3, 7, 8: Numeric value expression.
-    const aNum =
-      isAsciiDigitCode(cu) || cu === 45 || cu === 43 || cu === 46
-        ? parseNumberOrScientificAt(normText, prep.subText, prep.normMap, i, prep.isEnglish, true)
-        : null;
-    if (aNum !== null) {
+    const tryConsumeNumericExpr = (
+      numPos: number,
+      prePrefix: UnitMatch | null,
+    ): number => {
+      const aNum = parseNumberOrScientificAt(
+        normText,
+        prep.subText,
+        prep.normMap,
+        numPos,
+        prep.isEnglish,
+        prePrefix === null,
+        prePrefix !== null,
+      );
+      if (aNum === null) {
+        return -1;
+      }
       if (!Number.isFinite(aNum.value)) {
         ctx.lastConsumedEndNorm = aNum.endNorm;
-        i = aNum.endNorm;
-        continue;
+        return aNum.endNorm;
       }
-      let aPrefix = scanPrefixUnit(normText, normLowerText, i, ctx.lastConsumedEndNorm);
-      if (aPrefix !== null && overlapsExcludedSpan(excludedNormSpans, aPrefix.startNorm, i)) {
+      let aPrefix =
+        prePrefix ?? scanPrefixUnit(normText, normLowerText, numPos, ctx.lastConsumedEndNorm);
+      if (aPrefix !== null && overlapsExcludedSpan(excludedNormSpans, aPrefix.startNorm, numPos)) {
         aPrefix = null;
       }
       const aSuf = scanSuffixUnitFast(
@@ -2046,29 +2106,26 @@ export function extractQuantitiesWithMeta(
         ctx.seenPctBeforeCursor = true;
       }
       const afterANumAndUnit = aSuf !== null ? aSuf.endNorm : aNum.endNorm;
-      const exprStartBase = aPrefix !== null ? aPrefix.startNorm : i;
+      const exprStartBase = aPrefix !== null ? aPrefix.startNorm : numPos;
       const nextAfterA = skipSpaces(normText, afterANumAndUnit);
       const nextChAfterA = nextAfterA < n ? normText.charCodeAt(nextAfterA) : 0;
 
       if (nextChAfterA === 40 /* '(' */ || nextChAfterA === 91 /* '[' */ || nextChAfterA === 44 /* ',' */) {
         const nextR2 = tryRule2Interval(ctx, aNum, aPrefix, aSuf, exprStartBase, nextAfterA, nextChAfterA);
         if (nextR2 !== -1) {
-          i = nextR2;
-          continue;
+          return nextR2;
         }
       }
       if (nextChAfterA === 40 /* '(' */) {
         const nextR2b = tryRule2bMeanSd(ctx, aNum, aPrefix, aSuf, exprStartBase, nextAfterA);
         if (nextR2b !== -1) {
-          i = nextR2b;
-          continue;
+          return nextR2b;
         }
       }
       if (nextChAfterA === 0x00b1 /* '±' */ || nextChAfterA === 43 /* '+' */) {
         const nextR3 = tryRule3PlusMinus(ctx, aNum, aPrefix, aSuf, exprStartBase, nextAfterA);
         if (nextR3 !== -1) {
-          i = nextR3;
-          continue;
+          return nextR3;
         }
       }
       if (
@@ -2078,8 +2135,7 @@ export function extractQuantitiesWithMeta(
       ) {
         const nextR7 = tryRule7Range(ctx, aNum, aPrefix, aSuf, exprStartBase, afterANumAndUnit);
         if (nextR7 !== -1) {
-          i = nextR7;
-          continue;
+          return nextR7;
         }
       }
 
@@ -2104,17 +2160,38 @@ export function extractQuantitiesWithMeta(
           afterANumAndUnit,
         );
       }
-      i = afterANumAndUnit;
-      continue;
+      return afterANumAndUnit;
+    };
+
+    if (isAsciiDigitCode(cu) || cu === 45 || cu === 43 || cu === 46) {
+      const nextNum = tryConsumeNumericExpr(i, null);
+      if (nextNum !== -1) {
+        i = nextNum;
+        continue;
+      }
     }
 
-    // Rule 9: Word numbers when next word is a §7.3 unit or a COUNT_NOUNS word.
+    // Rule 9: Word numbers when next word is a §7.3 unit or a COUNT_NOUNS word,
+    // plus unspaced letter prefix currencies (`Rp5000`, `USD10`, `EUR5`).
     const firstCp = cu < 0x80 ? cu : codePointAtSafe(normText, i).cp;
     if (isBaseLetter(firstCp)) {
       const nextR9 = tryRule9WordNumber(ctx, i);
       if (nextR9 !== -1) {
         i = nextR9;
         continue;
+      }
+
+      const leadCur = scanLeadingPrefixCurrency(normText, normLowerText, i);
+      if (
+        leadCur !== null &&
+        leadCur.endNorm < n &&
+        isAsciiDigitCode(normText.charCodeAt(leadCur.endNorm))
+      ) {
+        const nextCurNum = tryConsumeNumericExpr(leadCur.endNorm, leadCur);
+        if (nextCurNum !== -1) {
+          i = nextCurNum;
+          continue;
+        }
       }
 
       while (i < n) {

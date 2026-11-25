@@ -714,6 +714,58 @@ export function scanPrefixUnit(
 }
 
 /**
+ * Scans forward at `pos` for a leading prefix currency unit (`$`, `US$`, `USD`, `€`, `EUR`,
+ * `£`, `GBP`, `Rp`, `IDR`) at a word boundary before a number (`02` §7.2 Rule 7, §7.3).
+ */
+export function scanLeadingPrefixCurrency(
+  normText: string,
+  normLowerText: string,
+  pos: number,
+): UnitMatch | null {
+  const n = normText.length;
+  if (pos < 0 || pos >= n || !isBoundaryBefore(normText, pos)) {
+    return null;
+  }
+  const ch = normLowerText.charCodeAt(pos);
+  if (
+    ch !== 36 /* '$' */ &&
+    ch !== 0x20ac /* '€' */ &&
+    ch !== 0x00a3 /* '£' */ &&
+    ch !== 117 /* 'u' */ &&
+    ch !== 101 /* 'e' */ &&
+    ch !== 103 /* 'g' */ &&
+    ch !== 105 /* 'i' */ &&
+    ch !== 114 /* 'r' */
+  ) {
+    return null;
+  }
+  for (let i = 0; i < PREFIX_CURRENCIES.length; i++) {
+    const c = PREFIX_CURRENCIES[i]!;
+    const pLen = c.prefixLower.length;
+    const end = pos + pLen;
+    if (end > n || !normLowerText.startsWith(c.prefixLower, pos)) {
+      continue;
+    }
+    if (c.isWord && end < n) {
+      const nextUnit = codePointAtSafe(normText, end);
+      if (isBaseLetter(nextUnit.cp)) {
+        continue;
+      }
+    }
+    return {
+      family: c.family,
+      unitCanon: c.unitCanon,
+      factor: 1,
+      startNorm: pos,
+      endNorm: end,
+      isSampleSizePrefix: false,
+      isRatioPrefix: false,
+    };
+  }
+  return null;
+}
+
+/**
  * Resolves trailing/leading ASCII spaces around punctuation check if needed.
  */
 export function isNormSpaceChar(code: number): boolean {

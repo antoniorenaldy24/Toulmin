@@ -507,6 +507,7 @@ function parsePlainNumberAt(
   pos: number,
   isEnglish: boolean,
   allowSign: boolean,
+  allowWordCharBefore: boolean = false,
 ): ParsedNumber | null {
   const n = normText.length;
   if (pos >= n) {
@@ -549,7 +550,7 @@ function parsePlainNumberAt(
     }
     negative = cu0 === 45;
     cur++;
-  } else if (isWordCharBefore(normText, cur)) {
+  } else if (!allowWordCharBefore && isWordCharBefore(normText, cur)) {
     return null;
   }
 
@@ -950,8 +951,17 @@ export function parseNumberOrScientificAt(
   pos: number,
   isEnglish: boolean,
   allowSign: boolean,
+  allowWordCharBefore: boolean = false,
 ): ParsedNumber | null {
-  const base = parsePlainNumberAt(normText, rawSubText, normMap, pos, isEnglish, allowSign);
+  const base = parsePlainNumberAt(
+    normText,
+    rawSubText,
+    normMap,
+    pos,
+    isEnglish,
+    allowSign,
+    allowWordCharBefore,
+  );
   if (base === null) {
     return null;
   }
@@ -1013,8 +1023,17 @@ export function parseFiniteNumberAt(
   pos: number,
   isEnglish: boolean,
   allowSign: boolean,
+  allowWordCharBefore: boolean = false,
 ): ParsedNumber | null {
-  const num = parseNumberOrScientificAt(normText, rawSubText, normMap, pos, isEnglish, allowSign);
+  const num = parseNumberOrScientificAt(
+    normText,
+    rawSubText,
+    normMap,
+    pos,
+    isEnglish,
+    allowSign,
+    allowWordCharBefore,
+  );
   return num !== null && Number.isFinite(num.value) ? num : null;
 }
 
@@ -1189,7 +1208,10 @@ function hasPercentageContextInText(textLower: string): boolean {
     if (!isBaseLetterBefore(textLower, pos)) {
       const next = pos + 1 < n ? textLower.charCodeAt(pos + 1) : 0;
       if (next === 112 /* 'p' */) {
-        if (!isWordCharAt(textLower, pos + 2)) {
+        if (
+          !isWordCharAt(textLower, pos + 2) &&
+          (pos + 2 >= n || textLower.charCodeAt(pos + 2) !== 46 /* '.' */)
+        ) {
           return true;
         }
       } else if (next === 99 /* 'c' */) {

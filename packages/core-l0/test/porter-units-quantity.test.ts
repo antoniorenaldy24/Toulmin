@@ -611,4 +611,75 @@ describe("quantity.ts helpers & AC-L0-25 edge cases", () => {
       expect(normalizedClaim(negSample)).not.toContain("\u27e8v:2pp\u27e9");
     }
   });
+
+  it("ignores page abbreviation pp. for percentage context while preserving standalone pp", () => {
+    const pageAbbrev = "See pp. 10-20; the score fell by 5 points.";
+    const qPage = extractQuantities(pageAbbrev);
+    expect(qPage.map((t) => [t.valueNorm, t.unitCanon])).toEqual([
+      [15, ""],
+      [5, ""],
+    ]);
+    expect(normalizedClaim(pageAbbrev)).not.toContain("\u27e8v:5pp\u27e9");
+
+    const pctPts = "A 2 points drop from 12 pp baseline.";
+    const qPp = extractQuantities(pctPts);
+    expect(qPp.map((t) => [t.valueNorm, t.unitCanon])).toEqual([
+      [2, "pp"],
+      [12, "pp"],
+    ]);
+    expect(normalizedClaim(pctPts)).toBe("a \u27e8v:2pp\u27e9 drop from \u27e8v:12pp\u27e9 baseline");
+  });
+
+  it("excludes citation marker text when slicing windowTextForMetric and localWindowLower", () => {
+    const rCite = extractQuantities("Score was 5 \\cite[r = 1]{smith2020} in group A.");
+    expect(rCite).toHaveLength(1);
+    expect(rCite[0]!.metricClass).toBe("other");
+
+    const sdCite = extractQuantities("Score was 12.5 (3.1) \\cite{s.d.2020} overall.");
+    expect(sdCite).toHaveLength(2);
+    expect(sdCite.map((t) => t.valueNorm)).toEqual([12.5, 3.1]);
+  });
+
+  it("supports prefix currency units in Rule 7 between-and ranges without cross-unit merging", () => {
+    const currencies: readonly [string, string][] = [
+      ["between $5 and $10", "usd"],
+      ["between \u20ac5 and \u20ac10", "eur"],
+      ["between \u00a320 and \u00a340", "gbp"],
+      ["between Rp 5000 and Rp 10000", "idr"],
+      ["between Rp5000 and Rp10000", "idr"],
+      ["between USD5 and USD10", "usd"],
+      ["between US$5 and US$10", "usd"],
+    ];
+    for (const [sample, expectedCanon] of currencies) {
+      const q = extractQuantities(sample);
+      expect(q).toHaveLength(1);
+      expect(q[0]!.unitCanon).toBe(expectedCanon);
+      expect(q[0]!.metricClass).toBe("currency");
+      expect(q[0]!.valueLo).toBeLessThan(q[0]!.valueHi!);
+      expect(q[0]!.valueNorm).toBe((q[0]!.valueLo! + q[0]!.valueHi!) / 2);
+    }
+
+    expect(extractQuantities("Rp5000").map((t) => [t.valueNorm, t.unitCanon])).toEqual([
+      [5000, "idr"],
+    ]);
+    expect(extractQuantities("USD10").map((t) => [t.valueNorm, t.unitCanon])).toEqual([
+      [10, "usd"],
+    ]);
+    expect(normalizedClaim("Rp5000")).toBe("\u27e8v:5000idr\u27e9");
+    expect(normalizedClaim("USD10")).toBe("\u27e8v:10usd\u27e9");
+
+    const mixedCur = extractQuantities("between $5 and \u20ac10");
+    expect(mixedCur).toHaveLength(2);
+    expect(mixedCur.map((t) => [t.valueNorm, t.unitCanon])).toEqual([
+      [5, "usd"],
+      [10, "eur"],
+    ]);
+
+    const mixedUnit = extractQuantities("between $5 and 10 mg");
+    expect(mixedUnit).toHaveLength(2);
+    expect(mixedUnit.map((t) => [t.valueNorm, t.unitCanon])).toEqual([
+      [5, "usd"],
+      [10, "mg"],
+    ]);
+  });
 });

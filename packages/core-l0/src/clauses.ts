@@ -263,7 +263,15 @@ function isRangeOutsideProtectedMask(
 function isWordBoundaryInStr(s: string, index: number, isStart: boolean): boolean {
   if (isStart) {
     if (index <= 0) return true;
-    const prev = codePointAtSafe(s, index - 1);
+    let prevStart = index - 1;
+    const cu = s.charCodeAt(prevStart);
+    if (cu >= 0xdc00 && cu <= 0xdfff && prevStart > 0) {
+      const high = s.charCodeAt(prevStart - 1);
+      if (high >= 0xd800 && high <= 0xdbff) {
+        prevStart--;
+      }
+    }
+    const prev = codePointAtSafe(s, prevStart);
     return prev.isUnpairedSurrogate || (!isLetter(prev.cp, false) && !isDigit(prev.cp));
   }
   if (index >= s.length) return true;
@@ -395,7 +403,7 @@ function findInnerSplitOffset(between: string): {
   if (allWords.length < 3) {
     return { offset: null, relativizer: fwLower };
   }
-  const minRawOffset = allWords[2]!.start;
+  const minRawOffset = allWords[1]!.end;
 
   const view = buildSearchView(between);
   const s = view.searchStr;

@@ -78,7 +78,13 @@ const CORE_L0_FORBIDDEN_GLOBALS = [
   { name: "global", message: "Node global is forbidden in packages/core-l0 (00 §7.1)." },
   { name: "globalThis", message: "Global namespace object globalThis is forbidden in packages/core-l0 (00 §7.1)." },
   { name: "crypto", message: "Runtime crypto global is forbidden in packages/core-l0 (00 §7.1, 02 §2.3)." },
-  { name: "Intl", message: "Platform Intl APIs are forbidden in packages/core-l0 (02 §4)." }
+  { name: "Intl", message: "Platform Intl APIs are forbidden in packages/core-l0 (02 §4)." },
+  { name: "TextEncoder", message: "Web TextEncoder global is forbidden in packages/core-l0 (00 §7.1)." },
+  { name: "TextDecoder", message: "Web TextDecoder global is forbidden in packages/core-l0 (00 §7.1)." },
+  { name: "atob", message: "Global base64 atob() is forbidden in packages/core-l0 (00 §7.1)." },
+  { name: "btoa", message: "Global base64 btoa() is forbidden in packages/core-l0 (00 §7.1)." },
+  { name: "URL", message: "Web URL global is forbidden in packages/core-l0 (00 §7.1)." },
+  { name: "structuredClone", message: "Global structuredClone() is forbidden in packages/core-l0 (00 §7.1)." }
 ];
 
 const CORE_L0_SRC_EXTRA_GLOBALS = [

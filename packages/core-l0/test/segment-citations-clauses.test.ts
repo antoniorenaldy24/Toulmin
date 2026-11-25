@@ -200,6 +200,57 @@ describe("segment.ts — detailed boundary, eligibility & offset rules", () => {
       raw.slice(normInfo.map[absNormMarkerStart]!, normInfo.map[absNormMarkerEnd]!),
     ).toBe("[1]");
   });
+
+  it("splits across Rule 4 boundaries when next sentence starts with narrative or non-narrative citation markers", () => {
+    const latexNar = segmentDocument("We tested aspirin. \\citet{smith2020} showed Y.", "latex");
+    expect(latexNar.sentences.map((s) => s.rawText)).toEqual([
+      "We tested aspirin.",
+      "\\citet{smith2020} showed Y.",
+    ]);
+
+    const mdNar = segmentDocument("We tested aspirin. @smith2020 showed Y.", "md", {
+      citationOptions: { bibKeys: new Set(["smith2020"]) },
+    });
+    expect(mdNar.sentences.map((s) => s.rawText)).toEqual([
+      "We tested aspirin.",
+      "@smith2020 showed Y.",
+    ]);
+
+    const ayNar = segmentDocument("We tested aspirin. Smith (2020) showed Y.", "md");
+    expect(ayNar.sentences.map((s) => s.rawText)).toEqual([
+      "We tested aspirin.",
+      "Smith (2020) showed Y.",
+    ]);
+
+    const nonNarUpper = segmentDocument(
+      "We tested aspirin. \\cite{a} The next trial confirmed Y.",
+      "latex",
+    );
+    expect(nonNarUpper.sentences.map((s) => s.rawText)).toEqual([
+      "We tested aspirin.",
+      "\\cite{a} The next trial confirmed Y.",
+    ]);
+
+    const nonNarLower = segmentDocument("We tested aspirin... (Smith, 2020) then left.", "md");
+    expect(nonNarLower.sentences.map((s) => s.rawText)).toEqual([
+      "We tested aspirin... (Smith, 2020) then left.",
+    ]);
+  });
+
+  it("segments large multi-section LaTeX documents with monotonic cursors in O(n) <= 5 ms / 10 KB", () => {
+    const unit =
+      "\\section{Results}\nPatients received $x = 5$ mg\\footnote{Note.} in trial [1]. Next sentence confirmed effect \\cite{k1}.\n";
+    const big = unit.repeat(95); // ~10.4 KB, >= 190 sentences
+    const bigRes = segmentDocument(big, "latex");
+    expect(bigRes.sentences.length).toBeGreaterThanOrEqual(190);
+    expect(bigRes.sentences[0]!.section).toBe("results");
+    expect(bigRes.sentences[0]!.markers).toHaveLength(1);
+    const slice10k = big.slice(0, 10_240);
+    const med = medianMs(7, () => {
+      segmentDocument(slice10k, "latex");
+    });
+    expect(med).toBeLessThanOrEqual(5);
+  });
 });
 
 describe("citations.ts — full rule, numeric exclusion, and resolution coverage", () => {
@@ -365,6 +416,49 @@ describe("citations.ts — full rule, numeric exclusion, and resolution coverage
     expect(spaced[0]!.rule).toBe("pandoc_narrative");
     expect(spaced[0]!.keys).toEqual(["k5"]);
   });
+
+  it("resolves sparse gapped markdownNumberedRefs by explicit ref.index and rejects signed/parenthesized bare numbers before intervals", () => {
+    const mdDoc = [
+      "Trial A [1] beat trial C [3] while [2] is missing.",
+      "",
+      "## References",
+      "1. First reference.",
+      "3. Third reference.",
+    ].join("\n");
+    const pre = preMask(mdDoc, "md");
+    const mdRefs = extractMarkdownNumberedReferences(mdDoc, pre);
+    expect(mdRefs.map((r) => r.index)).toEqual([1, 3]);
+    const mdMarkers = scanCitations(pre.maskedText, { hasKnownNumberingOrder: true });
+    const mdResolved = resolveCitationMarkers(mdMarkers, { markdownNumberedRefs: mdRefs });
+    expect(mdResolved.resolvedMarkers.map((r) => r.status)).toEqual([
+      "RESOLVED",
+      "RESOLVED",
+      "UNRESOLVED_KEY",
+    ]);
+    expect(mdResolved.resolvedRefIds).toEqual(["mdref:1", "mdref:3"]);
+    expect(mdResolved.unresolvedKeys).toEqual(["2"]);
+
+    expect(scanCitations("Change was -5 [1, 10] mm.")).toHaveLength(0);
+    expect(scanCitations("Change was +5 [1, 10] mm.")).toHaveLength(0);
+    expect(scanCitations("Median (5 [3, 7] days) fell.")).toHaveLength(0);
+    expect(scanCitations("Offset (-5 [1, 10] mm) held.")).toHaveLength(0);
+    expect(scanCitations("Median 1.2019 [1, 2] days.")).toHaveLength(0);
+    expect(scanCitations("Median (1.2019 [1, 2] days).")).toHaveLength(0);
+    expect(scanCitations("95% CI 2.5 [12, 45].")).toHaveLength(0);
+    expect(scanCitations("mean 5, SD 1.2 [3, 7].")).toHaveLength(0);
+    expect(scanCitations("median 3, IQR 0.5 [1, 2].")).toHaveLength(0);
+
+    // 02 §5.2 Rule 2 item 4: year and percentage before bracket remain numeric citations
+    expect(scanCitations("Cohort (2019 [1, 2] patients) improved.").map((m) => m.numericIds)).toEqual([
+      [1, 2],
+    ]);
+    expect(scanCitations("Reduced mortality by 30% [1, 2] across cohorts.").map((m) => m.numericIds)).toEqual([
+      [1, 2],
+    ]);
+    expect(scanCitations("Response 50% [40, 60] patients.").map((m) => m.numericIds)).toEqual([
+      [40, 60],
+    ]);
+  });
 });
 
 describe("clauses.ts — Step 1–4 boundaries, connectors, merges, and spans", () => {
@@ -412,6 +506,38 @@ describe("clauses.ts — Step 1–4 boundaries, connectors, merges, and spans", 
     for (let i = 1; i < clauses.length; i++) {
       expect(clauses[i - 1]!.range.end).toBeLessThanOrEqual(clauses[i]!.range.start);
     }
+  });
+
+  it("handles backward surrogate pairs in isWordBoundaryInStr and Step 2 inner splits after 2-word relative clauses", () => {
+    const mathBoldA = String.fromCodePoint(0x1d400);
+    const attachedSurrogate = `Drug X ${mathBoldA}not only reduced pain but also improved sleep [1].`;
+    const splitAttached = partitionClauses(attachedSurrogate, scanCitations(attachedSurrogate));
+    expect(splitAttached.map((c) => c.claimText)).toEqual([
+      `Drug X ${mathBoldA}not only reduced pain`,
+      "improved sleep",
+    ]);
+
+    const spacedSurrogate = `Drug X ${mathBoldA} not only reduced pain but also improved sleep [1].`;
+    const keptSpaced = partitionClauses(spacedSurrogate, scanCitations(spacedSurrogate));
+    expect(keptSpaced.map((c) => c.claimText)).toEqual([
+      `Drug X ${mathBoldA} not only reduced pain but also improved sleep`,
+    ]);
+
+    const twoWordRel = "Drug X helped [4], which works, and Drug Y failed [5].";
+    const twoWordTrace = partitionClausesWithTrace(twoWordRel, scanCitations(twoWordRel));
+    expect(twoWordTrace.splitTraces[0]!.splitOffset).toBe(twoWordRel.indexOf(", and "));
+    expect(twoWordTrace.clauses.map((c) => c.claimText)).toEqual([
+      "Drug X helped, which works",
+      "Drug Y failed",
+    ]);
+
+    const oneWordRel = "Drug X helped [4], which and Drug Y failed [5].";
+    const oneWordTrace = partitionClausesWithTrace(oneWordRel, scanCitations(oneWordRel));
+    expect(oneWordTrace.splitTraces[0]!.splitOffset).toBe(oneWordRel.indexOf(", which"));
+    expect(oneWordTrace.clauses.map((c) => c.claimText)).toEqual([
+      "Drug X helped",
+      "Drug Y failed",
+    ]);
   });
 });
 

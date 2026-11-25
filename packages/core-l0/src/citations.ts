@@ -792,18 +792,31 @@ function tryParsePandocBracket(
 
 function isBareNumberToken(token: string): boolean {
   if (token.length === 0) return false;
+  let start = 0;
+  if (token.charCodeAt(start) === 40 /* '(' */) {
+    start++;
+  }
+  if (start >= token.length) return false;
+  let hasSign = false;
+  const signCh = token.charCodeAt(start);
+  if (signCh === 45 /* '-' */ || signCh === 43 /* '+' */ || signCh === 0x2212 /* '−' */) {
+    hasSign = true;
+    start++;
+  }
+  if (start >= token.length) return false;
   let sawSep = false;
-  for (let i = 0; i < token.length; i++) {
+  const bodyLen = token.length - start;
+  for (let i = start; i < token.length; i++) {
     const ch = token.charCodeAt(i);
     if (isDigit(ch)) continue;
-    if ((ch === 46 || ch === 44) && !sawSep && i > 0 && i + 1 < token.length) {
+    if ((ch === 46 || ch === 44) && !sawSep && i > start && i + 1 < token.length) {
       sawSep = true;
       continue;
     }
     return false;
   }
-  if (!sawSep && token.length === 4) {
-    const yr = Number(token);
+  if (!sawSep && !hasSign && bodyLen === 4) {
+    const yr = Number(token.slice(start));
     if (yr >= 1900 && yr <= 2099) {
       return false;
     }
@@ -846,7 +859,8 @@ function advanceNumericLookback(
   let segStart = state.cursor;
   for (let k = p - 1; k >= state.cursor; k--) {
     const cp = text.charCodeAt(k);
-    if (isMaskChar(cp) || isSentenceStopChar(cp)) {
+    const isDecimalDot = cp === 46 && k + 1 < p && isDigit(text.charCodeAt(k + 1));
+    if (isMaskChar(cp) || (isSentenceStopChar(cp) && !isDecimalDot)) {
       segStart = k + 1;
       state.w1 = undefined;
       state.w2 = undefined;
@@ -857,15 +871,37 @@ function advanceNumericLookback(
     }
   }
 
+  const isPureDigitsSpan = (s: number, e: number): boolean => {
+    if (s < 0 || e <= s) return false;
+    for (let idx = s; idx < e; idx++) {
+      if (!isDigit(text.charCodeAt(idx))) return false;
+    }
+    return true;
+  };
+
   let aStart = -1;
   let aEnd = -1;
   let bStart = -1;
   let bEnd = -1;
+  let bMergedDecimal = false;
   forEachWordSpan(text, segStart, p, undefined, (ws, we) => {
+    if (
+      bStart !== -1 &&
+      !bMergedDecimal &&
+      ws === bEnd + 1 &&
+      text.charCodeAt(bEnd) === 46 &&
+      isPureDigitsSpan(bStart, bEnd) &&
+      isPureDigitsSpan(ws, we)
+    ) {
+      bEnd = we;
+      bMergedDecimal = true;
+      return;
+    }
     aStart = bStart;
     aEnd = bEnd;
     bStart = ws;
     bEnd = we;
+    bMergedDecimal = false;
   });
   if (aStart !== -1) {
     state.w2 = text.slice(aStart, aEnd);
@@ -1811,7 +1847,7 @@ export function resolveCitationMarkers(
   }
 
   // Rule 2 numeric ordering priority (§5.4 item 2)
-  const numberedOrderRefIds: string[] = [];
+  const numberedOrderRefMap = new Map<number, string>();
   let hasExplicitOrder = false;
 
   if (options?.bibItems !== undefined && options.bibItems.length > 0) {
@@ -1819,18 +1855,22 @@ export function resolveCitationMarkers(
     for (let idx = 0; idx < options.bibItems.length; idx++) {
       const item = options.bibItems[idx]!;
       const found = exactKeyMap.get(item.key)?.[0] ?? lowerKeyMap.get(normLower(item.key))?.[0];
-      numberedOrderRefIds.push(found !== undefined ? found.refId : `bibitem:${idx + 1}:${item.key}`);
+      numberedOrderRefMap.set(
+        idx + 1,
+        found !== undefined ? found.refId : `bibitem:${idx + 1}:${item.key}`,
+      );
     }
   } else if (options?.docxNumberedRefs !== undefined && options.docxNumberedRefs.length > 0) {
     hasExplicitOrder = true;
-    for (const ref of options.docxNumberedRefs) {
-      numberedOrderRefIds.push(ref);
+    for (let idx = 0; idx < options.docxNumberedRefs.length; idx++) {
+      numberedOrderRefMap.set(idx + 1, options.docxNumberedRefs[idx]!);
     }
   } else if (options?.markdownNumberedRefs !== undefined && options.markdownNumberedRefs.length > 0) {
     hasExplicitOrder = true;
-    const sortedMd = [...options.markdownNumberedRefs].sort((a, b) => a.index - b.index);
-    for (const ref of sortedMd) {
-      numberedOrderRefIds.push(`mdref:${ref.index}`);
+    for (const ref of options.markdownNumberedRefs) {
+      if (ref.index >= 1 && !numberedOrderRefMap.has(ref.index)) {
+        numberedOrderRefMap.set(ref.index, `mdref:${ref.index}`);
+      }
     }
   } else if (options?.bibStyle !== undefined) {
     const lowerStyle = normLower(options.bibStyle);
@@ -1840,8 +1880,8 @@ export function resolveCitationMarkers(
     if (isFirstCitationOrder && entries.length > 0) {
       hasExplicitOrder = true;
       const ordered = [...entries].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
-      for (const e of ordered) {
-        numberedOrderRefIds.push(e.refId);
+      for (let idx = 0; idx < ordered.length; idx++) {
+        numberedOrderRefMap.set(idx + 1, ordered[idx]!.refId);
       }
     }
   }
@@ -1868,7 +1908,7 @@ export function resolveCitationMarkers(
           else unresolved.push(k);
         }
         for (const num of m.numericIds) {
-          const targetRef = num >= 1 ? numberedOrderRefIds[num - 1] : undefined;
+          const targetRef = num >= 1 ? numberedOrderRefMap.get(num) : undefined;
           if (targetRef !== undefined) {
             recordUnique(refIds, targetRef);
           } else {
@@ -1899,7 +1939,7 @@ export function resolveCitationMarkers(
       numericPromotedExplicit = effectiveExplicit;
       if (effectiveExplicit) {
         for (const num of m.numericIds) {
-          const targetRef = num >= 1 ? numberedOrderRefIds[num - 1] : undefined;
+          const targetRef = num >= 1 ? numberedOrderRefMap.get(num) : undefined;
           if (targetRef !== undefined) {
             recordUnique(refIds, targetRef);
           } else {

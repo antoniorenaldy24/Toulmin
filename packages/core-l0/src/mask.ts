@@ -1265,7 +1265,7 @@ function tryParseNewcommandMacro(
       return null;
     }
     const digitText = trimHorizontal(source.slice(cur + 1, closeArgCount));
-    if (digitText.length !== 1 || digitText.charCodeAt(0) < 49 || digitText.charCodeAt(0) > 57) {
+    if (digitText.length !== 1 || digitText.charCodeAt(0) < 48 || digitText.charCodeAt(0) > 57) {
       return null;
     }
     paramCount = digitText.charCodeAt(0) - 48;
@@ -1273,7 +1273,7 @@ function tryParseNewcommandMacro(
 
     adj = skipAdjacentWhitespace(source, cur, n);
     cur = adj.pos;
-    if (!adj.crossedBlankLine && cur < n && source.charCodeAt(cur) === 91) {
+    if (paramCount >= 1 && !adj.crossedBlankLine && cur < n && source.charCodeAt(cur) === 91) {
       const closeDef = scanBracketGroup(source, braceClose, cur, n, ARG_BRACKET_MAX_LEN);
       if (closeDef === -1) {
         return null;
@@ -1498,7 +1498,7 @@ function parseMdTableBlock(
     }
   }
 
-  if (rawLines.length === 0) {
+  if (rawLines.length < 2) {
     return null;
   }
 
@@ -1541,6 +1541,10 @@ function parseMdTableBlock(
     if (!isSeparatorLine(line)) {
       parsedRows.push(splitPipeCells(line));
     }
+  }
+
+  if (parsedRows.length === 0) {
+    return null;
   }
 
   const headers = parsedRows[0] ?? [];
@@ -2050,9 +2054,14 @@ export function preMask(
         }
       }
 
-      // 8. Escaped backslash / escaped dollar in Markdown
+      // 8. Escaped backslash, escaped dollar, or escaped backtick in Markdown
       if (ch === 92) {
-        if (i + 1 < n && (source.charCodeAt(i + 1) === 92 || source.charCodeAt(i + 1) === 36)) {
+        if (
+          i + 1 < n &&
+          (source.charCodeAt(i + 1) === 92 ||
+            source.charCodeAt(i + 1) === 36 ||
+            source.charCodeAt(i + 1) === 96)
+        ) {
           i += 2;
           continue;
         }
@@ -2494,6 +2503,9 @@ export function preMask(
               recordDistinct(report.macrosNotExpanded, parsed.name);
             }
           } else {
+            if (cmd === "renewcommand") {
+              userMacros.delete(parsed.name);
+            }
             recordDistinct(report.macrosNotExpanded, parsed.name);
           }
           maskSpan("macro_def", i, parsed.end, false);
@@ -2515,6 +2527,7 @@ export function preMask(
               recordDistinct(report.macrosNotExpanded, parsed.name);
             }
           } else {
+            userMacros.delete(parsed.name);
             recordDistinct(report.macrosNotExpanded, parsed.name);
           }
           maskSpan("macro_def", i, parsed.end, false);
@@ -2537,7 +2550,11 @@ export function preMask(
               } else {
                 recordDistinct(report.macrosNotExpanded, parsed.name);
               }
+            } else {
+              userMacros.delete(parsed.name);
             }
+          } else {
+            userMacros.delete(parsed.name);
           }
           maskSpan("macro_def", i, parsed.end, false);
           i = parsed.end;

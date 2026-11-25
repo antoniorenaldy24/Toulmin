@@ -204,11 +204,35 @@ function isAsciiDigitCode(cu: number): boolean {
 
 /**
  * Extracts ONLY the first `WordSpan` in `[start, limit)` matching `extractWordSpans` rules
- * in O(first-word-length) time without scanning trailing text.
+ * in O(first-word-length) time without scanning trailing text, optionally skipping
+ * `insideMarkerMask` / `markerByStart` spans (`02` §4.4).
  */
-function extractFirstWordSpan(text: string, start: number, limit: number): WordSpan | undefined {
+function extractFirstWordSpan(
+  text: string,
+  start: number,
+  limit: number,
+  insideMarkerMask?: Uint8Array,
+  markerByStart?: ReadonlyMap<number, CitationMarker>,
+): WordSpan | undefined {
   let i = start;
-  while (i < limit) {
+  let nonMarkerSteps = 0;
+  let markersSkipped = 0;
+  while (i < limit && nonMarkerSteps < 160) {
+    if (insideMarkerMask !== undefined && insideMarkerMask[i] === 1) {
+      const m = markerByStart?.get(i);
+      if (m !== undefined && m.end > i) {
+        markersSkipped++;
+        if (markersSkipped >= 8) {
+          return undefined;
+        }
+        i = Math.min(limit, m.end);
+        continue;
+      }
+      nonMarkerSteps++;
+      i++;
+      continue;
+    }
+    nonMarkerSteps++;
     const cu = text.charCodeAt(i);
     if (cu === 0xe000) {
       i++;
@@ -249,6 +273,9 @@ function extractFirstWordSpan(text: string, start: number, limit: number): WordS
     }
 
     while (cur < limit) {
+      if (insideMarkerMask !== undefined && insideMarkerMask[cur] === 1) {
+        break;
+      }
       const nextCu = text.charCodeAt(cur);
       if (nextCu === 0xe000) {
         break;
@@ -264,7 +291,11 @@ function extractFirstWordSpan(text: string, start: number, limit: number): WordS
           cur++;
           continue;
         }
-        if ((nextCu === 0x27 || nextCu === 0x2d) && cur + 1 < limit) {
+        if (
+          (nextCu === 0x27 || nextCu === 0x2d) &&
+          cur + 1 < limit &&
+          (insideMarkerMask === undefined || insideMarkerMask[cur + 1] !== 1)
+        ) {
           const afterCu = text.charCodeAt(cur + 1);
           if (afterCu !== 0xe000) {
             if (afterCu < 0x80) {
@@ -734,21 +765,6 @@ function buildProseHardRanges(
   return ranges;
 }
 
-function getSectionAtOffset(
-  transitions: PreMaskResult["sectionTransitions"],
-  offset: number,
-): SectionState {
-  let state: SectionState = { label: "unlabeled", subsection: null };
-  for (const tr of transitions) {
-    if (tr.offset <= offset) {
-      state = tr.state;
-    } else {
-      break;
-    }
-  }
-  return state;
-}
-
 /**
  * Segments `source` into ordered sentences using `02` §4 rules, attaches scanned
  * citation markers (`§5`), maps hierarchical section state (`§3.4`), computes
@@ -796,6 +812,15 @@ export function segmentDocument(
   const sentences: SegmentedSentence[] = [];
   const hashCounts = new Map<string, number>();
 
+  const transitions = preMaskRes.sectionTransitions;
+  const mathRegions = preMaskRes.mathRegions;
+  const preRegions = preMaskRes.regions;
+  let markerCursor = 0;
+  let secCursor = 0;
+  let currentSecState: SectionState = { label: "unlabeled", subsection: null };
+  let mathCursor = 0;
+  let regionCursor = 0;
+
   const emitSentenceSpan = (segStart: number, segEnd: number): void => {
     let s = segStart;
     while (s < segEnd) {
@@ -823,8 +848,15 @@ export function segmentDocument(
     const rawEnd = normRes !== null ? (normRes.map[e] ?? e) : e;
     const rawTextSlice = source.slice(rawStart, rawEnd);
 
+    while (markerCursor < allMarkers.length && allMarkers[markerCursor]!.end <= s) {
+      markerCursor++;
+    }
     const sentMarkers: CitationMarker[] = [];
-    for (const m of allMarkers) {
+    for (let mIdx = markerCursor; mIdx < allMarkers.length; mIdx++) {
+      const m = allMarkers[mIdx]!;
+      if (m.start >= e) {
+        break;
+      }
       if (m.start >= s && m.end <= e) {
         sentMarkers.push({
           ...m,
@@ -832,24 +864,52 @@ export function segmentDocument(
           end: m.end - s,
         });
       }
+      if (m.end <= e) {
+        markerCursor = mIdx + 1;
+      }
     }
 
-    const secState = getSectionAtOffset(preMaskRes.sectionTransitions, s);
+    while (secCursor < transitions.length && transitions[secCursor]!.offset <= s) {
+      currentSecState = transitions[secCursor]!.state;
+      secCursor++;
+    }
+    const secState = currentSecState;
 
     // Filter preMask mathRegions / non-math maskedRegions relative to this sentence slice
+    while (mathCursor < mathRegions.length && mathRegions[mathCursor]!.end <= s) {
+      mathCursor++;
+    }
     const relMath: { start: number; end: number; text: string }[] = [];
-    for (const mr of preMaskRes.mathRegions) {
+    for (let mrIdx = mathCursor; mrIdx < mathRegions.length; mrIdx++) {
+      const mr = mathRegions[mrIdx]!;
+      if (mr.start >= e) {
+        break;
+      }
       if (mr.start >= s && mr.end <= e) {
         relMath.push({ start: mr.start - s, end: mr.end - s, text: mr.text });
       }
+      if (mr.end <= e) {
+        mathCursor = mrIdx + 1;
+      }
+    }
+
+    while (regionCursor < preRegions.length && preRegions[regionCursor]!.end <= s) {
+      regionCursor++;
     }
     const relMasked: TextRangeLike[] = [];
-    for (const r of preMaskRes.regions) {
+    for (let rIdx = regionCursor; rIdx < preRegions.length; rIdx++) {
+      const r = preRegions[rIdx]!;
+      if (r.start >= e) {
+        break;
+      }
       if (r.kind !== "inline_math" && r.kind !== "display_math" && r.end > s && r.start < e) {
         relMasked.push({
           start: Math.max(0, r.start - s),
           end: Math.min(e - s, r.end - s),
         });
+      }
+      if (r.end <= e) {
+        regionCursor = rIdx + 1;
       }
     }
 
@@ -971,8 +1031,22 @@ export function segmentDocument(
       // Apply rejection rules 1–5 (§4.3–§4.4)
       let rejected = false;
 
-      // Determine next word after `look` (for Class T, Rule 2 exception, Rule 4)
-      const nextWord = extractFirstWordSpan(masked, look, Math.min(hr.end, look + 160));
+      // Determine next word after `look` (for Class T, Rule 2 exception, Rule 4),
+      // skipping citation markers and recognizing sentence-initial narrative citations.
+      const nextWord = extractFirstWordSpan(masked, look, hr.end, insideMarkerMask, markerByStart);
+
+      let lookPastQuotes = look;
+      while (
+        lookPastQuotes < hr.end &&
+        (masked.charCodeAt(lookPastQuotes) === 0x22 ||
+          masked.charCodeAt(lookPastQuotes) === 0x27 ||
+          masked.charCodeAt(lookPastQuotes) === 0x201c ||
+          masked.charCodeAt(lookPastQuotes) === 0x2018)
+      ) {
+        lookPastQuotes++;
+      }
+      const nextMarker = markerByStart.get(lookPastQuotes);
+      const startsWithNarrativeCitation = nextMarker !== undefined && nextMarker.narrative;
 
       if (cu === 46) {
         // Rule 3: decimal (`DIGIT '.' DIGIT`)
@@ -1006,9 +1080,7 @@ export function segmentDocument(
 
           // Rule 1b: Class T
           if (!rejected && CLASS_T_ABBREVS.has(cleanLower)) {
-            if (nextWord === undefined) {
-              rejected = false;
-            } else {
+            if (!startsWithNarrativeCitation && nextWord !== undefined) {
               const nwFirst = codePointAtSafe(nextWord.text, 0);
               const nwLetters = countLettersInString(nextWord.text);
               const nwFollowedByDot =
@@ -1032,8 +1104,8 @@ export function segmentDocument(
             const prevW = extractLastWordSpanBefore(masked, sentStart, cleanTokOffset);
             const prevLower = prevW !== undefined ? normLower(prevW.text) : "";
             const hasValidPreceder = INITIAL_TERMINAL_PRECEDERS.has(prevLower);
-            let hasValidNext = false;
-            if (nextWord !== undefined) {
+            let hasValidNext = startsWithNarrativeCitation;
+            if (!hasValidNext && nextWord !== undefined) {
               const nwFirst = codePointAtSafe(nextWord.text, 0);
               hasValidNext =
                 !nwFirst.isUnpairedSurrogate &&
@@ -1048,7 +1120,7 @@ export function segmentDocument(
       }
 
       // Rule 4: Lowercase continuation (applies to any PUNCT_SENT `.`, `?`, `!`)
-      if (!rejected && nextWord !== undefined) {
+      if (!rejected && !startsWithNarrativeCitation && nextWord !== undefined) {
         const nwFirst = codePointAtSafe(nextWord.text, 0);
         if (!nwFirst.isUnpairedSurrogate && isLower(nwFirst.cp)) {
           if (!matchesLowercaseBoundaryException(nextWord.text)) {

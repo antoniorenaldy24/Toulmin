@@ -420,6 +420,66 @@ describe("applyLatexSubstitutions and normSentence", () => {
       expect(envRes.maskedText.endsWith("unclosed tail")).toBe(true);
     }
   });
+
+  it("handles [0] macros, stale macro deletion on redefinition, escaped backticks, and >=2-line Markdown tables", () => {
+    const zeroArg = preMask("\\newcommand{\\foo}[0]{bar}\nValue \\foo.", "latex");
+    expect(zeroArg.userMacros.get("foo")).toBe("bar");
+    expect(zeroArg.report.macrosNotExpanded).toEqual([]);
+
+    const invalidZeroDefault = preMask("\\newcommand{\\foo}[0][def]{bar}", "latex");
+    expect(invalidZeroDefault.userMacros.has("foo")).toBe(false);
+    expect(invalidZeroDefault.maskedText).toBe("\\newcommand{\\foo}[0][def]{bar}");
+
+    const redefNew = preMask("\\newcommand{\\foo}{old}\n\\renewcommand{\\foo}[1]{new #1}", "latex");
+    expect(redefNew.userMacros.has("foo")).toBe(false);
+    expect(redefNew.report.macrosNotExpanded).toEqual(["foo"]);
+
+    const redefDef = preMask("\\def\\bar{old}\n\\def\\bar#1{new #1}", "latex");
+    expect(redefDef.userMacros.has("bar")).toBe(false);
+    expect(redefDef.report.macrosNotExpanded).toEqual(["bar"]);
+
+    const redefLet = preMask("\\newcommand{\\baz}{old}\n\\let\\baz\\undefinedcmd", "latex");
+    expect(redefLet.userMacros.has("baz")).toBe(false);
+
+    const escTick = preMask("Text with \\`not code\\` here.", "md");
+    expect(escTick.regions.filter((r) => r.kind === "inline_code")).toHaveLength(0);
+    expect(escTick.maskedText).toBe("Text with \\`not code\\` here.");
+
+    const escSlashTick = preMask("Text with \\\\`code` here.", "md");
+    expect(escSlashTick.regions.filter((r) => r.kind === "inline_code")).toHaveLength(1);
+
+    const singlePipe = preMask("|x|", "md");
+    expect(singlePipe.tables).toHaveLength(0);
+    expect(singlePipe.report.tablesParsed).toBe(0);
+    expect(singlePipe.maskedText).toBe("|x|");
+
+    const sepOnly = preMask("|---|\n|---|", "md");
+    expect(sepOnly.tables).toHaveLength(0);
+    expect(sepOnly.maskedText).toBe("|---|\n|---|");
+
+    const twoRowNoSep = preMask("| A | B |\n| 1 | 2 |", "md");
+    expect(twoRowNoSep.tables).toHaveLength(1);
+    expect(twoRowNoSep.tables[0]?.headers).toEqual(["A", "B"]);
+    expect(twoRowNoSep.tables[0]?.rows).toEqual([["1", "2"]]);
+  });
+
+  it("normalizes spacing macros inside \\num{v} consistently with \\SI / \\qty", () => {
+    const numInputs: readonly [string, string][] = [
+      ["\\num{1\\,000}", "1 000"],
+      ["\\num{1\\ 000}", "1 000"],
+      ["\\num{1\\;000}", "1 000"],
+      ["\\num{1\\:000}", "1 000"],
+      ["\\num{1\\!000}", "1000"],
+      ["\\num{1~000}", "1 000"],
+      ["\\num{1\\quad000}", "1 000"],
+      ["\\num{1\\\\,000}", "1\\\\,000"],
+    ];
+    for (const [src, expected] of numInputs) {
+      const res = applyLatexSubstitutions(src);
+      expect(res.text).toBe(expected);
+      assertMapInvariants(src, res.text, res.map);
+    }
+  });
 });
 
 describe("10 KB adversarial unclosed-delimiter latency guard (<= 5 ms median)", () => {

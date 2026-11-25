@@ -17,7 +17,11 @@ import {
   prepareInput,
   scaleParsedNumber,
 } from "./numberParser.js";
-import { scanPrefixUnit, scanSuffixUnitFast } from "./units.js";
+import {
+  scanLeadingPrefixCurrency,
+  scanPrefixUnit,
+  scanSuffixUnitFast,
+} from "./units.js";
 
 export interface ClaimNormOptions {
   readonly lang?: string;
@@ -122,6 +126,42 @@ function scanNumberTokensForClaim(prep: PreparedInput): NumberReplacement[] {
 
     const firstCp = cu < 0x80 ? cu : codePointAtSafe(normText, i).cp;
     if (isBaseLetter(firstCp)) {
+      const leadCur = scanLeadingPrefixCurrency(normText, normLowerText, i);
+      if (
+        leadCur !== null &&
+        leadCur.endNorm < n &&
+        isAsciiDigitCode(normText.charCodeAt(leadCur.endNorm))
+      ) {
+        const curNum = parseNumberOrScientificAt(
+          normText,
+          prep.subText,
+          prep.normMap,
+          leadCur.endNorm,
+          isEnglish,
+          false,
+          true,
+        );
+        if (curNum !== null && Number.isFinite(curNum.value)) {
+          const suf = scanSuffixUnitFast(
+            normText,
+            normLowerText,
+            curNum.endNorm,
+            pctContext,
+            curNum.isYearIntCandidate,
+          );
+          if (suf === null) {
+            const canonVal = formatCanonicalDecimal(scaleParsedNumber(curNum, leadCur.factor));
+            out.push({
+              startNorm: leadCur.startNorm,
+              endNorm: curNum.endNorm,
+              token: `\u27e8v:${canonVal}${leadCur.unitCanon}\u27e9`,
+            });
+            lastClaimTokEnd = curNum.endNorm;
+            i = curNum.endNorm;
+            continue;
+          }
+        }
+      }
       while (i < n) {
         const c = normText.charCodeAt(i);
         if (c < 0x80) {

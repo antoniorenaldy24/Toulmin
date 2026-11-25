@@ -747,16 +747,55 @@ function substituteSlice(
         continue;
       }
 
-      // siunitx `\num{v}` -> `v`
+      // siunitx `\num{v}` -> `v` (normalizing spacing macros consistently with `\SI` / `\qty`)
       if (cmd === "num") {
         const parsed = scanOptBracketAndRequiredBraces(input, braceClose, cmdEnd, end, 1);
         const valArg = parsed?.braces[0];
         if (parsed !== null && valArg !== undefined) {
-          for (let k = valArg.open + 1; k < valArg.close; k++) {
+          let k = valArg.open + 1;
+          while (k < valArg.close) {
             const c = input.charCodeAt(k);
-            if (c !== 123 && c !== 125) {
-              pushOutChar(out, input.charAt(k), fixedOrigin ?? k);
+            const origK = fixedOrigin ?? k;
+            if (c === 123 || c === 125) {
+              k++;
+              continue;
             }
+            if (c === 126) {
+              pushOutChar(out, " ", origK);
+              k++;
+              continue;
+            }
+            if (c === 92 && k + 1 < valArg.close) {
+              const nextC = input.charCodeAt(k + 1);
+              if (nextC === 44 || nextC === 59 || nextC === 58 || nextC === 32) {
+                pushOutChar(out, " ", origK);
+                k += 2;
+                continue;
+              }
+              if (nextC === 33) {
+                k += 2;
+                continue;
+              }
+              if (isAsciiLetter(nextC)) {
+                let innerCmdEnd = k + 2;
+                while (innerCmdEnd < valArg.close && isAsciiLetter(input.charCodeAt(innerCmdEnd))) {
+                  innerCmdEnd++;
+                }
+                const innerCmd = input.slice(k + 1, innerCmdEnd);
+                if (KNOWN_SPACE_COMMANDS.has(innerCmd)) {
+                  pushOutChar(out, " ", origK);
+                  k = innerCmdEnd;
+                  continue;
+                }
+              } else {
+                pushOutChar(out, "\\", origK);
+                pushOutChar(out, input.charAt(k + 1), fixedOrigin ?? k + 1);
+                k += 2;
+                continue;
+              }
+            }
+            pushOutChar(out, input.charAt(k), origK);
+            k++;
           }
           i = parsed.after;
           continue;
