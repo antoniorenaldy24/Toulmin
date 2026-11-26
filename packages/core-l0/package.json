@@ -9,7 +9,14 @@
     "./ledger": "./src/ledger.ts",
     "./anchor": "./src/anchor.ts",
     "./b5pairing": "./src/b5pairing.ts",
-    "./triageBaseline": "./src/triageBaseline.ts"
+    "./triageBaseline": "./src/triageBaseline.ts",
+    "./ingest": "./src/ingest/index.ts",
+    "./ingest/zip": "./src/ingest/zip.ts",
+    "./ingest/tex": "./src/ingest/tex.ts",
+    "./ingest/bib": "./src/ingest/bib.ts",
+    "./ingest/docx": "./src/ingest/docx.ts",
+    "./ingest/md": "./src/ingest/md.ts",
+    "./ingest/pdf": "./src/ingest/pdf.ts"
   },
   "dependencies": {
     "@toulmin/schemas": "workspace:*"

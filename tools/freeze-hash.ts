@@ -70,6 +70,42 @@ const TIER_B_CORE_L0_EXCLUDES = new Set<string>([
   "watchdog.ts",
 ]);
 
+const TIER_B_CORE_L0_FILES = [
+  "packages/core-l0/src/anchor.ts",
+  "packages/core-l0/src/b5pairing.ts",
+  "packages/core-l0/src/gate.ts",
+  "packages/core-l0/src/ledger.ts",
+  "packages/core-l0/src/triageBaseline.ts",
+] as const;
+
+const TIER_B_SCHEMA_FILES = [
+  "packages/schemas/L2Verdict.schema.json",
+  "packages/schemas/src/aiOutputs.ts",
+  "packages/schemas/src/jsonSchema.ts",
+  "packages/schemas/src/routing.ts",
+] as const;
+
+const TIER_B_CONFORMANCE_FILES = [
+  "conformance/l0/anchor.json",
+  "conformance/l0/b5pairing.json",
+  "conformance/l0/b5_baseline.json",
+  "conformance/l0/b5_incremental.json",
+  "conformance/l0/gate.json",
+  "conformance/l0/holm.json",
+  "conformance/l0/meter.json",
+  "conformance/l0/reducer.json",
+  "conformance/l0/support_gate.json",
+  "conformance/l0/triage_baseline.json",
+] as const;
+
+const TIER_B_EVAL_FILES = [
+  "eval-harness/src/holm.ts",
+  "eval-harness/src/publish_routing.ts",
+  "eval-harness/src/stats.ts",
+] as const;
+
+const OUTSIDE_TIER_CONFORMANCE_EXCLUDES = new Set<string>(["ingest.json"]);
+
 const TIER_B_CONFORMANCE_EXCLUDES = new Set<string>([
   "anchor.json",
   "b5pairing.json",
@@ -255,7 +291,8 @@ export function collectTierATsFiles(repoRoot: string = DEFAULT_REPO_ROOT): strin
       if (
         entry.isFile() &&
         entry.name.endsWith(".json") &&
-        !TIER_B_CONFORMANCE_EXCLUDES.has(entry.name)
+        !TIER_B_CONFORMANCE_EXCLUDES.has(entry.name) &&
+        !OUTSIDE_TIER_CONFORMANCE_EXCLUDES.has(entry.name)
       ) {
         collected.push(normalizeManifestPath(relative(repoRoot, resolve(confDir, entry.name))));
       }
@@ -289,6 +326,32 @@ export function collectTierATsFiles(repoRoot: string = DEFAULT_REPO_ROOT): strin
     for (const entry of readdirSync(promptsSrcDir, { withFileTypes: true })) {
       if (entry.isFile() && entry.name.endsWith(".ts")) {
         collected.push(normalizeManifestPath(relative(repoRoot, resolve(promptsSrcDir, entry.name))));
+      }
+    }
+  }
+
+  collected.sort(compareUtf8Bytes);
+  return collected;
+}
+
+/**
+ * Collects the current TypeScript Tier B file scope (`07` §2.3, `06` §5.2):
+ * Tier B `packages/core-l0/src/*.ts`, post-decode validator/output schemas (`packages/schemas`),
+ * Tier B `conformance/l0/*.json`, and Tier B statistical/routing evaluators (`eval-harness`).
+ * Excludes `packages/core-l0/src/ingest/*`, `watchdog.ts`, and `conformance/l0/ingest.json` (outside both tiers).
+ */
+export function collectTierBTsFiles(repoRoot: string = DEFAULT_REPO_ROOT): string[] {
+  const collected: string[] = [];
+
+  for (const group of [
+    TIER_B_CORE_L0_FILES,
+    TIER_B_SCHEMA_FILES,
+    TIER_B_CONFORMANCE_FILES,
+    TIER_B_EVAL_FILES,
+  ]) {
+    for (const relPath of group) {
+      if (existsSync(resolve(repoRoot, relPath))) {
+        collected.push(normalizeManifestPath(relPath));
       }
     }
   }
@@ -448,7 +511,7 @@ interface ParsedCliArgs {
   rootDir: string;
   manifestPath?: string;
   tier?: FreezeTier;
-  scope?: "tier_a_ts";
+  scope?: "tier_a_ts" | "tier_b_ts";
   hashOutPath?: string;
   expectedHash?: string;
   hashFilePath?: string;
@@ -484,7 +547,7 @@ function parseCliArgs(argv: readonly string[]): ParsedCliArgs {
       out.tier = tier;
     } else if (arg === "--scope" && i + 1 < argv.length) {
       const scope = argv[++i]!;
-      if (scope !== "tier_a_ts") {
+      if (scope !== "tier_a_ts" && scope !== "tier_b_ts") {
         throw new Error(`Invalid --scope value "${scope}"`);
       }
       out.scope = scope;
@@ -525,7 +588,9 @@ export function runFreezeHashCli(argv: readonly string[]): number {
     const paths =
       args.scope === "tier_a_ts"
         ? [...collectTierATsFiles(args.rootDir), ...args.positionalPaths]
-        : args.positionalPaths;
+        : args.scope === "tier_b_ts"
+          ? [...collectTierBTsFiles(args.rootDir), ...args.positionalPaths]
+          : args.positionalPaths;
     try {
       const res = writeFreezeManifest({
         rootDir: args.rootDir,
@@ -571,11 +636,13 @@ export function runFreezeHashCli(argv: readonly string[]): number {
     return res.ok ? 0 : 1;
   }
 
-  // Default mode: compute and print hash from --scope tier_a_ts, --manifest/--tier, or positional paths
+  // Default mode: compute and print hash from --scope tier_a_ts|tier_b_ts, --manifest/--tier, or positional paths
   try {
     let targetPaths: string[];
     if (args.scope === "tier_a_ts") {
       targetPaths = collectTierATsFiles(args.rootDir);
+    } else if (args.scope === "tier_b_ts") {
+      targetPaths = collectTierBTsFiles(args.rootDir);
     } else if (manifestPath !== undefined) {
       const raw = readFileSync(resolve(args.rootDir, manifestPath), "utf8");
       targetPaths = parseManifestText(raw, { requireCanonicalOrder: true });

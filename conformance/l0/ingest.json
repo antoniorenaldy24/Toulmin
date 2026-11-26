@@ -1,0 +1,288 @@
+[
+  {
+    "id": "doi-url-https",
+    "op": "normalizeDoiVerbatim",
+    "input": "  https://doi.org/10.1038/nature12373  ",
+    "expected": "10.1038/nature12373"
+  },
+  {
+    "id": "doi-sici-verbatim",
+    "op": "normalizeDoiVerbatim",
+    "input": "http://dx.doi.org/10.1002/(SICI)1097-4679(199906)55:6<727::AID-JCLP6>3.0.CO;2-4",
+    "expected": "10.1002/(SICI)1097-4679(199906)55:6<727::AID-JCLP6>3.0.CO;2-4"
+  },
+  {
+    "id": "doi-prefix-colon",
+    "op": "normalizeDoiVerbatim",
+    "input": "{DOI: 10.1186/s12889-020-09999-1}",
+    "expected": "10.1186/s12889-020-09999-1"
+  },
+  {
+    "id": "doi-invalid",
+    "op": "normalizeDoiVerbatim",
+    "input": "not-a-doi",
+    "expected": null
+  },
+  {
+    "id": "bib-string-concat-sici-unknown-cmd",
+    "op": "parseBibTex",
+    "input": "@preamble{\"Ignored preamble\"}\n@comment{ignored comment}\n@string{j = \"Journal of \" # {Medicine}}\n@article{smith2020,\n  author = {Jane Smith and John Doe},\n  title = {{DNA} and {COVID-19} with \\gls{CI} in Primary Care},\n  journal = j,\n  year = {2020},\n  doi = {https://doi.org/10.1002/(SICI)1097-4679(199906)55:6<727::AID-JCLP6>3.0.CO;2-4}\n}",
+    "expected": {
+      "skippedEntries": 0,
+      "records": [
+        {
+          "key": "smith2020",
+          "refId": "doi:10.1002/(sici)1097-4679(199906)55:6<727::aid-jclp6>3.0.co;2-4",
+          "doi": "10.1002/(SICI)1097-4679(199906)55:6<727::AID-JCLP6>3.0.CO;2-4",
+          "title": "DNA and COVID-19 with \\gls{CI} in Primary Care",
+          "venue": "Journal of Medicine",
+          "firstAuthorFamily": "Smith",
+          "year": "2020"
+        }
+      ]
+    }
+  },
+  {
+    "id": "bib-diacritics-and-particles",
+    "op": "parseBibTex",
+    "input": "@article{muller2021,\n  author = {M{\\\"u}ller, Hans-J{\\\"u}rgen and Maria de la Cruz},\n  title = {Caf\\'e \\c{c}a va in {S}\\~{a}o Paulo},\n  year = {2021a},\n  doi = {10.1000/muller2021}\n}\n@misc{broken_without_comma}",
+    "expected": {
+      "skippedEntries": 1,
+      "records": [
+        {
+          "key": "muller2021",
+          "refId": "doi:10.1000/muller2021",
+          "doi": "10.1000/muller2021",
+          "title": "Café ça va in São Paulo",
+          "firstAuthorFamily": "Müller",
+          "year": "2021a"
+        }
+      ]
+    }
+  },
+  {
+    "id": "bib-corporate-author-and-van-particle",
+    "op": "parseBibTex",
+    "input": "@techreport{who2020,\n  author = {{World Health Organization}},\n  shortauthor = {WHO},\n  title = {Global Vaccine Report},\n  year = {2020}\n}\n@article{rossum1995,\n  author = {Guido van Rossum},\n  title = {Python Notes},\n  year = {1995}\n}",
+    "expected": {
+      "skippedEntries": 0,
+      "records": [
+        {
+          "key": "who2020",
+          "refId": "key:who2020",
+          "corporateAuthor": "World Health Organization",
+          "shortauthor": "WHO",
+          "year": "2020"
+        },
+        {
+          "key": "rossum1995",
+          "refId": "key:rossum1995",
+          "firstAuthorFamily": "van Rossum",
+          "year": "1995"
+        }
+      ]
+    }
+  },
+  {
+    "id": "ris-basic",
+    "op": "parseRis",
+    "input": "TY  - JOUR\nID  - lee2022\nAU  - Lee, Alice\nAU  - Park, Bob\nTI  - Clinical Outcomes in Primary Care\nPY  - 2022/04/12\nJO  - Lancet Digit Health\nDO  - 10.1016/j.ldh.2022.001\nER  - \n",
+    "expected": {
+      "skippedEntries": 0,
+      "records": [
+        {
+          "key": "lee2022",
+          "refId": "doi:10.1016/j.ldh.2022.001",
+          "doi": "10.1016/j.ldh.2022.001",
+          "firstAuthorFamily": "Lee",
+          "year": "2022",
+          "orderIndex": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "csl-json-basic",
+    "op": "parseCslJson",
+    "input": "[{\"id\":\"csl1\",\"type\":\"article-journal\",\"title\":\"Randomized Trial Results\",\"DOI\":\"10.1234/trial.99\",\"issued\":{\"date-parts\":[[2023,5]]},\"author\":[{\"non-dropping-particle\":\"van\",\"family\":\"Beek\",\"given\":\"Jan\"}]}]",
+    "expected": {
+      "skippedEntries": 0,
+      "records": [
+        {
+          "key": "csl1",
+          "refId": "doi:10.1234/trial.99",
+          "firstAuthorFamily": "van Beek",
+          "year": "2023",
+          "orderIndex": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "bibitem-ordered-bbl",
+    "op": "parseBibItems",
+    "input": "\\begin{thebibliography}{9}\n\\bibitem[Smith et al., 2020]{smith2020} J. Smith. Primary study. doi:10.1000/bib1.\n\\bibitem{doe2021} A. Doe. Follow-up cohort (2021).\n\\end{thebibliography}",
+    "expected": {
+      "records": [
+        {
+          "key": "smith2020",
+          "orderIndex": 1,
+          "doi": "10.1000/bib1"
+        },
+        {
+          "key": "doe2021",
+          "orderIndex": 2,
+          "doi": null
+        }
+      ]
+    }
+  },
+  {
+    "id": "archive-guard-201mb",
+    "op": "ingestArchiveEntries",
+    "input": {
+      "archiveBytes": 210763776,
+      "entries": [{ "path": "main.tex", "compressedSize": 100, "uncompressedSize": 200, "text": "x" }]
+    },
+    "expected": {
+      "ok": false,
+      "errorCode": "ARCHIVE_TOO_LARGE",
+      "decompressedPaths": []
+    }
+  },
+  {
+    "id": "archive-guard-5001-entries",
+    "op": "ingestArchiveEntries",
+    "input": {
+      "archiveBytes": 1024,
+      "syntheticEntryCount": 5001
+    },
+    "expected": {
+      "ok": false,
+      "errorCode": "TOO_MANY_ENTRIES",
+      "decompressedPaths": []
+    }
+  },
+  {
+    "id": "archive-guard-entry-limits-and-traversal",
+    "op": "ingestArchiveEntries",
+    "input": {
+      "archiveBytes": 4096,
+      "entries": [
+        { "path": "main.tex", "compressedSize": 10, "uncompressedSize": 25, "text": "\\documentclass{article}\n" },
+        { "path": "../../etc/passwd", "compressedSize": 10, "uncompressedSize": 20, "text": "bad" },
+        { "path": "fig1.png", "compressedSize": 50, "uncompressedSize": 100, "text": "png" },
+        { "path": "huge.tex", "compressedSize": 1000, "uncompressedSize": 22020096, "text": "big" },
+        { "path": "bomb.tex", "compressedSize": 10, "uncompressedSize": 1010, "text": "bomb" }
+      ]
+    },
+    "expected": {
+      "ok": true,
+      "orderedPaths": ["main.tex"],
+      "decompressedPaths": ["main.tex"],
+      "violationReasons": ["PATH_TRAVERSAL", "NON_TEXT_ENTRY", "ENTRY_TOO_LARGE", "COMPRESSION_RATIO_EXCEEDED"],
+      "filesSkipped": 4
+    }
+  },
+  {
+    "id": "archive-guard-51mb-total",
+    "op": "ingestArchiveEntries",
+    "input": {
+      "archiveBytes": 4096,
+      "entries": [
+        { "path": "a.tex", "compressedSize": 1000000, "uncompressedSize": 20000000, "text": "a" },
+        { "path": "b.tex", "compressedSize": 1000000, "uncompressedSize": 20000000, "text": "b" },
+        { "path": "c.tex", "compressedSize": 1000000, "uncompressedSize": 13000000, "text": "c" }
+      ]
+    },
+    "expected": {
+      "ok": false,
+      "errorCode": "TOTAL_TEXT_LIMIT_EXCEEDED",
+      "orderedPaths": ["a.tex", "b.tex"],
+      "decompressedPaths": ["a.tex", "b.tex"]
+    }
+  },
+  {
+    "id": "tex-depth3-roundtrip-and-bib",
+    "op": "ingestLatexProject",
+    "input": {
+      "isArchive": true,
+      "files": {
+        "main.tex": "\\documentclass{article}\n\\begin{document}\n% \\input{ignored_comment}\n\\iffalse\n\\input{ignored_iffalse}\n\\fi\nIntro line.\n\\input{sec1}\n\\bibliography{a,b}\n\\end{document}",
+        "sec1.tex": "\\section{Methods}\n\\input{sec2}",
+        "sec2.tex": "\\input{sec3}",
+        "sec3.tex": "Deep finding \\cite{k1,k2}.\nSecond deep line.",
+        "a.bib": "@article{k1, author={Ada Lovelace}, title={First Paper}, year={2020}, doi={10.1000/k1}}",
+        "b.bib": "@article{k2, author={Alan Turing}, title={Second Paper}, year={2021}, doi={10.1000/k2}}",
+        "unused.bib": "@article{k3, title={Should Not Load}}"
+      },
+      "probeText": "Second deep line."
+    },
+    "expected": {
+      "ok": true,
+      "mainFile": "main.tex",
+      "documentKind": "multi_file",
+      "editable": false,
+      "includedFiles": ["sec1.tex", "sec2.tex", "sec3.tex"],
+      "bibFilesUsed": ["a.bib", "b.bib"],
+      "resolvedKeys": ["k1", "k2"],
+      "probeFileLine": { "file": "sec3.tex", "line": 2, "column": 1 },
+      "roundTripBackMatches": true
+    }
+  },
+  {
+    "id": "tex-input-depth10-and-2mb-limit",
+    "op": "expandLatexProjectLimits",
+    "input": {
+      "depthChainLength": 12
+    },
+    "expected": {
+      "maxIncludedDepth": 10,
+      "depthLimitCode": "INPUT_DEPTH_LIMIT",
+      "expansionLimitCode": "INPUT_EXPANSION_LIMIT"
+    }
+  },
+  {
+    "id": "md-pandoc-frontmatter-and-numbered-refs",
+    "op": "ingestMarkdownDocument",
+    "input": {
+      "text": "---\nbibliography: refs.bib\nlang: en\nmath: true\n---\n\n# Results\n\nMortality dropped by 30% [@ref1].\n",
+      "siblingFiles": {
+        "refs.bib": "@article{ref1, author={Jane Smith}, title={Outcome Study}, year={2022}, doi={10.1000/ref1}}"
+      }
+    },
+    "expected": {
+      "documentKind": "single_file",
+      "editable": true,
+      "frontMatter": { "bibliography": ["refs.bib"], "lang": "en", "math": true },
+      "bibFilesUsed": ["refs.bib"],
+      "bibRecordKeys": ["ref1"]
+    }
+  },
+  {
+    "id": "docx-zotero-mendeley-endnote-sup-table-math-footnotes",
+    "op": "ingestDocxXml",
+    "input": {
+      "documentXml": "<w:document><w:body><w:p><w:pPr><w:pStyle w:val=\"Heading1\"/></w:pPr><w:r><w:t>Results</w:t></w:r></w:p><w:p><w:r><w:t xml:space=\"preserve\">Dose 10</w:t></w:r><w:r><w:rPr><w:vertAlign w:val=\"superscript\"/></w:rPr><w:t>2</w:t></w:r><w:r><w:t xml:space=\"preserve\"> mg reduced mortality </w:t></w:r><w:r><w:fldChar w:fldCharType=\"begin\"/></w:r><w:r><w:instrText>ADDIN ZOTERO_ITEM CSL_CITATION {\"citationItems\":[{\"itemData\":{\"id\":\"z1\",\"DOI\":\"10.1000/z1\",\"title\":\"Zotero Study\",\"issued\":{\"date-parts\":[[2020]]},\"author\":[{\"family\":\"Alpha\",\"given\":\"A\"}]}}]}</w:instrText></w:r><w:r><w:fldChar w:fldCharType=\"separate\"/></w:r><w:r><w:t>(Alpha, 2020)</w:t></w:r><w:r><w:fldChar w:fldCharType=\"end\"/></w:r><w:r><w:t xml:space=\"preserve\"> and note</w:t></w:r><w:r><w:rPr><w:vertAlign w:val=\"superscript\"/></w:rPr><w:t>1</w:t></w:r><w:r><w:t xml:space=\"preserve\"> with </w:t></w:r><m:oMath><m:r><m:t>p&lt;0.05</m:t></m:r></m:oMath><w:r><w:footnoteReference w:id=\"2\"/></w:r></w:p><w:tbl><w:tr><w:tc><w:p><w:r><w:t>Arm</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Rate</w:t></w:r></w:p></w:tc></w:tr><w:tr><w:tc><w:p><w:r><w:t>Active</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>12%</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:p><w:r><w:fldChar w:fldCharType=\"begin\"/></w:r><w:r><w:instrText>ADDIN ZOTERO_BIBL {}</w:instrText></w:r><w:r><w:fldChar w:fldCharType=\"separate\"/></w:r><w:r><w:t>Alpha A. Zotero Study. 2020.</w:t></w:r><w:r><w:fldChar w:fldCharType=\"end\"/></w:r></w:p></w:body></w:document>",
+      "footnotesXml": "<w:footnotes><w:footnote w:id=\"2\"><w:p><w:r><w:t>Sensitivity footnote.</w:t></w:r></w:p></w:footnote></w:footnotes>"
+    },
+    "expected": {
+      "documentKind": "multi_file",
+      "editable": false,
+      "markerCount": 1,
+      "markerSubstrings": ["(Alpha, 2020)"],
+      "bibRefIds": ["doi:10.1000/z1"],
+      "containsText": ["10^2 mg", "note[1]", "$p<0.05$", "| Arm | Rate |", "| Active | 12% |"],
+      "excludesText": ["Alpha A. Zotero Study. 2020."],
+      "rawReferences": ["Alpha A. Zotero Study. 2020."],
+      "footnoteParagraphs": ["Sensitivity footnote."],
+      "tablesParsed": 1
+    }
+  },
+  {
+    "id": "pdf-page1-doi-trailing-punct",
+    "op": "scanPage1Doi",
+    "input": "Clinical Trial Protocol\nPublished online: https://doi.org/10.1016/S0140-6736(20)30183-5).",
+    "expected": "10.1016/S0140-6736(20)30183-5"
+  }
+]

@@ -8,6 +8,7 @@ import {
   DEFAULT_REPO_ROOT,
   checkFreezeManifest,
   collectTierATsFiles,
+  collectTierBTsFiles,
   compareUtf8Bytes,
   computeFreezeHash,
   formatManifestText,
@@ -219,5 +220,55 @@ describe("tools/freeze-hash.ts deterministic manifest & hash verification", () =
     const freezeEntries = readdirSync(resolve(REPO_ROOT, "freeze"));
     expect(freezeEntries).toEqual([".gitkeep"]);
     expect(existsSync(resolve(REPO_ROOT, "apps", "android", "core-l0"))).toBe(false);
+  });
+
+  it("supports --scope tier_b_ts cleanly, keeps tier_a_ts invariant, and keeps ingest/* outside both tiers", () => {
+    const tierAFiles = collectTierATsFiles(REPO_ROOT);
+    const tierBFiles = collectTierBTsFiles(REPO_ROOT);
+
+    // Tier A invariance
+    const tierARes = computeFreezeHash(REPO_ROOT, tierAFiles);
+    expect(tierARes.fileCount).toBe(55);
+    expect(tierARes.hash).toBe("a80425ea4b60d3dccc2856c818d3ecb9f761267086d5ac46bf3f04c087e11f8d");
+
+    // Tier B required current members
+    expect(tierBFiles).toContain("packages/core-l0/src/anchor.ts");
+    expect(tierBFiles).toContain("packages/core-l0/src/b5pairing.ts");
+    expect(tierBFiles).toContain("packages/core-l0/src/ledger.ts");
+    expect(tierBFiles).toContain("packages/core-l0/src/triageBaseline.ts");
+    expect(tierBFiles).toContain("packages/schemas/src/aiOutputs.ts");
+    expect(tierBFiles).toContain("packages/schemas/src/jsonSchema.ts");
+    expect(tierBFiles).toContain("packages/schemas/L2Verdict.schema.json");
+    expect(tierBFiles).toContain("conformance/l0/anchor.json");
+    expect(tierBFiles).toContain("conformance/l0/b5pairing.json");
+    expect(tierBFiles).toContain("conformance/l0/b5_baseline.json");
+    expect(tierBFiles).toContain("conformance/l0/b5_incremental.json");
+    expect(tierBFiles).toContain("conformance/l0/reducer.json");
+    expect(tierBFiles).toContain("conformance/l0/meter.json");
+    expect(tierBFiles).toContain("conformance/l0/triage_baseline.json");
+
+    // Strict disjointness & exclusion of outside-both-tiers modules (06 §5.2)
+    const tierASet = new Set(tierAFiles);
+    for (const f of tierBFiles) {
+      expect(tierASet.has(f)).toBe(false);
+    }
+    expect(tierAFiles.some((f) => f.includes("/ingest/"))).toBe(false);
+    expect(tierBFiles.some((f) => f.includes("/ingest/"))).toBe(false);
+    expect(tierAFiles).not.toContain("conformance/l0/ingest.json");
+    expect(tierBFiles).not.toContain("conformance/l0/ingest.json");
+
+    // Ascending UTF-8 byte order
+    for (let i = 1; i < tierBFiles.length; i += 1) {
+      expect(compareUtf8Bytes(tierBFiles[i - 1]!, tierBFiles[i]!)).toBeLessThan(0);
+    }
+
+    const res1 = computeFreezeHash(REPO_ROOT, tierBFiles);
+    const res2 = computeFreezeHash(REPO_ROOT, [...tierBFiles].reverse());
+    expect(res1.hash).toBe(res2.hash);
+    expect(isBareSha256Hex(res1.hash)).toBe(true);
+
+    // CLI support for --scope tier_b_ts
+    expect(runFreezeHashCli(["--scope", "tier_b_ts", "--json"])).toBe(0);
+    expect(readdirSync(resolve(REPO_ROOT, "freeze"))).toEqual([".gitkeep"]);
   });
 });
