@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "holmCases": [
+    {
+      "id": "spec_07_4_2_web_fixture",
+      "description": "07 §4.2 Web m=4 fixture: 0.010, 0.200, 0.030, 0.040 -> 0.040, 0.090, 0.090, 0.200",
+      "entries": [
+        { "task": "B1", "p": 0.010 },
+        { "task": "B2", "p": 0.200 },
+        { "task": "B3", "p": 0.030 },
+        { "task": "B5", "p": 0.040 }
+      ],
+      "expected": [
+        { "task": "B1", "p": 0.010, "p_holm": 0.040, "rank": 1 },
+        { "task": "B3", "p": 0.030, "p_holm": 0.090, "rank": 2 },
+        { "task": "B5", "p": 0.040, "p_holm": 0.090, "rank": 3 },
+        { "task": "B2", "p": 0.200, "p_holm": 0.200, "rank": 4 }
+      ]
+    },
+    {
+      "id": "ties_broken_by_task_order_m5",
+      "description": "07 §6.9 Procedure 4: exact p ties broken deterministically by B1, B2, B3, B5, O2",
+      "entries": [
+        { "task": "O2", "p": 0.020 },
+        { "task": "B5", "p": 0.020 },
+        { "task": "B3", "p": 0.050 },
+        { "task": "B2", "p": 0.020 },
+        { "task": "B1", "p": 0.020 }
+      ],
+      "expected": [
+        { "task": "B1", "p": 0.020, "p_holm": 0.100, "rank": 1 },
+        { "task": "B2", "p": 0.020, "p_holm": 0.100, "rank": 2 },
+        { "task": "B5", "p": 0.020, "p_holm": 0.100, "rank": 3 },
+        { "task": "O2", "p": 0.020, "p_holm": 0.100, "rank": 4 },
+        { "task": "B3", "p": 0.050, "p_holm": 0.100, "rank": 5 }
+      ]
+    }
+  ],
+  "authorityCases": [
+    {
+      "id": "boundary_pass_delta_010_pholm_010",
+      "description": "07 §6.9 Procedure 4: delta=0.10 with p_holm=0.10 -> authoritative",
+      "cf1": { "B3": { "delta": 0.10, "p": 0.03, "p_holm": 0.10, "power": 0.80 } },
+      "task": "B3",
+      "expected": "authoritative"
+    },
+    {
+      "id": "boundary_fail_pholm_01001",
+      "description": "07 §6.9 Procedure 4: delta=0.10 with p_holm=0.1001 -> advisory",
+      "cf1": { "B3": { "delta": 0.10, "p": 0.03, "p_holm": 0.1001, "power": 0.80 } },
+      "task": "B3",
+      "expected": "advisory"
+    },
+    {
+      "id": "boundary_fail_delta_00999",
+      "description": "delta=0.0999 < 0.10 even with tiny p_holm -> advisory",
+      "cf1": { "B1": { "delta": 0.0999, "p": 0.001, "p_holm": 0.004, "power": 0.70 } },
+      "task": "B1",
+      "expected": "advisory"
+    },
+    {
+      "id": "b5_lower_inconsistent_precision_downgraded",
+      "description": "07 §6.9 Procedure 4: B5 with L1 INCONSISTENT precision below baseline -> advisory",
+      "cf1": {
+        "B5": {
+          "delta": 0.20,
+          "p": 0.01,
+          "p_holm": 0.04,
+          "power": 0.75,
+          "inconsistent_precision_l1": 0.70,
+          "inconsistent_precision_baseline": 0.75
+        }
+      },
+      "task": "B5",
+      "expected": "advisory"
+    },
+    {
+      "id": "b5_equal_positive_precision_authoritative",
+      "description": "B5 with equal positive INCONSISTENT precision and passing delta/p_holm -> authoritative",
+      "cf1": {
+        "B5": {
+          "delta": 0.15,
+          "p": 0.02,
+          "p_holm": 0.08,
+          "power": 0.75,
+          "inconsistent_precision_l1": 0.75,
+          "inconsistent_precision_baseline": 0.75
+        }
+      },
+      "task": "B5",
+      "expected": "authoritative"
+    },
+    {
+      "id": "b5_zero_l1_precision_fails",
+      "description": "07 §4.7: 0 L1 INCONSISTENT predictions gives precision 0 -> condition fails",
+      "cf1": {
+        "B5": {
+          "delta": 0.20,
+          "p": 0.01,
+          "p_holm": 0.04,
+          "power": 0.75,
+          "inconsistent_precision_l1": 0.0,
+          "inconsistent_precision_baseline": 0.0
+        }
+      },
+      "task": "B5",
+      "expected": "advisory"
+    }
+  ]
+}

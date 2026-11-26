@@ -30,6 +30,15 @@ importers:
         specifier: ^3.0.0
         version: 3.2.7(@types/node@22.20.5)(supports-color@7.2.0)(tsx@4.23.15)
 
+  eval-harness:
+    dependencies:
+      '@toulmin/core-l0':
+        specifier: workspace:*
+        version: link:../packages/core-l0
+      '@toulmin/schemas':
+        specifier: workspace:*
+        version: link:../packages/schemas
+
   packages/copy:
     dependencies:
       '@toulmin/schemas':

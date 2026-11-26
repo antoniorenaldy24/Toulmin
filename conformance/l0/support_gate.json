@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "supportGateCases": [
+    {
+      "id": "ps50_ts46_pass",
+      "description": "07 §6.9 Procedure 4: (TS, PS) = (46, 50) passes (LB 0.8116 >= 0.80)",
+      "input": { "ts_pairs": 46, "ps_pairs": 50 },
+      "expected": { "authoritative": true, "failed": [] }
+    },
+    {
+      "id": "ps50_ts45_fail",
+      "description": "07 §6.9 Procedure 4: (TS, PS) = (45, 50) fails (LB 0.7864 < 0.80)",
+      "input": { "ts_pairs": 45, "ps_pairs": 50 },
+      "expected": { "authoritative": false, "failed": ["WILSON_LB_S"] }
+    },
+    {
+      "id": "ps40_ts37_pass",
+      "description": "07 §6.9 Procedure 4: (TS, PS) = (37, 40) passes (LB 0.8014 >= 0.80)",
+      "input": { "ts_pairs": 37, "ps_pairs": 40 },
+      "expected": { "authoritative": true, "failed": [] }
+    },
+    {
+      "id": "ps40_ts36_fail",
+      "description": "07 §6.9 Procedure 4: (TS, PS) = (36, 40) fails (LB 0.7695 < 0.80)",
+      "input": { "ts_pairs": 36, "ps_pairs": 40 },
+      "expected": { "authoritative": false, "failed": ["WILSON_LB_S"] }
+    },
+    {
+      "id": "ps30_ts29_pass",
+      "description": "07 §6.9 Procedure 4: (TS, PS) = (29, 30) passes (LB 0.8333 >= 0.80)",
+      "input": { "ts_pairs": 29, "ps_pairs": 30 },
+      "expected": { "authoritative": true, "failed": [] }
+    },
+    {
+      "id": "ps30_ts28_fail",
+      "description": "07 §6.9 Procedure 4: (TS, PS) = (28, 30) fails (LB 0.7868 < 0.80)",
+      "input": { "ts_pairs": 28, "ps_pairs": 30 },
+      "expected": { "authoritative": false, "failed": ["WILSON_LB_S"] }
+    },
+    {
+      "id": "ps25_ts24_pass",
+      "description": "07 §6.9 Procedure 4: (TS, PS) = (24, 25) passes (LB 0.8046 >= 0.80)",
+      "input": { "ts_pairs": 24, "ps_pairs": 25 },
+      "expected": { "authoritative": true, "failed": [] }
+    },
+    {
+      "id": "ps25_ts23_fail",
+      "description": "07 §6.9 Procedure 4: (TS, PS) = (23, 25) fails (LB 0.7503 < 0.80)",
+      "input": { "ts_pairs": 23, "ps_pairs": 25 },
+      "expected": { "authoritative": false, "failed": ["WILSON_LB_S"] }
+    },
+    {
+      "id": "ps16_ts16_pass",
+      "description": "07 §6.9 Procedure 4: floor (TS, PS) = (16, 16) passes (LB 0.8064 >= 0.80)",
+      "input": { "ts_pairs": 16, "ps_pairs": 16 },
+      "expected": { "authoritative": true, "failed": [] }
+    },
+    {
+      "id": "ps15_ts15_fail",
+      "description": "07 §6.9 Procedure 4: (TS, PS) = (15, 15) fails both LB (0.7961 < 0.80) and PS_PAIRS floor (< 16)",
+      "input": { "ts_pairs": 15, "ps_pairs": 15 },
+      "expected": { "authoritative": false, "failed": ["WILSON_LB_S", "PS_PAIRS"] }
+    },
+    {
+      "id": "ps0_ts0_fail",
+      "description": "Zero support pairs fails both WILSON_LB_S and PS_PAIRS",
+      "input": { "ts_pairs": 0, "ps_pairs": 0 },
+      "expected": { "authoritative": false, "failed": ["WILSON_LB_S", "PS_PAIRS"] }
+    },
+    {
+      "id": "explicit_lb_exact_boundary",
+      "description": "Exact support_wilson_lb_min = 0.80 at ps_pairs = 16 passes",
+      "input": { "ps_pairs": 16, "wilson_lb_s": 0.80 },
+      "expected": { "authoritative": true, "failed": [] }
+    },
+    {
+      "id": "explicit_lb_below_boundary",
+      "description": "Support LB 0.7999 at ps_pairs = 16 fails WILSON_LB_S",
+      "input": { "ps_pairs": 16, "wilson_lb_s": 0.7999 },
+      "expected": { "authoritative": false, "failed": ["WILSON_LB_S"] }
+    }
+  ]
+}

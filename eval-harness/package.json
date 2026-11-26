@@ -1,0 +1,20 @@
+{
+  "name": "@toulmin/eval-harness",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./stats": "./src/stats.ts",
+    "./holm": "./src/holm.ts",
+    "./publish_routing": "./src/publish_routing.ts"
+  },
+  "dependencies": {
+    "@toulmin/core-l0": "workspace:*",
+    "@toulmin/schemas": "workspace:*"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}

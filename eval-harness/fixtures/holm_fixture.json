@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "profileId": "web_chrome_nano",
+  "inputs": [
+    { "task": "B1", "delta": 0.18, "p": 0.010, "power": 0.82 },
+    { "task": "B2", "delta": 0.05, "p": 0.200, "power": 0.30 },
+    { "task": "B3", "delta": 0.15, "p": 0.030, "power": 0.76 },
+    {
+      "task": "B5",
+      "delta": 0.12,
+      "p": 0.040,
+      "power": 0.61,
+      "inconsistent_precision_l1": 0.82,
+      "inconsistent_precision_baseline": 0.78
+    }
+  ],
+  "expectedSortedOrder": ["B1", "B3", "B5", "B2"],
+  "expectedAdjustedP": [0.040, 0.090, 0.090, 0.200],
+  "expectedAuthority": {
+    "B1": "authoritative",
+    "B2": "advisory",
+    "B3": "authoritative",
+    "B5": "authoritative",
+    "O2": "advisory"
+  }
+}

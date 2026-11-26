@@ -10,6 +10,8 @@
     "./anchor": "./src/anchor.ts",
     "./b5pairing": "./src/b5pairing.ts",
     "./triageBaseline": "./src/triageBaseline.ts",
+    "./gate": "./src/gate.ts",
+    "./watchdog": "./src/watchdog.ts",
     "./ingest": "./src/ingest/index.ts",
     "./ingest/zip": "./src/ingest/zip.ts",
     "./ingest/tex": "./src/ingest/tex.ts",

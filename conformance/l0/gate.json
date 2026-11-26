@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "wilsonCases": [
+    { "id": "wilson_15_15", "k": 15, "n": 15, "expectedLb4": 0.7961, "expectedUb4": 1.0 },
+    { "id": "wilson_16_16", "k": 16, "n": 16, "expectedLb4": 0.8064, "expectedUb4": 1.0 },
+    { "id": "wilson_46_50", "k": 46, "n": 50, "expectedLb4": 0.8116, "expectedUb4": 0.9685 },
+    { "id": "wilson_11_15", "k": 11, "n": 15, "expectedLb4": 0.4805, "expectedUb4": 0.8910 },
+    { "id": "wilson_15_20", "k": 15, "n": 20, "expectedLb4": 0.5313, "expectedUb4": 0.8881 },
+    { "id": "wilson_16_20", "k": 16, "n": 20, "expectedLb4": 0.5840, "expectedUb4": 0.9193 },
+    { "id": "wilson_28_40", "k": 28, "n": 40, "expectedLb4": 0.5457, "expectedUb4": 0.8193 },
+    { "id": "wilson_40_50", "k": 40, "n": 50, "expectedLb4": 0.6696, "expectedUb4": 0.8876 },
+    { "id": "wilson_0_100", "k": 0, "n": 100, "expectedLb4": 0.0, "expectedUb4": 0.0370 },
+    { "id": "wilson_0_0_undefined", "k": 0, "n": 0, "expectedNull": true }
+  ],
+  "pathAGateCases": [
+    {
+      "id": "exact_boundary_pass",
+      "description": "07 §6.9 Procedure 4: exact boundary 0.70, 0.50, 0.60, 15 passes",
+      "input": { "p_hat": 0.70, "wilson_lb": 0.50, "stability": 0.60, "pp_pairs": 15 },
+      "expected": { "pathA": true, "failed": [] }
+    },
+    {
+      "id": "fail_p_hat_only",
+      "description": "07 §6.9 Procedure 4: single failing P_HAT below 0.70",
+      "input": { "p_hat": 0.6999, "wilson_lb": 0.50, "stability": 0.60, "pp_pairs": 15 },
+      "expected": { "pathA": false, "failed": ["P_HAT"] }
+    },
+    {
+      "id": "fail_wilson_lb_only",
+      "description": "07 §6.9 Procedure 4: single failing WILSON_LB below 0.50",
+      "input": { "p_hat": 0.70, "wilson_lb": 0.4999, "stability": 0.60, "pp_pairs": 15 },
+      "expected": { "pathA": false, "failed": ["WILSON_LB"] }
+    },
+    {
+      "id": "fail_stability_only",
+      "description": "07 §6.9 Procedure 4: single failing STABILITY below 0.60",
+      "input": { "p_hat": 0.70, "wilson_lb": 0.50, "stability": 0.5999, "pp_pairs": 15 },
+      "expected": { "pathA": false, "failed": ["STABILITY"] }
+    },
+    {
+      "id": "fail_pp_pairs_only",
+      "description": "07 §6.9 Procedure 4: single failing PP_PAIRS below 15",
+      "input": { "p_hat": 0.80, "wilson_lb": 0.54, "stability": 0.75, "pp_pairs": 14 },
+      "expected": { "pathA": false, "failed": ["PP_PAIRS"] }
+    },
+    {
+      "id": "fail_zero_pp_pairs",
+      "description": "Edge case: 0 positive contradiction predictions fails gate cleanly",
+      "input": { "p_hat": 0.0, "wilson_lb": 0.0, "stability": 1.0, "pp_pairs": 0 },
+      "expected": { "pathA": false, "failed": ["P_HAT", "WILSON_LB", "PP_PAIRS"] }
+    },
+    {
+      "id": "fail_all_four",
+      "description": "All four Path A thresholds missed",
+      "input": { "p_hat": 0.60, "wilson_lb": 0.40, "stability": 0.55, "pp_pairs": 10 },
+      "expected": { "pathA": false, "failed": ["P_HAT", "WILSON_LB", "STABILITY", "PP_PAIRS"] }
+    },
+    {
+      "id": "count_backed_pass_16_of_20",
+      "description": "16/20 yields p_hat=0.80, wilson_lb=0.5840 >= 0.50 -> Path A pass",
+      "input": { "p_hat": 0.80, "wilson_lb": 0.5840, "stability": 0.70, "pp_pairs": 20, "tp_pairs": 16 },
+      "expected": { "pathA": true, "failed": [] }
+    },
+    {
+      "id": "count_backed_fail_11_of_15_lb",
+      "description": "11/15 yields p_hat=0.7333 >= 0.70 but wilson_lb=0.4805 < 0.50 -> fail WILSON_LB",
+      "input": { "p_hat": 0.7333, "wilson_lb": 0.4805, "stability": 0.70, "pp_pairs": 15, "tp_pairs": 11 },
+      "expected": { "pathA": false, "failed": ["WILSON_LB"] }
+    }
+  ]
+}
