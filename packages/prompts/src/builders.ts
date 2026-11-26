@@ -148,8 +148,10 @@ function sanitizeAndWrapBlocks(
     const sanitized = sanitizeText(raw);
     if (sanitized.blocked) {
       blockedIndices.push(i);
+      continue;
     }
-    wrappedBlocks.push(wrapEvidenceBlock(i, sanitized.text));
+    // Assign compact 0-based IDs matching kept EVIDENCE[] units (`02` §9.5, `04` §3.3/§3.6.3)
+    wrappedBlocks.push(wrapEvidenceBlock(wrappedBlocks.length, sanitized.text));
   }
   return { wrappedBlocks, blockedIndices };
 }
@@ -273,7 +275,7 @@ export function buildStage2Prompt(
       userPrompt = render(activeBlocks);
       tokens = estimatePromptTokens(userPrompt);
     }
-    if (activeBlocks.length === 0 && input.evidence.length > 0) {
+    if (activeBlocks.length === 0 && wrappedBlocks.length > 0) {
       overBudget = true;
     } else if (tokens > input.maxInputTokens) {
       overBudget = true;
@@ -290,7 +292,7 @@ export function buildStage2Prompt(
     streamCharLimit: streamCharLimit(schemaId),
     evidenceCount: activeBlocks.length,
     overBudget,
-    blockedEvidenceIndices: blockedIndices.filter((idx) => idx < activeBlocks.length),
+    blockedEvidenceIndices: blockedIndices,
   };
 }
 
@@ -357,29 +359,38 @@ export function buildO2Prompt(
 ): BuiltPrompt<"O2PhysicalExtractV1" | "O2PhysicalExtractFlatV1"> {
   const schemaId = input.variant ?? "O2PhysicalExtractV1";
   const instructions = buildO2InstructionBlock(schemaId);
-  // Per 02 §9.5 line 866: blocked OCR blocks are excluded from O2/O3 prompts
-  const rawBlocks = [input.headerText, input.rowText] as const;
+  // Per 02 §9.5 line 866 & 04 §3.1 line 602: omit blocked OCR blocks and their headers/delimiters completely
+  const headerSanitized = sanitizeText(input.headerText);
+  const rowSanitized = sanitizeText(input.rowText);
   const blockedIndices: number[] = [];
-  const wrappedBlocks: string[] = [];
-  for (let i = 0; i < rawBlocks.length; i += 1) {
-    const sanitized = sanitizeText(rawBlocks[i]!);
-    if (sanitized.blocked) {
-      blockedIndices.push(i);
-      wrappedBlocks.push(wrapEvidenceBlock(i, "[blocked by sanitizer]"));
-    } else {
-      wrappedBlocks.push(wrapEvidenceBlock(i, sanitized.text));
-    }
-  }
-
-  const userPrompt = [
+  const lines: string[] = [
     instructions,
     "",
     `TARGET_CLAIM: """${input.claimText}"""`,
-    'HEADER (cells separated by " | "):',
-    wrappedBlocks[0]!,
-    'ROW (cells separated by " | "):',
-    wrappedBlocks[1]!,
-  ].join("\n") + "\n";
+  ];
+  let evidenceCount = 0;
+
+  if (headerSanitized.blocked) {
+    blockedIndices.push(0);
+  } else {
+    lines.push(
+      'HEADER (cells separated by " | "):',
+      wrapEvidenceBlock(0, headerSanitized.text)
+    );
+    evidenceCount += 1;
+  }
+
+  if (rowSanitized.blocked) {
+    blockedIndices.push(1);
+  } else {
+    lines.push(
+      'ROW (cells separated by " | "):',
+      wrapEvidenceBlock(1, rowSanitized.text)
+    );
+    evidenceCount += 1;
+  }
+
+  const userPrompt = lines.join("\n") + "\n";
 
   return {
     promptVersion: PROMPT_VERSION,
@@ -389,7 +400,7 @@ export function buildO2Prompt(
     systemInstruction: instructions,
     estimatedInputTokens: estimatePromptTokens(userPrompt),
     streamCharLimit: streamCharLimit(schemaId),
-    evidenceCount: 2,
+    evidenceCount,
     overBudget: false,
     blockedEvidenceIndices: blockedIndices,
   };
@@ -480,7 +491,7 @@ export function buildL2Prompt(input: L2PromptInput): BuiltPrompt<"L2Verdict"> {
       userPrompt = render(activeBlocks);
       tokens = estimatePromptTokens(userPrompt);
     }
-    if ((activeBlocks.length === 0 && input.evidence.length > 0) || tokens > input.maxInputTokens) {
+    if ((activeBlocks.length === 0 && wrappedBlocks.length > 0) || tokens > input.maxInputTokens) {
       overBudget = true;
     }
   }
@@ -495,7 +506,7 @@ export function buildL2Prompt(input: L2PromptInput): BuiltPrompt<"L2Verdict"> {
     streamCharLimit: streamCharLimit("L2Verdict"),
     evidenceCount: activeBlocks.length,
     overBudget,
-    blockedEvidenceIndices: blockedIndices.filter((idx) => idx < activeBlocks.length),
+    blockedEvidenceIndices: blockedIndices,
   };
 }
 

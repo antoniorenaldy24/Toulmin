@@ -663,7 +663,25 @@ function materializeEntry(
   const refIdsKey = refIdsKeyOf(entry.refs);
   const ovKey = overrideKeyOf(entry.docId, entry.normalizedClaimHash, refIdsKey);
   const sharedOv = overridesByKey.get(ovKey);
-  let effectiveOverride = sideFacts.override ?? deepClone(entry.override);
+  const fromSideFacts = effectiveOverrideForEntry(
+    sideFacts,
+    entry.normalizedClaimHash,
+    refIdsKey,
+  );
+  const entryOvValid = isValidOverrideForEntry(
+    entry.override,
+    entry.normalizedClaimHash,
+    refIdsKey,
+  );
+  let effectiveOverride: Versioned<AuthorOverride | null> =
+    fromSideFacts !== null
+      ? deepClone(fromSideFacts)
+      : entryOvValid
+        ? deepClone(entry.override)
+        : { value: null, seq: 0 };
+  if (fromSideFacts !== null && entryOvValid) {
+    effectiveOverride = mergeVersioned(effectiveOverride, deepClone(entry.override));
+  }
   if (sharedOv !== undefined && isValidOverrideForEntry(sharedOv, entry.normalizedClaimHash, refIdsKey)) {
     effectiveOverride = mergeVersioned(effectiveOverride, deepClone(sharedOv));
   }

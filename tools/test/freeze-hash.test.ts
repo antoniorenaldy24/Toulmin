@@ -229,7 +229,7 @@ describe("tools/freeze-hash.ts deterministic manifest & hash verification", () =
     // Tier A invariance
     const tierARes = computeFreezeHash(REPO_ROOT, tierAFiles);
     expect(tierARes.fileCount).toBe(55);
-    expect(tierARes.hash).toBe("a80425ea4b60d3dccc2856c818d3ecb9f761267086d5ac46bf3f04c087e11f8d");
+    expect(tierARes.hash).toBe("35b076eabbc53848587014411e9323ad651fd8c5f121b67733c313e801221dbe");
 
     // Tier B required current members
     expect(tierBFiles).toContain("packages/core-l0/src/anchor.ts");

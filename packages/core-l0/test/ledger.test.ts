@@ -506,19 +506,27 @@ describe("Ledger reducer E1–E16 & E6b unit semantics & immutability", () => {
       note: "invalid",
       createdAt: 1700000002000,
     };
+    const evBib: LedgerEvent = {
+      type: "BibResolved",
+      refId: "ref-1",
+      bibStatus: "RESOLVED",
+      retracted: false,
+      checkMetadata: false,
+      seq: 1,
+    };
     const evValid: LedgerEvent = { type: "Override", claimId: "c1", value: validOv, seq: 1 };
     const evInvalid: LedgerEvent = { type: "Override", claimId: "c1", value: invalidOv, seq: 2 };
 
     const s1 = reduceLedger(
-      [{ type: "ClauseCreated", entry: c1 }, evValid, evInvalid, { type: "ClauseCreated", entry: c1v2 }],
+      [evBib, { type: "ClauseCreated", entry: c1 }, evValid, evInvalid, { type: "ClauseCreated", entry: c1v2 }],
       { policy: POLICY_A },
     );
     const s2 = reduceLedger(
-      [evInvalid, { type: "ClauseCreated", entry: c1v2 }, evValid, { type: "ClauseCreated", entry: c1 }],
+      [evInvalid, { type: "ClauseCreated", entry: c1v2 }, evValid, { type: "ClauseCreated", entry: c1 }, evBib],
       { policy: POLICY_A },
     );
     const s3 = reduceLedger(
-      [{ type: "ClauseCreated", entry: c1 }, evInvalid, evValid, { type: "ClauseCreated", entry: c1v2 }],
+      [{ type: "ClauseCreated", entry: c1 }, evInvalid, evValid, evBib, { type: "ClauseCreated", entry: c1v2 }],
       { policy: POLICY_A },
     );
 
@@ -526,7 +534,81 @@ describe("Ledger reducer E1–E16 & E6b unit semantics & immutability", () => {
     expect(s1.entries).toStrictEqual(s3.entries);
     expect(s1.overridesByKey).toStrictEqual(s2.overridesByKey);
     expect(s1.overridesByKey).toStrictEqual(s3.overridesByKey);
-    expect(s1.entries.get("c1-v2")!.override.value?.note).toBe("valid");
+
+    const matOrigin = s1.entries.get("c1")!;
+    const matSibling = s1.entries.get("c1-v2")!;
+    expect(matOrigin.override.value?.note).toBe("valid");
+    expect(matOrigin.override.seq).toBe(1);
+    expect(matSibling.override.value?.note).toBe("valid");
+    expect(matSibling.override.seq).toBe(1);
+    expect(matOrigin.override).toStrictEqual(matSibling.override);
+
+    const derivedOrigin = derive(matOrigin, s1.refFacts, s1.policy, MODE_STANDARD, SESSION_DEFAULT);
+    const derivedSibling = derive(matSibling, s1.refFacts, s1.policy, MODE_STANDARD, SESSION_DEFAULT);
+    expect(derivedOrigin.state).toBe("REVIEWED_BY_AUTHOR");
+    expect(derivedOrigin.provenance).toBe("AUTHOR");
+    expect(derivedSibling.state).toBe("REVIEWED_BY_AUTHOR");
+    expect(derivedSibling.provenance).toBe("AUTHOR");
+  });
+
+  it("commutatively clears REVIEWED_BY_AUTHOR on origin and sibling entries when a valid Override(value: null) arrives with higher seq", () => {
+    const c1 = makeSkeletonEntry({ claimId: "c1" });
+    const c1v2 = makeSkeletonEntry({ claimId: "c1-v2", claimText: "Drug X lowered mortality by 30%." });
+    const validOv: AuthorOverride = {
+      dismissedState: "WAITING",
+      basis: "REVIEW",
+      captureId: null,
+      normalizedClaimHash: c1.normalizedClaimHash,
+      refIdsKey: "ref-1",
+      note: "valid",
+      createdAt: 1700000001000,
+    };
+    const invalidOv: AuthorOverride = {
+      dismissedState: "WAITING",
+      basis: "REVIEW",
+      captureId: null,
+      normalizedClaimHash: sha256hex("different claim"),
+      refIdsKey: "ref-1",
+      note: "invalid",
+      createdAt: 1700000002000,
+    };
+    const evBib: LedgerEvent = {
+      type: "BibResolved",
+      refId: "ref-1",
+      bibStatus: "RESOLVED",
+      retracted: false,
+      checkMetadata: false,
+      seq: 1,
+    };
+    const evValid: LedgerEvent = { type: "Override", claimId: "c1", value: validOv, seq: 1 };
+    const evInvalid: LedgerEvent = { type: "Override", claimId: "c1", value: invalidOv, seq: 2 };
+    const evUndo: LedgerEvent = { type: "Override", claimId: "c1", value: null, seq: 3 };
+    const evC1: LedgerEvent = { type: "ClauseCreated", entry: c1 };
+    const evC1v2: LedgerEvent = { type: "ClauseCreated", entry: c1v2 };
+
+    const orders: LedgerEvent[][] = [
+      [evBib, evC1, evC1v2, evValid, evInvalid, evUndo],
+      [evUndo, evBib, evInvalid, evC1v2, evValid, evC1],
+      [evC1v2, evValid, evUndo, evC1, evInvalid, evBib],
+      [evInvalid, evValid, evUndo, evBib, evC1, evC1v2],
+    ];
+
+    const baseline = reduceLedger(orders[0]!, { policy: POLICY_A });
+    for (const order of orders.slice(1)) {
+      const next = reduceLedger(order, { policy: POLICY_A });
+      expect(next.entries).toStrictEqual(baseline.entries);
+      expect(next.overridesByKey).toStrictEqual(baseline.overridesByKey);
+    }
+
+    const matOrigin = baseline.entries.get("c1")!;
+    const matSibling = baseline.entries.get("c1-v2")!;
+    expect(matOrigin.override).toStrictEqual({ value: null, seq: 3 });
+    expect(matSibling.override).toStrictEqual({ value: null, seq: 3 });
+
+    const derivedOrigin = derive(matOrigin, baseline.refFacts, baseline.policy, MODE_STANDARD, SESSION_DEFAULT);
+    const derivedSibling = derive(matSibling, baseline.refFacts, baseline.policy, MODE_STANDARD, SESSION_DEFAULT);
+    expect(derivedOrigin.state).toBe("WAITING");
+    expect(derivedSibling.state).toBe("WAITING");
   });
 
   it("rejects forged LocalResult and Stage1Result whose internal schema/prompt fields do not match resultKey", () => {
