@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "ex01_methods_120_patients",
+      "description": "Normative Example 1 (03 §3.4): Methods sentence with 120 patients -> QUANTITATIVE, HIGH, uncited=false",
+      "input": {
+        "clauseText": "We enrolled 120 patients.",
+        "section": "methods",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "QUANTITATIVE",
+        "worth": "HIGH",
+        "uncited": false
+      }
+    },
+    {
+      "id": "ex02_results_12_pct_not_uncited",
+      "description": "Normative Example 2 / AC-L0-25: Results quantitative sentence -> QUANTITATIVE, HIGH, uncited=false",
+      "input": {
+        "clauseText": "Mortality was 12% in the treated group.",
+        "section": "results",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "QUANTITATIVE",
+        "worth": "HIGH",
+        "uncited": false
+      }
+    },
+    {
+      "id": "ex03_discussion_12_pct_uncited",
+      "description": "Normative Example 3 / AC-L0-25: Discussion quantitative sentence -> QUANTITATIVE, HIGH, uncited=true",
+      "input": {
+        "clauseText": "Mortality was 12% in the treated group.",
+        "section": "discussion",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "QUANTITATIVE",
+        "worth": "HIGH",
+        "uncited": true
+      }
+    },
+    {
+      "id": "ex04_one_of_main_causes_causal",
+      "description": "Normative Example 4 / AC-L0-25: 'one of' is not a number; 'causes' -> CAUSAL, HIGH, uncited=true",
+      "input": {
+        "clauseText": "One of the main causes of delay is staffing.",
+        "section": "introduction",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "CAUSAL",
+        "worth": "HIGH",
+        "uncited": true
+      }
+    },
+    {
+      "id": "ex05_cited_methodological",
+      "description": "Normative Example 5 / Procedure 4: cited METHODOLOGICAL -> METHODOLOGICAL, LOW, uncited=false",
+      "input": {
+        "clauseText": "We followed the protocol of [3].",
+        "section": "methods",
+        "hasResolvedCitation": true
+      },
+      "expected": {
+        "claimType": "METHODOLOGICAL",
+        "worth": "LOW",
+        "uncited": false
+      }
+    },
+    {
+      "id": "ex06_aims_sentence_non_empirical",
+      "description": "Normative Example 6 / Procedure 4: aims sentence -> NON_EMPIRICAL, LOW, uncited=false",
+      "input": {
+        "clauseText": "This study aims to describe staffing.",
+        "section": "introduction",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "NON_EMPIRICAL",
+        "worth": "LOW",
+        "uncited": false
+      }
+    },
+    {
+      "id": "ex07_more_without_number",
+      "description": "Normative Example 7 / Procedure 4: 'more' without a number -> NON_EMPIRICAL, LOW, uncited=false",
+      "input": {
+        "clauseText": "More patients were treated.",
+        "section": "discussion",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "NON_EMPIRICAL",
+        "worth": "LOW",
+        "uncited": false
+      }
+    },
+    {
+      "id": "ex08_resulted_in_causal",
+      "description": "Normative Example 8 / Procedure 4: 'resulted in' -> CAUSAL, HIGH, uncited=true",
+      "input": {
+        "clauseText": "The delay resulted in longer stays.",
+        "section": "discussion",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "CAUSAL",
+        "worth": "HIGH",
+        "uncited": true
+      }
+    },
+    {
+      "id": "ex09_results_noun_non_empirical",
+      "description": "Normative Example 9 / Procedure 4: 'results' as noun (not 'results in') -> NON_EMPIRICAL, LOW, uncited=false",
+      "input": {
+        "clauseText": "The results are shown below.",
+        "section": "results",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "NON_EMPIRICAL",
+        "worth": "LOW",
+        "uncited": false
+      }
+    },
+    {
+      "id": "methods_without_numbers_uncited_false",
+      "description": "Procedure 4: Methods sentence without numbers -> METHODOLOGICAL, LOW, uncited=false",
+      "input": {
+        "clauseText": "Samples were stored at room temperature.",
+        "section": "methods",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "METHODOLOGICAL",
+        "worth": "LOW",
+        "uncited": false
+      }
+    },
+    {
+      "id": "method_opener_outside_methods_section",
+      "description": "Method opener in discussion stays METHODOLOGICAL and never uncited",
+      "input": {
+        "clauseText": "We measured serum creatinine across all visits.",
+        "section": "discussion",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "METHODOLOGICAL",
+        "worth": "LOW",
+        "uncited": false
+      }
+    },
+    {
+      "id": "cited_non_empirical_transition_sentence",
+      "description": "Procedure 4: cited NON_EMPIRICAL transition sentence -> NON_EMPIRICAL, LOW, uncited=false",
+      "input": {
+        "clauseText": "The following section outlines the background context [4].",
+        "section": "introduction",
+        "hasResolvedCitation": true
+      },
+      "expected": {
+        "claimType": "NON_EMPIRICAL",
+        "worth": "LOW",
+        "uncited": false
+      }
+    },
+    {
+      "id": "comparative_without_numbers",
+      "description": "Comparative cue without numbers in background -> COMPARATIVE, HIGH, uncited=true",
+      "input": {
+        "clauseText": "Drug X outperformed placebo in clinical remission.",
+        "section": "background",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "COMPARATIVE",
+        "worth": "HIGH",
+        "uncited": true
+      }
+    },
+    {
+      "id": "existence_uncited_low_worth",
+      "description": "Existence cue without citation -> EXISTENCE, LOW, uncited=false",
+      "input": {
+        "clauseText": "This biomarker is present in human serum.",
+        "section": "introduction",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "EXISTENCE",
+        "worth": "LOW",
+        "uncited": false
+      }
+    },
+    {
+      "id": "existence_cited_high_worth",
+      "description": "Existence cue with resolved citation -> EXISTENCE, HIGH, uncited=false",
+      "input": {
+        "clauseText": "This biomarker is present in human serum [2].",
+        "section": "introduction",
+        "hasResolvedCitation": true
+      },
+      "expected": {
+        "claimType": "EXISTENCE",
+        "worth": "HIGH",
+        "uncited": false
+      }
+    },
+    {
+      "id": "twelve_patients_quantitative",
+      "description": "AC-L0-25: 'Twelve patients' word number + COUNT_NOUNS -> QUANTITATIVE, HIGH, uncited=true in unlabeled",
+      "input": {
+        "clauseText": "Twelve patients experienced adverse events.",
+        "section": "unlabeled",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "QUANTITATIVE",
+        "worth": "HIGH",
+        "uncited": true
+      }
+    },
+    {
+      "id": "year_2020_alone_not_quantitative",
+      "description": "Unitless year 2020 is excluded from nums -> NON_EMPIRICAL",
+      "input": {
+        "clauseText": "In 2020 the guideline was drafted.",
+        "section": "introduction",
+        "hasResolvedCitation": false
+      },
+      "expected": {
+        "claimType": "NON_EMPIRICAL",
+        "worth": "LOW",
+        "uncited": false
+      }
+    }
+  ]
+}

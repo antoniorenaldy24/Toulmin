@@ -6,7 +6,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./norm": "./src/norm.ts",
-    "./ledger": "./src/ledger.ts"
+    "./ledger": "./src/ledger.ts",
+    "./anchor": "./src/anchor.ts",
+    "./triageBaseline": "./src/triageBaseline.ts"
   },
   "dependencies": {
     "@toulmin/schemas": "workspace:*"

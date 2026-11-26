@@ -1,0 +1,647 @@
+{
+  "schemaVersion": 1,
+  "localCases": [
+    {
+      "id": "ex01_neg_left_margin",
+      "description": "Normative Example 1: verbatim match; left margin contains 'no' -> NEGATION_PARITY",
+      "evidence": ["We found no significant difference in 30-day mortality (12.1% vs 12.4%)."],
+      "out": {
+        "s01_evidence_span": "significant difference in 30-day mortality",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "The evidence supports the claim.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "X lowered 30-day mortality",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "NEGATION_PARITY", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "ex02_neg_both_sides",
+      "description": "Normative Example 2: verbatim match with 'no' on both span and claim -> SUPPORTED",
+      "evidence": ["We found no significant difference in 30-day mortality (12.1% vs 12.4%)."],
+      "out": {
+        "s01_evidence_span": "no significant difference in 30-day mortality",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Matches the claim.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "There was no significant difference in 30-day mortality with X",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true, "snappedSnippet": "no significant difference in 30-day mortality" }
+    },
+    {
+      "id": "ex03_mid_dot_decimals",
+      "description": "Normative Example 3 / AC-L0-07: Lancet mid-dot decimal normalized and snapped to exact substring",
+      "evidence": ["Mortality fell from 18\u00b72% to 12\u00b77% (p = 0\u00b701)."],
+      "out": {
+        "s01_evidence_span": "Mortality fell from 18.2% to 12.7%",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "The reported figures match.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Mortality fell from 18.2% to 12.7%",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true, "snappedRange": { "start": 0, "end": 34 }, "snappedSnippet": "Mortality fell from 18\u00b72% to 12\u00b77%" }
+    },
+    {
+      "id": "ex04_clause_stop_before_nondiabetic",
+      "description": "Normative Example 4 / AC-L0-07: comma stops left margin; 'nondiabetic' is not negation cue",
+      "evidence": ["In non-diabetic patients, the intervention reduced HbA1c by 0.4%."],
+      "out": {
+        "s01_evidence_span": "the intervention reduced HbA1c by 0.4%",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Exact reduction matches.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "the intervention reduced HbA1c by 0.4%",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true, "snappedRange": { "start": 26, "end": 64 }, "snappedSnippet": "the intervention reduced HbA1c by 0.4%" }
+    },
+    {
+      "id": "ex05_fragment_too_short",
+      "description": "Normative Example 5: Fragment 2 ('by 40%') has 1 content token < 3 -> FRAGMENT_TOO_SHORT",
+      "evidence": ["The treatment reduced pain scores by 30% at 12 weeks."],
+      "out": {
+        "s01_evidence_span": "treatment reduced pain ... by 40%",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Matches.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "The treatment reduced pain scores by 40%",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "FRAGMENT_TOO_SHORT", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "ex06_claim_value_mismatch_supported",
+      "description": "Normative Example 6 / AC-L0-08: claim 40% vs span 30% with decoded SUPPORTED -> CLAIM_SPAN_MISMATCH",
+      "evidence": ["The treatment reduced pain scores by 30% at 12 weeks."],
+      "out": {
+        "s01_evidence_span": "The treatment reduced pain scores by 30%",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Pain scores declined.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "The treatment reduced pain scores by 40%",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "CLAIM_SPAN_MISMATCH", "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex07_claim_value_mismatch_contradicts",
+      "description": "Normative Example 7 / AC-L0-08: claim 40% vs span 30% with decoded CONTRADICTS -> CONTRADICTS kept",
+      "evidence": ["The treatment reduced pain scores by 30% at 12 weeks."],
+      "out": {
+        "s01_evidence_span": "The treatment reduced pain scores by 30%",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "The paper reports 30% rather than 40%.",
+        "s04_verdict": "CONTRADICTS"
+      },
+      "claim": "The treatment reduced pain scores by 40%",
+      "expected": { "verdict": "CONTRADICTS", "failReason": null, "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex07b_kind_mismatch_percent_vs_duration",
+      "description": "Normative Example 7b / AC-L0-08: percentage vs duration -> CLAIM_SPAN_MISMATCH",
+      "evidence": ["The treatment reduced pain scores within 30 days."],
+      "out": {
+        "s01_evidence_span": "The treatment reduced pain scores within 30 days",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Both mention 30.",
+        "s04_verdict": "CONTRADICTS"
+      },
+      "claim": "The treatment reduced pain scores by 40%",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "CLAIM_SPAN_MISMATCH", "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex07c_low_claim_overlap",
+      "description": "Normative Example 7c / AC-L0-08: no shared content stems -> LOW_CLAIM_OVERLAP",
+      "evidence": ["The treatment reduced anxiety scores by 30%."],
+      "out": {
+        "s01_evidence_span": "The treatment reduced anxiety scores by 30%",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "30% vs 40%.",
+        "s04_verdict": "CONTRADICTS"
+      },
+      "claim": "The drug lowered blood pressure by 40%",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "LOW_CLAIM_OVERLAP", "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex08_scope_negation",
+      "description": "Normative Example 8 / AC-L0-06: scope negation ('no ... that') beyond 4-token margin -> NEGATION_PARITY",
+      "evidence": ["There was no convincing evidence in this trial that the new intervention substantially reduced mortality."],
+      "out": {
+        "s01_evidence_span": "the new intervention substantially reduced mortality",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Reduced mortality.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "the intervention reduced mortality",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "NEGATION_PARITY", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "ex09_elliptical_concessive",
+      "description": "Normative Example 9 / AC-L0-06: elliptical 'although not significantly' right after window -> NEGATION_PARITY",
+      "evidence": ["The intervention reduced mortality, although not significantly (p = 0.2)."],
+      "out": {
+        "s01_evidence_span": "The intervention reduced mortality",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Intervention reduced mortality.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "The intervention reduced mortality",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "NEGATION_PARITY", "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex09b_non_elliptical_concessive",
+      "description": "Normative Example 9b: 'but there were no' is 3 tokens after 'but' -> not elliptical -> SUPPORTED",
+      "evidence": ["The intervention reduced pain, but there were no serious adverse events."],
+      "out": {
+        "s01_evidence_span": "The intervention reduced pain",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Pain was reduced.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "The intervention reduced pain",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex10_hyphenated_nonsignificant",
+      "description": "Normative Example 10 / AC-L0-06: 'non-significant' merged to 'nonsignificant' -> NEGATION_PARITY",
+      "evidence": ["Differences were non-significant in both arms."],
+      "out": {
+        "s01_evidence_span": "Differences were significant in both arms",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Significant differences observed.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Differences were significant in both arms",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "NEGATION_PARITY", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "ex11_numeric_parity_12_1_vs_2_1",
+      "description": "Normative Example 11 / AC-L0-08: 12.1% vs 2.1%, containment 3/4 passes, NUMERIC_PARITY fails",
+      "evidence": ["Adherence was 12.1% in the control arm."],
+      "out": {
+        "s01_evidence_span": "Adherence was 2.1% in the control arm",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Matches adherence rate.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Adherence was 2.1% in the control arm",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "NUMERIC_PARITY", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "ex12_direction_parity_worsened_vs_improved",
+      "description": "Normative Example 12: valence NEG ('worsened') vs POS ('improved') -> DIRECTION_PARITY",
+      "evidence": ["Symptoms worsened by 30% in the treated group."],
+      "out": {
+        "s01_evidence_span": "Symptoms improved by 30% in the treated group",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Symptoms improved.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Symptoms improved by 30% in the treated group",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "DIRECTION_PARITY", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "ex12b_measure_valence_pain_decreased_vs_improved",
+      "description": "Normative Example 12b: measureOf('decreased')=ADVERSE ('pain') gives valence POS matching 'improved' -> SUPPORTED",
+      "evidence": ["Pain decreased by 30% in the treated group."],
+      "out": {
+        "s01_evidence_span": "Pain decreased by 30% in the treated group",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Pain decreased by 30%.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Pain improved by 30% in the treated group",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex13_canonical_leading_zero_045",
+      "description": "Normative Example 13: '.045' == '0.045' by canonical numeric value -> SUPPORTED",
+      "evidence": ["The odds ratio was .045 lower."],
+      "out": {
+        "s01_evidence_span": "The odds ratio was 0.045 lower",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Odds ratio reduction matches.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "The odds ratio was 0.045 lower",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex14_non_negating_idiom_not_only",
+      "description": "Normative Example 14: idiom 'not only' deleted -> negation 0 = 0 -> SUPPORTED",
+      "evidence": ["The effect was not only large but also durable."],
+      "out": {
+        "s01_evidence_span": "The effect was not only large but also durable",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Large and durable effect.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "the effect was large and durable",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex15_soft_neg_inactive",
+      "description": "Normative Example 15: 'similar' without strong negation on either side -> SUPPORTED",
+      "evidence": ["Rates were similar between groups."],
+      "out": {
+        "s01_evidence_span": "Rates were similar between groups",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Similar rates.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Rates were similar between groups",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex15b_soft_neg_activated_by_claim",
+      "description": "Normative Example 15b: claim 'did not differ' activates softFor(clTok) -> 'similar' matches 'not differ' -> SUPPORTED",
+      "evidence": ["Rates were similar between groups."],
+      "out": {
+        "s01_evidence_span": "Rates were similar between groups",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Rates were similar, indicating no difference.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Rates did not differ between groups",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex15c_neg_exclusion_heart_failure",
+      "description": "Normative Example 15c: ('heart', 'failure') excluded from negation cues -> SUPPORTED",
+      "evidence": ["Mortality was lower in patients with heart failure."],
+      "out": {
+        "s01_evidence_span": "Mortality was lower in patients with heart failure",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Lower mortality in heart failure.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Mortality was lower in patients with heart failure",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex16_reasoning_verdict_conflict",
+      "description": "Normative Example 16: reasoning 'does not mention dose' conflicts with SUPPORTED -> REASONING_VERDICT_CONFLICT",
+      "evidence": ["Dose information was not enough information for comparison."],
+      "out": {
+        "s01_evidence_span": "not enough information",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "the abstract does not mention dose",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "The dose was 10 mg daily",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "REASONING_VERDICT_CONFLICT", "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex17_percent_vs_days_claim_span_mismatch",
+      "description": "Normative Example 17 / AC-L0-08: 30% vs 30 days -> isPercent differs -> CLAIM_SPAN_MISMATCH",
+      "evidence": ["Readmission was 30% in both arms."],
+      "out": {
+        "s01_evidence_span": "Readmission was 30% in both arms",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Readmission was 30.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Readmission was 30 days in both arms",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "CLAIM_SPAN_MISMATCH", "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex18_l1_no_difference_signal_identical",
+      "description": "Normative Example 18 / AC-L0-09: identical claim and evidence with L1 CONTRADICTS -> NO_DIFFERENCE_SIGNAL",
+      "evidence": ["The drug reduced blood pressure in older adults."],
+      "out": {
+        "s01_evidence_span": "The drug reduced blood pressure in older adults",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Disagrees.",
+        "s04_verdict": "CONTRADICTS"
+      },
+      "claim": "The drug reduced blood pressure in older adults",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "NO_DIFFERENCE_SIGNAL", "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex19_l1_subject_swap_no_difference_signal",
+      "description": "Normative Example 19 / AC-L0-09: L1 subject swap without values -> NO_DIFFERENCE_SIGNAL",
+      "evidence": ["Drug Y outperformed drug X in remission rates."],
+      "out": {
+        "s01_evidence_span": "Drug Y outperformed drug X in remission rates",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Opposite drug outperformed.",
+        "s04_verdict": "CONTRADICTS"
+      },
+      "claim": "Drug X outperformed drug Y in remission rates",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "NO_DIFFERENCE_SIGNAL", "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex20_measure_valence_dir_diff_supported_and_contradicts",
+      "description": "Normative Example 20: 'increased pain' (NEG) vs 'improved pain' (POS) -> SUPPORTED downgraded to CLAIM_SPAN_MISMATCH",
+      "evidence": ["The drug increased pain scores in older adults."],
+      "out": {
+        "s01_evidence_span": "The drug increased pain scores in older adults",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Pain scores changed.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "The drug improved pain scores in older adults",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "CLAIM_SPAN_MISMATCH", "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "ex20_contradicts_kept",
+      "description": "Normative Example 20 with CONTRADICTS: dirDiff is a difference signal -> CONTRADICTS kept",
+      "evidence": ["The drug increased pain scores in older adults."],
+      "out": {
+        "s01_evidence_span": "The drug increased pain scores in older adults",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "The evidence shows increased pain rather than improvement.",
+        "s04_verdict": "CONTRADICTS"
+      },
+      "claim": "The drug improved pain scores in older adults",
+      "expected": { "verdict": "CONTRADICTS", "failReason": null, "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "fail_idx_out_of_bounds",
+      "description": "Mandatory AnchorFailReason: IDX_OUT_OF_BOUNDS",
+      "evidence": ["Mortality fell in the treated group."],
+      "out": {
+        "s01_evidence_span": "Mortality fell in the treated group",
+        "s02_evidence_idx": 2,
+        "s03_micro_reasoning": "Matches.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Mortality fell in the treated group",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "IDX_OUT_OF_BOUNDS", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "fail_empty_span",
+      "description": "Mandatory AnchorFailReason: EMPTY_SPAN",
+      "evidence": ["Mortality fell in the treated group."],
+      "out": {
+        "s01_evidence_span": "   ",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Matches.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Mortality fell in the treated group",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "EMPTY_SPAN", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "fail_containment_below_threshold",
+      "description": "Mandatory AnchorFailReason: CONTAINMENT_BELOW_THRESHOLD",
+      "evidence": ["Aspirin reduced stroke incidence significantly over five years."],
+      "out": {
+        "s01_evidence_span": "Aspirin prevented myocardial infarction mortality completely",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Matches.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Aspirin reduced stroke incidence",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "CONTAINMENT_BELOW_THRESHOLD", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "fail_window_too_wide",
+      "description": "Mandatory AnchorFailReason: WINDOW_TOO_WIDE",
+      "evidence": ["Drug alpha reduced headaches in frail hospitalized elderly diabetic patients treated across multiple regional medical centers near outpatient neurology clinics winter."],
+      "out": {
+        "s01_evidence_span": "Drug alpha reduced headaches ... outpatient neurology clinics winter",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Matches.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Drug alpha reduced headaches in outpatient neurology clinics during winter",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "WINDOW_TOO_WIDE", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "fail_fragment_order_violation",
+      "description": "Mandatory AnchorFailReason: FRAGMENT_ORDER_VIOLATION",
+      "evidence": ["Aspirin reduced headache frequency by half while ibuprofen improved sleep duration."],
+      "out": {
+        "s01_evidence_span": "ibuprofen improved sleep duration ... Aspirin reduced headache frequency",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Matches.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Aspirin reduced headache frequency",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "FRAGMENT_ORDER_VIOLATION", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "fail_uncalibrated_variant",
+      "description": "Mandatory AnchorFailReason: UNCALIBRATED_VARIANT on calibrated-variant mismatch",
+      "evidence": ["The treatment reduced pain scores by 30% at 12 weeks."],
+      "out": {
+        "s01_evidence_span": "The treatment reduced pain scores by 30%",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Evidence reports 30% rather than 40%.",
+        "s04_verdict": "CONTRADICTS"
+      },
+      "claim": "The treatment reduced pain scores by 40%",
+      "calibratedVariant": { "schemaId": "VerdictV1", "reasoningCap": 40 },
+      "actualVariant": { "schemaId": "VerdictV1_cap20", "reasoningCap": 20 },
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "UNCALIBRATED_VARIANT", "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "neg_right_margin_within_4_tokens",
+      "description": "AC-L0-06 / Procedure 4: negation cue 1-4 tokens right of window -> NEGATION_PARITY",
+      "evidence": ["The intervention reduced mortality was not confirmed in the trial."],
+      "out": {
+        "s01_evidence_span": "The intervention reduced mortality",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Reduced mortality.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "The intervention reduced mortality",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "NEGATION_PARITY", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "contraction_didnt_negation",
+      "description": "Procedure 4: contraction didn't expands to did + not -> NEGATION_PARITY when omitted from span",
+      "evidence": ["The drug didn't improve overall survival in elderly cohorts."],
+      "out": {
+        "s01_evidence_span": "improve overall survival in elderly cohorts",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Improved survival.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "The drug improved overall survival in elderly cohorts",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "NEGATION_PARITY", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "direction_increased_vs_decreased",
+      "description": "Procedure 4: increased vs decreased in span vs evidence -> DIRECTION_PARITY",
+      "evidence": ["Serum lactate decreased significantly after fluid resuscitation."],
+      "out": {
+        "s01_evidence_span": "Serum lactate increased significantly after fluid resuscitation",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Matches.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Serum lactate increased after resuscitation",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "DIRECTION_PARITY", "noDifferenceNote": false, "hasAnchor": false }
+    },
+    {
+      "id": "direction_comparator_gt_vs_lt",
+      "description": "Procedure 4: comparator > vs < mismatch between claim and evidence -> CLAIM_SPAN_MISMATCH",
+      "evidence": ["The effect was statistically significant (p < 0.05) across groups."],
+      "out": {
+        "s01_evidence_span": "The effect was statistically significant (p < 0.05) across groups",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Significant effect.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "The effect was statistically significant (p > 0.05) across groups",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "CLAIM_SPAN_MISMATCH", "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "neg_exclusions_all_pass",
+      "description": "Procedure 4: renal failure, treatment failure, similar methods, not inconsistent -> SUPPORTED",
+      "evidence": ["Survival improved in renal failure and treatment failure using similar methods, and findings were not inconsistent across sites."],
+      "out": {
+        "s01_evidence_span": "Survival improved in renal failure and treatment failure using similar methods, and findings were not inconsistent across sites",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "All details match.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Survival improved in renal failure and treatment failure using similar methods across sites",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "claim_number_checked_against_clause_not_whole_unit",
+      "description": "Procedure 4: claim number checked against evidence clause (stops at ';'), not another clause -> CLAIM_SPAN_MISMATCH",
+      "evidence": ["Pain dropped by 20% at week 4; adherence was 95% in the control arm."],
+      "out": {
+        "s01_evidence_span": "Pain dropped by 20% at week 4",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Pain dropped.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Pain dropped by 95% at week 4",
+      "expected": { "verdict": "NEI_SILENT_ESCALATE", "failReason": "CLAIM_SPAN_MISMATCH", "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "kind_mismatch_cue_derived_classes_same_family_no_mismatch",
+      "description": "Procedure 4: equal (unitFamily='mass', isPercent=false) with two different cue-derived metricClass values (dose vs other) -> no kindMismatch -> SUPPORTED",
+      "evidence": ["The daily dose was 50 mg of aspirin in adults."],
+      "out": {
+        "s01_evidence_span": "The daily dose was 50 mg of aspirin in adults",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Matches 50 mg aspirin.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Aspirin weight was 50 mg in adults",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true }
+    },
+    {
+      "id": "measure_valence_increased_survival_vs_improved_survival",
+      "description": "Procedure 4: 'increased survival' (GOOD measure -> POS) matches 'improved survival' (POS) -> SUPPORTED",
+      "evidence": ["Treatment increased survival in stage III patients."],
+      "out": {
+        "s01_evidence_span": "Treatment increased survival in stage III patients",
+        "s02_evidence_idx": 0,
+        "s03_micro_reasoning": "Matches survival benefit.",
+        "s04_verdict": "SUPPORTED"
+      },
+      "claim": "Treatment improved survival in stage III patients",
+      "expected": { "verdict": "SUPPORTED", "failReason": null, "noDifferenceNote": false, "hasAnchor": true }
+    }
+  ],
+  "l2Cases": [
+    {
+      "id": "ex18b_l2_identical_downgraded",
+      "description": "Normative Example 18b / AC-L0-09: L2 CONTRADICTED identical claim and evidence -> NEI (NO_DIFFERENCE_SIGNAL)",
+      "evidence": ["The drug reduced blood pressure in older adults."],
+      "l2Out": {
+        "s1_source_identified": "CITED_DOI_MATCHED",
+        "s2_quote": "The drug reduced blood pressure in older adults",
+        "s3_quote_origin": "PROVIDED_EVIDENCE",
+        "s4_reasoning": "The quote contradicts the claim.",
+        "s5_verdict": "CONTRADICTED",
+        "s6_alternatives": []
+      },
+      "claim": "The drug reduced blood pressure in older adults",
+      "expected": { "verdict": "NEI", "failReason": "NO_DIFFERENCE_SIGNAL", "noDifferenceNote": false, "hasQuote": false }
+    },
+    {
+      "id": "ex19b_l2_subject_swap_no_values_kept",
+      "description": "Normative Example 19b / AC-L0-09: L2 CONTRADICTED subject swap without values -> CONTRADICTED kept, noDifferenceNote=true",
+      "evidence": ["Drug Y outperformed drug X in remission rates."],
+      "l2Out": {
+        "s1_source_identified": "CITED_DOI_MATCHED",
+        "s2_quote": "Drug Y outperformed drug X in remission rates",
+        "s3_quote_origin": "PROVIDED_EVIDENCE",
+        "s4_reasoning": "The paper reports Drug Y outperformed Drug X, reversing the claim.",
+        "s5_verdict": "CONTRADICTED",
+        "s6_alternatives": []
+      },
+      "claim": "Drug X outperformed drug Y in remission rates",
+      "expected": { "verdict": "CONTRADICTED", "failReason": null, "noDifferenceNote": true, "hasQuote": true, "evidenceIdx": 0, "quote": "Drug Y outperformed drug X in remission rates" }
+    },
+    {
+      "id": "ex19c_l2_numeric_value_swap_kept",
+      "description": "Normative Example 19c / AC-L0-09: identical values {12%, 18%} in reversed order -> sameOrder=false -> CONTRADICTED kept, noDifferenceNote=true",
+      "evidence": ["Mortality was 12% with X and 18% with Y."],
+      "l2Out": {
+        "s1_source_identified": "CITED_DOI_MATCHED",
+        "s2_quote": "Mortality was 12% with X and 18% with Y",
+        "s3_quote_origin": "PROVIDED_EVIDENCE",
+        "s4_reasoning": "The rates for X and Y are swapped.",
+        "s5_verdict": "CONTRADICTED",
+        "s6_alternatives": []
+      },
+      "claim": "Mortality was 18% with X and 12% with Y",
+      "expected": { "verdict": "CONTRADICTED", "failReason": null, "noDifferenceNote": true, "hasQuote": true, "evidenceIdx": 0, "quote": "Mortality was 12% with X and 18% with Y" }
+    },
+    {
+      "id": "l2_same_values_same_order_downgraded",
+      "description": "AC-L0-09: L2 CONTRADICTED with same kind, identical values, and sameOrder=true -> NEI (NO_DIFFERENCE_SIGNAL)",
+      "evidence": ["Mortality was 12% with drug X and 18% with drug Y."],
+      "l2Out": {
+        "s1_source_identified": "CITED_DOI_MATCHED",
+        "s2_quote": "Mortality was 12% with drug X and 18% with drug Y",
+        "s3_quote_origin": "PROVIDED_EVIDENCE",
+        "s4_reasoning": "Disagrees.",
+        "s5_verdict": "CONTRADICTED",
+        "s6_alternatives": []
+      },
+      "claim": "Mortality was 12% for X and 18% for Y",
+      "expected": { "verdict": "NEI", "failReason": "NO_DIFFERENCE_SIGNAL", "noDifferenceNote": false, "hasQuote": false }
+    },
+    {
+      "id": "l2_partial_anchored_kept",
+      "description": "03 §2.1.1 & 04 §4.1: L2 PARTIAL with valid anchored provided quote stays PARTIAL",
+      "evidence": ["Drug X lowered systolic blood pressure by 10 mmHg in younger adults."],
+      "l2Out": {
+        "s1_source_identified": "CITED_DOI_MATCHED",
+        "s2_quote": "Drug X lowered systolic blood pressure by 10 mmHg",
+        "s3_quote_origin": "PROVIDED_EVIDENCE",
+        "s4_reasoning": "Matches blood pressure lowering in younger adults.",
+        "s5_verdict": "PARTIAL",
+        "s6_alternatives": []
+      },
+      "claim": "Drug X lowered systolic blood pressure in all adults",
+      "expected": { "verdict": "PARTIAL", "failReason": null, "noDifferenceNote": false, "hasQuote": true, "evidenceIdx": 0, "quote": "Drug X lowered systolic blood pressure by 10 mmHg" }
+    },
+    {
+      "id": "l2_web_source_stored_as_nei_no_quote",
+      "description": "04 §4.1 / AC-L2-05(d): WEB_SOURCE stored as NEI with quote=null",
+      "evidence": ["Unrelated abstract text."],
+      "l2Out": {
+        "s1_source_identified": "CITED_DOI_MATCHED",
+        "s2_quote": "Found on external website.",
+        "s3_quote_origin": "WEB_SOURCE",
+        "s4_reasoning": "Web source confirms claim.",
+        "s5_verdict": "SUPPORTED",
+        "s6_alternatives": []
+      },
+      "claim": "Drug X lowered blood pressure",
+      "expected": { "verdict": "NEI", "failReason": null, "noDifferenceNote": false, "hasQuote": false }
+    },
+    {
+      "id": "l2_provided_quote_absent_downgraded",
+      "description": "AC-L2-05(a): PROVIDED_EVIDENCE quote absent from evidence -> NEI (CONTAINMENT_BELOW_THRESHOLD)",
+      "evidence": ["Aspirin reduced stroke incidence over five years."],
+      "l2Out": {
+        "s1_source_identified": "CITED_DOI_MATCHED",
+        "s2_quote": "Clopidogrel prevented myocardial infarction completely",
+        "s3_quote_origin": "PROVIDED_EVIDENCE",
+        "s4_reasoning": "Matches.",
+        "s5_verdict": "SUPPORTED",
+        "s6_alternatives": []
+      },
+      "claim": "Aspirin reduced stroke incidence",
+      "expected": { "verdict": "NEI", "failReason": "CONTAINMENT_BELOW_THRESHOLD", "noDifferenceNote": false, "hasQuote": false }
+    }
+  ]
+}
