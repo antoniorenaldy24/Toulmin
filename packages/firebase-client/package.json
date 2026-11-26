@@ -2,5 +2,19 @@
   "name": "@toulmin/firebase-client",
   "private": true,
   "type": "module",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@toulmin/copy": "workspace:*",
+    "@toulmin/core-l0": "workspace:*",
+    "@toulmin/prompts": "workspace:*",
+    "@toulmin/schemas": "workspace:*",
+    "firebase": "^12.14.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
 }
