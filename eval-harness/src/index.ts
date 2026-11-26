@@ -79,3 +79,106 @@ export type {
   PublishRoutingValidationInput,
   PublishRoutingValidationResult,
 } from "./publish_routing.js";
+
+export {
+  compareUtf8Bytes,
+  computeManifestEnvelopeHash,
+  computeStrataCounts,
+  createRunManifest,
+  generateDatasetManifest,
+  inferDatasetKind,
+  isBareSha256Hex,
+  normalizeRelativePath,
+  parseJsonl,
+  runManifestCli,
+  sha256HexBytes,
+  sha256HexUtf8,
+  validateDatasetRow,
+  validateRunManifest,
+  verifyDatasetManifest,
+} from "./manifest.js";
+export type {
+  DatasetFileEntry,
+  DatasetKind,
+  DatasetManifest,
+  DatasetVerifyError,
+  DatasetVerifyErrorCode,
+  DatasetVerifyResult,
+  ParsedJsonlLine,
+  RunManifest,
+  RunManifestValidationResult,
+} from "./manifest.js";
+
+export {
+  KAPPA_TARGET_MIN,
+  checkDatasetDisjointness,
+  evaluateAnnotators,
+  formatAnnotationReportMarkdown,
+  runDisjointnessCli,
+} from "./disjointness.js";
+export type {
+  AnnotationStatus,
+  AnnotatorEvaluationInput,
+  AnnotatorEvaluationResult,
+  AnnotatorPairLabel,
+  B2AnnotatorPairLabel,
+  DisjointnessOverlap,
+  DisjointnessResult,
+  DisjointnessSplitInput,
+  GitAuthorRecord,
+  NPairRelatednessViolation,
+  OverlapKind,
+  SGrayBoundSummary,
+} from "./disjointness.js";
+
+export {
+  calibrateBm25MinCov,
+  formatBm25CalibrationMarkdown,
+  runBm25CalibrateCli,
+} from "./bm25Calibrate.js";
+export type {
+  Bm25CalibrationInput,
+  Bm25CalibrationResult,
+  ClaimLengthStratum,
+  DevPairForCalibration,
+  DistractorAbstract,
+  StratumRetentionRow,
+  UnitLengthStratum,
+} from "./bm25Calibrate.js";
+
+export {
+  MS_SAN_OVERALL_FP_MAX,
+  MS_SAN_PER_PATTERN_FP_MAX,
+  evaluateSanitizerMsSan,
+  evaluateSanitizerRedTeam,
+  formatSanitizerReportMarkdown,
+  runSanitizerEvalCli,
+} from "./sanitizerEval.js";
+export type {
+  BlockedUnitSample,
+  MsSanEvalResult,
+  RedTeamEvalResult,
+  SanitizerCorpusItem,
+  SanitizerPatternStat,
+} from "./sanitizerEval.js";
+
+export {
+  PLANNED_CF1_SAMPLE_SIZES,
+  POWER_TARGET_DELTAS,
+  analyzeCf1Power,
+  computePilotStats,
+  formatPowerReportMarkdown,
+  runPowerCli,
+  simulateB1PermutationPower,
+  solveB1FlipProbabilities,
+} from "./power.js";
+export type {
+  B1PilotF1Item,
+  PilotOutcomePair,
+  PilotStats,
+  PowerAnalysisReport,
+  PowerMatrixCell,
+  TaskPowerInput,
+  TaskPowerMethod,
+  TaskPowerSummary,
+} from "./power.js";

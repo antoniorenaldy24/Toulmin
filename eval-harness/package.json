@@ -7,7 +7,12 @@
     ".": "./src/index.ts",
     "./stats": "./src/stats.ts",
     "./holm": "./src/holm.ts",
-    "./publish_routing": "./src/publish_routing.ts"
+    "./publish_routing": "./src/publish_routing.ts",
+    "./manifest": "./src/manifest.ts",
+    "./disjointness": "./src/disjointness.ts",
+    "./bm25Calibrate": "./src/bm25Calibrate.ts",
+    "./sanitizerEval": "./src/sanitizerEval.ts",
+    "./power": "./src/power.ts"
   },
   "dependencies": {
     "@toulmin/core-l0": "workspace:*",
