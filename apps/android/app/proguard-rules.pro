@@ -1,0 +1,5 @@
+-keep class app.toulmin.core.** { *; }
+-keep class app.toulmin.spikes.** { *; }
+-keep class app.toulmin.l1.** { *; }
+-keep class app.toulmin.app.** { *; }
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod

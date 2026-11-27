@@ -1,0 +1,3 @@
+-keep class app.toulmin.l1.schema.** { *; }
+-keep class app.toulmin.core.** { *; }
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod

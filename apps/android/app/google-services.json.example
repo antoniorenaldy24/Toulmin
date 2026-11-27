@@ -1,0 +1,23 @@
+{
+  "project_info": {
+    "project_number": "000000000000",
+    "project_id": "toulmin-example-local",
+    "storage_bucket": "toulmin-example-local.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "android_client_info": {
+          "package_name": "app.toulmin"
+        }
+      },
+      "api_key": [
+        {
+          "current_key": "REPLACE_WITH_LOCAL_UNCOMMITTED_FIREBASE_API_KEY"
+        }
+      ]
+    }
+  ],
+  "configuration_version": "1"
+}

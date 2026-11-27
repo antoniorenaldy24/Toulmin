@@ -12,8 +12,11 @@ dist/
 google-services.json
 GoogleService-Info.plist
 .gradle/
+.kotlin/
+apps/android/.kotlin/
 apps/android/build/
 apps/android/**/build/
+apps/android/**/bin/
 apps/android/local.properties
 apps/android/core-l0/src/main/resources/unicode_15_1.bin
 apps/android/core-l0/src/main/resources/norm_table.json

@@ -16,3 +16,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "toulmin-android"
 include(":core-l0")
+include(":spike-core")
+include(":l1")
+include(":app")
