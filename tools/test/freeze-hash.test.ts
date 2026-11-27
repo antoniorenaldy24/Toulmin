@@ -216,10 +216,10 @@ describe("tools/freeze-hash.ts deterministic manifest & hash verification", () =
     expect(isBareSha256Hex(res1.hash)).toBe(true);
     expect(res1.fileCount).toBe(tierAFiles.length);
 
-    // Guardrail: freeze/ stays untouched (only .gitkeep) and no fake apps/android/core-l0 stubs exist
+    // Guardrail: freeze/ stays untouched (only .gitkeep) and apps/android/core-l0 is a real Gradle module
     const freezeEntries = readdirSync(resolve(REPO_ROOT, "freeze"));
     expect(freezeEntries).toEqual([".gitkeep"]);
-    expect(existsSync(resolve(REPO_ROOT, "apps", "android", "core-l0"))).toBe(false);
+    expect(existsSync(resolve(REPO_ROOT, "apps", "android", "core-l0", "build.gradle.kts"))).toBe(true);
   });
 
   it("supports --scope tier_b_ts cleanly, keeps tier_a_ts invariant, and keeps ingest/* outside both tiers", () => {

@@ -345,6 +345,9 @@ export default tseslint.config(
     ignores: [
       "**/node_modules/**",
       "**/dist/**",
+      "**/.gradle/**",
+      "apps/android/build/**",
+      "apps/android/**/build/**",
       ".agents/**",
       ".validator-scratch/**",
       "docs/**"
