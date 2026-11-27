@@ -6,9 +6,11 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.double
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -54,6 +56,24 @@ internal object ConformanceTestHelper {
         val el = this[key] ?: return null
         if (el is JsonNull) return null
         return el.jsonPrimitive.int
+    }
+
+    fun JsonObject.longVal(key: String): Long =
+        this[key]?.jsonPrimitive?.long ?: error("Missing long field '$key'")
+
+    fun JsonObject.longOrNull(key: String): Long? {
+        val el = this[key] ?: return null
+        if (el is JsonNull) return null
+        return el.jsonPrimitive.long
+    }
+
+    fun JsonObject.doubleVal(key: String): Double =
+        this[key]?.jsonPrimitive?.double ?: error("Missing double field '$key'")
+
+    fun JsonObject.doubleOrNull(key: String): Double? {
+        val el = this[key] ?: return null
+        if (el is JsonNull) return null
+        return el.jsonPrimitive.double
     }
 
     fun JsonElement.asIntList(): List<Int> = jsonArray.map { it.jsonPrimitive.int }

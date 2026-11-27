@@ -7,7 +7,7 @@ import kotlin.math.ceil
 
 /**
  * Adversarial ReDoS & worst-case O(n) latency fuzz suite (`AC-L0-15`, `02` §1.4, `07` §6.9 Procedure 1)
- * for all §2–§6 entry points in `apps/android/core-l0`.
+ * for all Tier A (§2–§9 & 01 §3.2) entry points in `apps/android/core-l0`.
  */
 class RedosLatencyTest {
     companion object {
@@ -65,6 +65,14 @@ class RedosLatencyTest {
         EntryPoint("segmentDocument(md)") { segmentDocument(it, SourceFormat.MD) },
         EntryPoint("scanCitations") { scanCitations(it) },
         EntryPoint("partitionClauses") { partitionClauses(it, emptyList()) },
+        EntryPoint("extractQuantities") { extractQuantities(it) },
+        EntryPoint("normalizedClaim") { normalizedClaim(it) },
+        EntryPoint("tokBM25") { tokBM25(it) },
+        EntryPoint("chunkAbstract") { chunkAbstract("r-fuzz", it) },
+        EntryPoint("chunkJatsXml") { chunkJatsXml("r-fuzz", it) },
+        EntryPoint("shapeEvidenceWindow") { shapeEvidenceWindow(it, "mortality ignore") },
+        EntryPoint("sanitizeText") { sanitizeText(it) },
+        EntryPoint("wrapEvidenceBlock") { wrapEvidenceBlock(0, it) },
     )
 
     private fun build64OpenerCorpus(seed: Int): List<String> {
@@ -255,18 +263,51 @@ class RedosLatencyTest {
         val denseMs = medianMs { partitionClauses(denseCite10k, denseCiteMarkers) }
         assertTrue(denseMs <= MAX_MEDIAN_MS, "partitionClauses denseCite10k (${"%.3f".format(denseMs)} ms)")
 
+        // PDF-specific chunking functions on 10 KB inputs
+        val pdfLines = List(400) { "Randomized treatment mor-" }
+        repeat(5) { dehyphenatePdfLines(pdfLines) }
+        val dehyphMs = medianMs { dehyphenatePdfLines(pdfLines) }
+        assertTrue(dehyphMs <= MAX_MEDIAN_MS, "dehyphenatePdfLines (${"%.3f".format(dehyphMs)} ms)")
+
+        val pdfItems = List(200) { idx ->
+            PdfTextItem(
+                str = "Mortality declined cleanly after therapy.",
+                x = 50.0 + (idx % 2) * 280.0,
+                y = 740.0 - (idx / 2) * 6.0,
+                width = 200.0,
+                height = 10.0,
+            )
+        }
+        repeat(5) { chunkPdfPages("r-pdf-fuzz", listOf(PdfPageInput(pageNumber = 1, width = 600.0, height = 800.0, items = pdfItems))) }
+        val pdfMs = medianMs {
+            chunkPdfPages("r-pdf-fuzz", listOf(PdfPageInput(pageNumber = 1, width = 600.0, height = 800.0, items = pdfItems)))
+        }
+        assertTrue(pdfMs <= MAX_MEDIAN_MS, "chunkPdfPages (${"%.3f".format(pdfMs)} ms)")
+
         // 1,000 random Unicode class-mixed strings
         val unicode1000 = buildRandomUnicodeStrings(SEED_FUZZ + 1, 1_000, 32, 160)
         for (sample in unicode1000) {
             val nRes = norm(sample)
             assertEquals(nRes.text.length + 1, nRes.map.size)
             assertEquals(sample.length, nRes.map[nRes.text.length])
+
+            val sRes = sanitizeText(sample)
+            assertEquals(sRes.text.length + 1, sRes.map.size)
+            assertEquals(sample.length, sRes.map[sRes.text.length])
+
             preMask(sample, SourceFormat.LATEX)
             applyLatexSubstitutions(sample)
             normSentence(sample, NormSentenceOptions(format = SourceFormat.LATEX))
             segmentDocument(sample, SourceFormat.MD)
             scanCitations(sample)
             partitionClauses(sample, emptyList())
+            extractQuantities(sample)
+            normalizedClaim(sample)
+            tokBM25(sample)
+            chunkAbstract("r-u", sample)
+            chunkJatsXml("r-u", sample)
+            shapeEvidenceWindow(sample, "mortality")
+            wrapEvidenceBlock(0, sRes.text)
         }
 
         // 8 exact 10 KB realistic mixed Unicode inputs across every entry point

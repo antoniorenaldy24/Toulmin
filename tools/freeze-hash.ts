@@ -70,6 +70,17 @@ const TIER_B_CORE_L0_EXCLUDES = new Set<string>([
   "watchdog.ts",
 ]);
 
+const TIER_B_KOTLIN_CORE_L0_EXCLUDES = new Set<string>([
+  "Anchor.kt",
+  "B5Pairing.kt",
+  "TriageBaseline.kt",
+  "Ledger.kt",
+  "Reducer.kt",
+  "Gate.kt",
+  "FastPath.kt",
+  "Watchdog.kt",
+]);
+
 const TIER_B_CORE_L0_FILES = [
   "packages/core-l0/src/anchor.ts",
   "packages/core-l0/src/b5pairing.ts",
@@ -335,6 +346,56 @@ export function collectTierATsFiles(repoRoot: string = DEFAULT_REPO_ROOT): strin
 }
 
 /**
+ * Collects the pure Kotlin Tier A `.kt` sources under `apps/android/core-l0/src/main/kotlin/`
+ * (`06` §5.2–§5.3, `07` §2.3), excluding Tier B Kotlin files and any `ingest` subdirectories.
+ */
+export function collectTierAKotlinFiles(repoRoot: string = DEFAULT_REPO_ROOT): string[] {
+  const collected: string[] = [];
+  const ktRoot = resolve(repoRoot, "apps", "android", "core-l0", "src", "main", "kotlin");
+  if (!existsSync(ktRoot)) {
+    return collected;
+  }
+
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = resolve(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name !== "ingest") {
+          walk(fullPath);
+        }
+      } else if (
+        entry.isFile() &&
+        entry.name.endsWith(".kt") &&
+        !TIER_B_KOTLIN_CORE_L0_EXCLUDES.has(entry.name)
+      ) {
+        collected.push(normalizeManifestPath(relative(repoRoot, fullPath)));
+      }
+    }
+  };
+
+  walk(ktRoot);
+  collected.sort(compareUtf8Bytes);
+  return collected;
+}
+
+/**
+ * Collects the combined cross-language Tier A scope (`07` §2.3):
+ * `collectTierATsFiles` + `collectTierAKotlinFiles`, sorted ascending by UTF-8 bytes.
+ */
+export function collectTierAFiles(repoRoot: string = DEFAULT_REPO_ROOT): string[] {
+  const seen = new Set<string>();
+  const combined: string[] = [];
+  for (const relPath of [...collectTierATsFiles(repoRoot), ...collectTierAKotlinFiles(repoRoot)]) {
+    if (!seen.has(relPath)) {
+      seen.add(relPath);
+      combined.push(relPath);
+    }
+  }
+  combined.sort(compareUtf8Bytes);
+  return combined;
+}
+
+/**
  * Collects the current TypeScript Tier B file scope (`07` §2.3, `06` §5.2):
  * Tier B `packages/core-l0/src/*.ts`, post-decode validator/output schemas (`packages/schemas`),
  * Tier B `conformance/l0/*.json`, and Tier B statistical/routing evaluators (`eval-harness`).
@@ -511,7 +572,7 @@ interface ParsedCliArgs {
   rootDir: string;
   manifestPath?: string;
   tier?: FreezeTier;
-  scope?: "tier_a_ts" | "tier_b_ts";
+  scope?: "tier_a" | "tier_a_ts" | "tier_b_ts";
   hashOutPath?: string;
   expectedHash?: string;
   hashFilePath?: string;
@@ -547,7 +608,7 @@ function parseCliArgs(argv: readonly string[]): ParsedCliArgs {
       out.tier = tier;
     } else if (arg === "--scope" && i + 1 < argv.length) {
       const scope = argv[++i]!;
-      if (scope !== "tier_a_ts" && scope !== "tier_b_ts") {
+      if (scope !== "tier_a" && scope !== "tier_a_ts" && scope !== "tier_b_ts") {
         throw new Error(`Invalid --scope value "${scope}"`);
       }
       out.scope = scope;
@@ -586,11 +647,13 @@ export function runFreezeHashCli(argv: readonly string[]): number {
       return 2;
     }
     const paths =
-      args.scope === "tier_a_ts"
-        ? [...collectTierATsFiles(args.rootDir), ...args.positionalPaths]
-        : args.scope === "tier_b_ts"
-          ? [...collectTierBTsFiles(args.rootDir), ...args.positionalPaths]
-          : args.positionalPaths;
+      args.scope === "tier_a"
+        ? [...collectTierAFiles(args.rootDir), ...args.positionalPaths]
+        : args.scope === "tier_a_ts"
+          ? [...collectTierATsFiles(args.rootDir), ...args.positionalPaths]
+          : args.scope === "tier_b_ts"
+            ? [...collectTierBTsFiles(args.rootDir), ...args.positionalPaths]
+            : args.positionalPaths;
     try {
       const res = writeFreezeManifest({
         rootDir: args.rootDir,
@@ -636,10 +699,12 @@ export function runFreezeHashCli(argv: readonly string[]): number {
     return res.ok ? 0 : 1;
   }
 
-  // Default mode: compute and print hash from --scope tier_a_ts|tier_b_ts, --manifest/--tier, or positional paths
+  // Default mode: compute and print hash from --scope tier_a|tier_a_ts|tier_b_ts, --manifest/--tier, or positional paths
   try {
     let targetPaths: string[];
-    if (args.scope === "tier_a_ts") {
+    if (args.scope === "tier_a") {
+      targetPaths = collectTierAFiles(args.rootDir);
+    } else if (args.scope === "tier_a_ts") {
       targetPaths = collectTierATsFiles(args.rootDir);
     } else if (args.scope === "tier_b_ts") {
       targetPaths = collectTierBTsFiles(args.rootDir);

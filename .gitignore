@@ -17,3 +17,6 @@ apps/android/**/build/
 apps/android/local.properties
 apps/android/core-l0/src/main/resources/unicode_15_1.bin
 apps/android/core-l0/src/main/resources/norm_table.json
+apps/android/core-l0/src/main/resources/porter_v1.json
+apps/android/core-l0/src/main/resources/bm25_min_cov.json
+apps/android/core-l0/src/main/resources/wordlist_en.txt

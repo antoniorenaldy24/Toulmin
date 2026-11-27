@@ -212,15 +212,6 @@ private fun containsCiteAsciiCaseInsensitive(name: String): Boolean {
     return false
 }
 
-private fun asciiLower(s: String): String {
-    val out = CharArray(s.length)
-    for (i in s.indices) {
-        val code = s[i].code
-        out[i] = (if (code in 65..90) code + 32 else code).toChar()
-    }
-    return String(out)
-}
-
 fun countPrecedingBackslashes(input: String, index: Int): Int {
     var count = 0
     var k = index - 1

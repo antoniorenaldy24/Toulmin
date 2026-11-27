@@ -7,21 +7,8 @@ import java.nio.file.Files
 
 class CoreL0PurityAndHygieneTest {
     @Test
-    fun `bundled Tier A binary and JSON resources match packages-core-l0 byte-for-byte`() {
+    fun `bundled Tier A binary, JSON, and wordlist resources match packages-core-l0 byte-for-byte`() {
         val tsDir = ConformanceTestHelper.repoRoot.resolve("packages").resolve("core-l0")
-        val binFromTs = Files.readAllBytes(tsDir.resolve("unicode_15_1.bin"))
-        val normFromTs = Files.readAllBytes(tsDir.resolve("norm_table.json"))
-
-        val binFromClasspath = NormTableData::class.java.classLoader
-            .getResourceAsStream("unicode_15_1.bin")!!
-            .use { it.readBytes() }
-        val normFromClasspath = NormTableData::class.java.classLoader
-            .getResourceAsStream("norm_table.json")!!
-            .use { it.readBytes() }
-
-        assertEquals(sha256hexBytes(binFromTs), sha256hexBytes(binFromClasspath))
-        assertEquals(sha256hexBytes(normFromTs), sha256hexBytes(normFromClasspath))
-
         val resDir = ConformanceTestHelper.repoRoot
             .resolve("apps")
             .resolve("android")
@@ -29,10 +16,29 @@ class CoreL0PurityAndHygieneTest {
             .resolve("src")
             .resolve("main")
             .resolve("resources")
-        assertTrue(Files.isRegularFile(resDir.resolve("unicode_15_1.bin")))
-        assertTrue(Files.isRegularFile(resDir.resolve("norm_table.json")))
-        assertEquals(sha256hexBytes(binFromTs), sha256hexBytes(Files.readAllBytes(resDir.resolve("unicode_15_1.bin"))))
-        assertEquals(sha256hexBytes(normFromTs), sha256hexBytes(Files.readAllBytes(resDir.resolve("norm_table.json"))))
+
+        val assetNames = listOf(
+            "unicode_15_1.bin",
+            "norm_table.json",
+            "porter_v1.json",
+            "bm25_min_cov.json",
+            "wordlist_en.txt",
+        )
+        for (name in assetNames) {
+            val fromTs = Files.readAllBytes(tsDir.resolve(name))
+            val fromClasspath = NormTableData::class.java.classLoader
+                .getResourceAsStream(name)!!
+                .use { it.readBytes() }
+            assertEquals(sha256hexBytes(fromTs), sha256hexBytes(fromClasspath), "Classpath hash mismatch for $name")
+
+            val resPath = resDir.resolve(name)
+            assertTrue(Files.isRegularFile(resPath), "Missing copied resource $name under src/main/resources/")
+            assertEquals(
+                sha256hexBytes(fromTs),
+                sha256hexBytes(Files.readAllBytes(resPath)),
+                "On-disk resource hash mismatch for $name",
+            )
+        }
     }
 
     @Test
@@ -71,6 +77,8 @@ class CoreL0PurityAndHygieneTest {
             "java.util.Random",
             "kotlin.random",
             "toByteArray(Charsets.UTF_8)",
+            "Locale",
+            "String.format",
         )
 
         val ktFiles = Files.walk(mainDir).use { stream ->

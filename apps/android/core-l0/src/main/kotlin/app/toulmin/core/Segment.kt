@@ -69,8 +69,6 @@ private fun stripLeadingOpenDelimiters(token: String): String {
 
 private fun isAsciiAlphaCode(cu: Int): Boolean = (cu in 65..90) || (cu in 97..122)
 
-private fun isAsciiDigitCode(cu: Int): Boolean = cu in 48..57
-
 private fun extractFirstWordSpan(
     text: String,
     start: Int,

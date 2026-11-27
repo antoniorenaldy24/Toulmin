@@ -112,7 +112,7 @@ internal object NormTableData {
         unicodeTable = parseUnicode151Bin(unicodeBytes)
     }
 
-    private fun loadResourceBytes(name: String): ByteArray {
+    internal fun loadResourceBytes(name: String): ByteArray {
         val stream = NormTableData::class.java.classLoader?.getResourceAsStream(name)
             ?: error("Missing bundled Tier A resource: $name")
         return stream.use { it.readBytes() }

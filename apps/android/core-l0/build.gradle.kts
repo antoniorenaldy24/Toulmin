@@ -17,6 +17,9 @@ val tsCoreL0Dir = rootProject.layout.projectDirectory.dir("../../packages/core-l
 val syncTierAAssets by tasks.registering(Copy::class) {
     from(tsCoreL0Dir.file("unicode_15_1.bin"))
     from(tsCoreL0Dir.file("norm_table.json"))
+    from(tsCoreL0Dir.file("porter_v1.json"))
+    from(tsCoreL0Dir.file("bm25_min_cov.json"))
+    from(tsCoreL0Dir.file("wordlist_en.txt"))
     into(layout.projectDirectory.dir("src/main/resources"))
 }
 

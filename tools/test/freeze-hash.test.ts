@@ -7,6 +7,8 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_REPO_ROOT,
   checkFreezeManifest,
+  collectTierAFiles,
+  collectTierAKotlinFiles,
   collectTierATsFiles,
   collectTierBTsFiles,
   compareUtf8Bytes,
@@ -269,6 +271,46 @@ describe("tools/freeze-hash.ts deterministic manifest & hash verification", () =
 
     // CLI support for --scope tier_b_ts
     expect(runFreezeHashCli(["--scope", "tier_b_ts", "--json"])).toBe(0);
+    expect(readdirSync(resolve(REPO_ROOT, "freeze"))).toEqual([".gitkeep"]);
+  });
+
+  it("supports --scope tier_a combining tier_a_ts (55) and Kotlin Tier A sources (19) cleanly without touching freeze/", () => {
+    const tierATsFiles = collectTierATsFiles(REPO_ROOT);
+    const tierAKtFiles = collectTierAKotlinFiles(REPO_ROOT);
+    const tierAFiles = collectTierAFiles(REPO_ROOT);
+    const tierBFiles = collectTierBTsFiles(REPO_ROOT);
+
+    expect(tierATsFiles).toHaveLength(55);
+    expect(tierAKtFiles).toHaveLength(19);
+    expect(tierAFiles).toHaveLength(74);
+
+    expect(tierAKtFiles).toContain("apps/android/core-l0/src/main/kotlin/app/toulmin/core/Norm.kt");
+    expect(tierAKtFiles).toContain("apps/android/core-l0/src/main/kotlin/app/toulmin/core/Quantity.kt");
+    expect(tierAKtFiles).toContain("apps/android/core-l0/src/main/kotlin/app/toulmin/core/ClaimHash.kt");
+    expect(tierAKtFiles).toContain("apps/android/core-l0/src/main/kotlin/app/toulmin/core/Bm25.kt");
+    expect(tierAKtFiles).toContain("apps/android/core-l0/src/main/kotlin/app/toulmin/core/Chunk.kt");
+    expect(tierAKtFiles).toContain("apps/android/core-l0/src/main/kotlin/app/toulmin/core/Sanitize.kt");
+
+    expect(tierAKtFiles.some((f) => f.includes("/src/test/"))).toBe(false);
+    expect(tierAKtFiles.some((f) => f.includes("/src/main/resources/"))).toBe(false);
+    expect(tierAKtFiles.some((f) => f.endsWith("/Ledger.kt") || f.endsWith("/Gate.kt"))).toBe(false);
+
+    const tierBSet = new Set(tierBFiles);
+    for (const f of tierAFiles) {
+      expect(tierBSet.has(f)).toBe(false);
+    }
+
+    for (let i = 1; i < tierAFiles.length; i += 1) {
+      expect(compareUtf8Bytes(tierAFiles[i - 1]!, tierAFiles[i]!)).toBeLessThan(0);
+    }
+
+    const res1 = computeFreezeHash(REPO_ROOT, tierAFiles);
+    const res2 = computeFreezeHash(REPO_ROOT, [...tierAFiles].reverse());
+    expect(res1.hash).toBe(res2.hash);
+    expect(isBareSha256Hex(res1.hash)).toBe(true);
+    expect(res1.fileCount).toBe(74);
+
+    expect(runFreezeHashCli(["--scope", "tier_a", "--json"])).toBe(0);
     expect(readdirSync(resolve(REPO_ROOT, "freeze"))).toEqual([".gitkeep"]);
   });
 });
