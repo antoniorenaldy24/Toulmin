@@ -525,5 +525,56 @@ export default tseslint.config(
         { name: "Headers", message: "Network APIs are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." }
       ]
     }
+  },
+  {
+    files: ["apps/web/**/*.{ts,tsx,mts,cts}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "firebase",
+              message: "apps/web MUST route all Firebase calls through @toulmin/firebase-client (00 §7.2, 06 §5.3)."
+            }
+          ],
+          patterns: [
+            {
+              group: ["firebase/*", "@firebase/*"],
+              message: "apps/web MUST NOT import firebase/* directly; use @toulmin/firebase-client (00 §7.2, 06 §5.3)."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    files: ["apps/web/src/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-properties": [
+        "error",
+        {
+          property: "innerHTML",
+          message: "Direct innerHTML assignment is forbidden in apps/web/src under Trusted Types (05 §2.3, AC-SEC-04)."
+        },
+        {
+          property: "outerHTML",
+          message: "Direct outerHTML assignment is forbidden in apps/web/src under Trusted Types (05 §2.3)."
+        },
+        {
+          property: "insertAdjacentHTML",
+          message: "insertAdjacentHTML is forbidden in apps/web/src under Trusted Types (05 §2.3)."
+        },
+        {
+          property: "srcdoc",
+          message: "iframe srcdoc is forbidden in apps/web/src; use Blob URLs with sandbox (04 §4.4, 05 §2.3, AC-GND-02)."
+        },
+        {
+          object: "document",
+          property: "write",
+          message: "document.write is forbidden in apps/web/src (05 §2.3)."
+        }
+      ]
+    }
   }
 );
