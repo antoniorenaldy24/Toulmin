@@ -469,5 +469,61 @@ export default tseslint.config(
       ],
       "toulmin/no-implicit-l0-regex": "error"
     }
+  },
+  {
+    files: ["functions/src/oaparse/**/*.{ts,tsx,mts,cts,js,mjs}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            { name: "undici", message: "HTTP clients are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "axios", message: "HTTP clients are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "node-fetch", message: "HTTP clients are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "http", message: "HTTP clients are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "https", message: "HTTP clients are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "http2", message: "HTTP clients are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "net", message: "Network modules are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "tls", message: "Network modules are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "dns", message: "Network modules are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "dgram", message: "Network modules are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "ws", message: "Network modules are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "node:http", message: "HTTP clients are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "node:https", message: "HTTP clients are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "node:http2", message: "HTTP clients are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "node:net", message: "Network modules are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "node:tls", message: "Network modules are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "node:dns", message: "Network modules are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "node:dgram", message: "Network modules are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "@google-cloud/secret-manager", message: "Secret Manager clients are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+            { name: "firebase-admin", message: "Firebase Admin SDK is forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." }
+          ],
+          patterns: [
+            {
+              group: ["@google-cloud/secret-manager/*"],
+              message: "Secret Manager clients are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)."
+            },
+            {
+              group: ["firebase-admin/*"],
+              message: "Firebase Admin SDK is forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)."
+            },
+            {
+              group: ["firebase/ai", "firebase/ai/*", "@firebase/ai", "@firebase/ai/*"],
+              message: "Firebase AI Logic is forbidden outside packages/firebase-client (00 §7.2, 06 §5.3)."
+            }
+          ]
+        }
+      ],
+      "no-restricted-globals": [
+        "error",
+        { name: "fetch", message: "Network API fetch() is forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+        { name: "XMLHttpRequest", message: "Network APIs are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+        { name: "WebSocket", message: "Network APIs are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+        { name: "EventSource", message: "Network APIs are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+        { name: "Request", message: "Network APIs are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+        { name: "Response", message: "Network APIs are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." },
+        { name: "Headers", message: "Network APIs are forbidden in functions/src/oaparse/** (05 §3.2.4, 06 §5.3)." }
+      ]
+    }
   }
 );

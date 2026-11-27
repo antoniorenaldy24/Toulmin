@@ -1,0 +1,7 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /rw/{file}       { allow read: if request.auth != null; allow write: if false; }   // retraction snapshot; any signed-in (including anonymous) user may read
+    match /{allPaths=**}   { allow read, write: if false; }   // /oa/** is read and written by oaFetch (oafetch-sa) only
+  }
+}

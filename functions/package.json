@@ -1,0 +1,20 @@
+{
+  "name": "@toulmin/functions",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "main": "dist/index.js",
+  "dependencies": {
+    "@toulmin/core-l0": "workspace:*",
+    "@toulmin/schemas": "workspace:*",
+    "firebase-admin": "^13.2.0",
+    "firebase-functions": "^6.3.2"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}
